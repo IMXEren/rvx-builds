@@ -32,7 +32,7 @@ Let the 'forkception' begin!
 
 ...**arm64-v8a** architecture.
 
-***Releases include alternative versions of both with the all the different icon options.***
+
 
 ###### Check [.env](https://github.com/Spacellary/docker-py-revanced/blob/main/.env) for a list of excluded patches and [options.toml](https://github.com/Spacellary/docker-py-revanced/blob/main/apks/options.toml) for patch options.
 ###### Complete and original README can be found [here](https://github.com/Spacellary/docker-py-revanced/blob/main/README-ORIGINAL.md).
