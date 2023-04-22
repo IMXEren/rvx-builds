@@ -103,10 +103,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 #         tag: Build-${{ steps.get-date.outputs.date }}-extended-patches-${{ env.PATCHES_VERSION }}
           body: |
-            | Application                         | Icon Set                       | Version          | Architecture           |
-            | ----------------------------------- |--------------------------------|------------------|------------------------|
-            | ReVanced Extended **YouTube**       | custom-branding-icon-mmt       | Latest Supported | all                    |
-            | ReVanced Extended **YouTube Music** | custom-branding-music-mmt      | Latest Available | arm64-v8a              |
+            | Applications                        | Icon Sets                      | Versions         | Architectures                    |
+            | ----------------------------------- |--------------------------------|------------------|----------------------------------|
+            | ReVanced Extended **YouTube**       | [custom-branding-icon-mmt](https://i.imgur.com/N1vKprm.png)       | Latest Supported | all                    |
+            | ReVanced Extended **YouTube Music** | [custom-branding-music-mmt](https://i.imgur.com/m1jbdx6.png)      | Latest Available | arm64-v8a              |
             
 #            ## Release patch notes:
 #            ${{ steps.get-release-body.outputs.body }}
