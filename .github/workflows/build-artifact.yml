@@ -56,8 +56,8 @@ jobs:
           name: Built-APKs
           path: |
             apks/*-by-Spacellary.apk
-#            apks/*-output.apk
-#            apks/VancedMicroG.apk"
+            apks/*-output.apk
+            apks/VancedMicroG.apk"
           if-no-files-found: error
           files-to-expect: ${{ inputs.FILES_TO_EXPECT }}
 
