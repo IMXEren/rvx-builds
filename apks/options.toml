@@ -1,11 +1,7 @@
-[patch-options]
-YouTubeAppName = "ReVanced Extended"
-YouTubePackageName = "app.rvx.android.youtube"
-MusicPackageName = "app.rvx.android.apps.youtube.music"
-CustomSpeedArrays = "0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.15, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0"
-# OverlayButtonsIcon = "new"
-darkThemeBackgroundColor = "@android:color/black"
-# clientSpoofVersion = "17.06.35" # No longer supported as of rvx patches v2.171.3
+[website]
+websiteURL = "https://t.me/revanced_apkss"
+websiteSummary = "Visit Revanced Builder Channel"
 
-[debugging]
-debuggable = false
+['website-music']
+websiteURL = "https://t.me/revanced_apkss"
+websiteSummary = "Visit Revanced Builder Channel"
