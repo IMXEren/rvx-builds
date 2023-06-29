@@ -34,6 +34,7 @@ class Patches(object):
         "com.sony.songpal.mdr": ("sony_headphones_connect", "_sony_headphones_connect"),
         "com.rubenmayayo.reddit": ("reddit_boost", "_reddit_boost"),
         "com.google.android.apps.recorder": ("google_recorder", "_google_recorder"),
+        "com.teslacoilsw.launcher": ("nova_launcher", "_nova_launcher"),
     }
     revanced_extended_app_ids = {
         "com.google.android.youtube": ("youtube", "_yt"),
@@ -152,6 +153,7 @@ class Patches(object):
             "sony_headphones_connect": "_sony_headphones_connect",
             "reddit_boost": "_reddit_boost",
             "google_recorder": "_google_recorder",
+            "nova_launcher": "_nova_launcher",
         }
         if not (app_name := app_names.get(app)):
             raise AppNotFound(app)
