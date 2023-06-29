@@ -30,6 +30,9 @@ all_builds = [
     "reddit_boost",
     "google_recorder",
     "nova_launcher",
+    "meme_generator",
+    "vsco",
+    "trakt",
 ]
 possible_archs = ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 
