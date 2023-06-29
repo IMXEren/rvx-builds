@@ -30,7 +30,7 @@ class Patches(object):
         "com.ithebk.expensemanager": ("expensemanager", "_expensemanager"),
         "net.dinglisch.android.taskerm": ("tasker", "_tasker"),
         "net.binarymode.android.irplus": ("irplus", "_irplus"),
-        "com.laurencedawson.reddit_sync": ("sync", "_sync"),
+        "com.laurencedawson.reddit_sync": ("reddit_sync", "_reddit_sync"),
         "com.sony.songpal.mdr": ("sony_headphones_connect", "_sony_headphones_connect"),
     }
     revanced_extended_app_ids = {
@@ -146,7 +146,7 @@ class Patches(object):
             "expensemanager": "_expensemanager",
             "tasker": "_tasker",
             "irplus": "_irplus",
-            "sync": "_sync",
+            "reddit_sync": "_reddit_sync",
             "sony_headphones_connect": "_sony_headphones_connect",
         }
         if not (app_name := app_names.get(app)):
