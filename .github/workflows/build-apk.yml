@@ -163,7 +163,7 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -d '{
-              "deviceId": "${JOIN_DEVICE_ID}",
+              "deviceId": "'${JOIN_DEVICE_ID}'",
               "title": "IMXEren/RVX-Builds",
               "text": "🚀 New Release Alert: Built ReVanced Apps has just been released on GitHub. Happy coding! 💻",
               "icon": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
