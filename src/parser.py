@@ -97,7 +97,7 @@ class Parser(object):
             "-m",
             integrations,
             "-o",
-            f"{app}-v{version}.apk",
+            f"{app}-v{version}{output_prefix}output.apk",
             "--keystore",
             self.config.keystore_name
             #"--options",
