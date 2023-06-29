@@ -26,7 +26,7 @@ all_builds = [
     "backdrops",
     "tasker",
     "sync",
-    "sony_headphones_connect"
+    "sony_headphones_connect",
 ]
 possible_archs = ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 
