@@ -99,7 +99,7 @@ class Parser(object):
             "-o",
             f"{app}-v{version}{output_prefix}output.apk",
             "--keystore",
-            self.config.keystore_name
+            self.config.keystore_name,
             "--options",
             "options.json"
         ]
