@@ -70,6 +70,9 @@ class RevancedConfig(object):
             "reddit_boost": f"{self.apk_mirror}/apk/ruben-mayayo/boost-for-reddit/",
             "google_recorder": f"{self.apk_mirror}/apk/google-inc/google-recorder/",
             "nova_launcher": f"{self.apk_mirror}/apk/teslacoil-software/nova-launcher/",
+            "meme_generator": f"{self.apk_mirror}/apk/zombodroid/meme-generator-free/",
+            "vsco": f"{self.apk_mirror}/apk/vsco/vsco-cam/",
+            "trakt": f"{self.apk_mirror}/apk/trakt/trakt/",
         }
         self.apk_mirror_version_urls = {
             "reddit": f"{self.apk_mirror_urls.get('reddit')}reddit",
@@ -89,6 +92,9 @@ class RevancedConfig(object):
             "reddit_boost": f"{self.apk_mirror_urls.get('reddit_boost')}boost-for-reddit/",
             "google_recorder": f"{self.apk_mirror_urls.get('google_recorder')}google-recorder/",
             "nova_launcher": f"{self.apk_mirror_urls.get('nova_launcher')}nova-launcher/",
+            "meme_generator": f"{self.apk_mirror_urls.get('meme_generator')}meme-generator-free/",
+            "vsco": f"{self.apk_mirror_urls.get('vsco')}vsco-cam/",
+            "trakt": f"{self.apk_mirror_urls.get('trakt')}trakt/",
         }
         self.archs_to_build = env.list("ARCHS_TO_BUILD", [])
         self.alternative_youtube_patches = env.list("ALTERNATIVE_YOUTUBE_PATCHES", [])
