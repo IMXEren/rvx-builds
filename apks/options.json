@@ -46,10 +46,4 @@
     "key" : "darkThemeBackgroundColor",
     "value" : "@android:color/black"
   } ]
-}, {
-  "patchName" : "change-oauth-client-id",
-  "options" : [ {
-    "key" : "client-id",
-    "value" : "${{ secrets.REDDIT_CLIENT_ID }}"
-  } ]
 } ]
