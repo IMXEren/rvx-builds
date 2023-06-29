@@ -35,6 +35,9 @@ class Patches(object):
         "com.rubenmayayo.reddit": ("reddit_boost", "_reddit_boost"),
         "com.google.android.apps.recorder": ("google_recorder", "_google_recorder"),
         "com.teslacoilsw.launcher": ("nova_launcher", "_nova_launcher"),
+        "com.zombodroid.MemeGenerator": ("meme_generator", "_meme_generator"),
+        "com.vsco.cam": ("vsco", "_vsco"),
+        "tv.trakt.trakt": ("trakt", "_trakt"),
     }
     revanced_extended_app_ids = {
         "com.google.android.youtube": ("youtube", "_yt"),
@@ -154,6 +157,10 @@ class Patches(object):
             "reddit_boost": "_reddit_boost",
             "google_recorder": "_google_recorder",
             "nova_launcher": "_nova_launcher",
+            "meme_generator": "_meme_generator",
+            "vsco": "_vsco",
+            "trakt": "_trakt",
+            
         }
         if not (app_name := app_names.get(app)):
             raise AppNotFound(app)
