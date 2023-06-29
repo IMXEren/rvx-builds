@@ -50,6 +50,6 @@
   "patchName" : "change-oauth-client-id",
   "options" : [ {
     "key" : "client-id",
-    "value" : "Fycw6ro80g-w06VVAkc0Xw"
+    "value" : "${{ secrets.REDDIT_CLIENT_ID }}"
   } ]
 } ]
