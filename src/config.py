@@ -67,6 +67,7 @@ class RevancedConfig(object):
             "tasker": f"{self.apk_mirror}/apk/joaomgcd/tasker-crafty-apps-eu/",
             "reddit_sync": f"{self.apk_mirror}/apk/red-apps-ltd/sync-for-reddit/",
             "sony_headphones_connect": f"{self.apk_mirror}/apk/sony-corporation/sony-headphones-connect/",
+            "reddit_boost": f"{self.apk_mirror}/apk/ruben-mayayo/boost-for-reddit/",
         }
         self.apk_mirror_version_urls = {
             "reddit": f"{self.apk_mirror_urls.get('reddit')}reddit",
@@ -81,8 +82,9 @@ class RevancedConfig(object):
             "twitch": f"{self.apk_mirror_urls.get('twitch')}twitch",
             "windy": f"{self.apk_mirror_urls.get('windy')}windy-wind-weather-forecast",
             "tasker": f"{self.apk_mirror_urls.get('tasker')}tasker-crafty-apps-eu/",
-            "reddit_sync": f"{self.apk_mirror_urls.get('sync')}sync-for-reddit/",
+            "reddit_sync": f"{self.apk_mirror_urls.get('reddit_sync')}sync-for-reddit/",
             "sony_headphones_connect": f"{self.apk_mirror_urls.get('sony_headphones_connect')}sony-headphones-connect/",
+            "reddit_boost": f"{self.apk_mirror_urls.get('reddit_boost')}boost-for-reddit/",
         }
         self.archs_to_build = env.list("ARCHS_TO_BUILD", [])
         self.alternative_youtube_patches = env.list("ALTERNATIVE_YOUTUBE_PATCHES", [])
