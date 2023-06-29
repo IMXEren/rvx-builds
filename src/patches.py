@@ -30,6 +30,7 @@ class Patches(object):
         "com.ithebk.expensemanager": ("expensemanager", "_expensemanager"),
         "net.dinglisch.android.taskerm": ("tasker", "_tasker"),
         "net.binarymode.android.irplus": ("irplus", "_irplus"),
+        "com.laurencedawson.reddit_sync": ("sync", "_sync")
     }
     revanced_extended_app_ids = {
         "com.google.android.youtube": ("youtube", "_yt"),
@@ -144,6 +145,7 @@ class Patches(object):
             "expensemanager": "_expensemanager",
             "tasker": "_tasker",
             "irplus": "_irplus",
+            "sync": "_sync"
         }
         if not (app_name := app_names.get(app)):
             raise AppNotFound(app)
