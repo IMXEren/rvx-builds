@@ -1,0 +1,210 @@
+[
+    {
+        "app_package": "com.google.android.youtube",
+        "app_code": "youtube",
+        "app_name": "YouTube",
+        "app_url": "https://play.google.com/store/apps/details?id=com.google.android.youtube",
+        "app_icon": "https://play-lh.googleusercontent.com/lMoItBgdPPVDJsNOVtP26EKHePkwBg-PkuY9NOrc-fumRtTFP4XhpUNk_22syN4Datc=w64-h64",
+        "target_version": "18.19.35"
+    },
+    {
+        "app_package": "com.google.android.apps.youtube.music",
+        "app_code": "youtube-music",
+        "app_name": "YouTube Music",
+        "app_url": "https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music",
+        "app_icon": "https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.backdrops.wallpapers",
+        "app_code": "backdrops",
+        "app_name": "Backdrops - Wallpapers",
+        "app_url": "https://play.google.com/store/apps/details?id=com.backdrops.wallpapers",
+        "app_icon": "https://play-lh.googleusercontent.com/ybkU2kHmt5RBz4mXpxyYuO1ZqM3I8uJPhAKA7v51Pj03fwmT7PMMgPP6X2_CymH1cyg=w64-h64",
+        "target_version": "4.52"
+    },
+    {
+        "app_package": "com.rubenmayayo.reddit",
+        "app_code": "reddit_boost",
+        "app_name": "Boost for reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=com.rubenmayayo.reddit",
+        "app_icon": "https://play-lh.googleusercontent.com/GF71STDEmTKhbEexCYbePXAjYym_ee8E6WR7_R8jr5_Xf10jfL0Kibkjfl33zDrJBw=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.myprog.hexedit",
+        "app_code": "hex-editor",
+        "app_name": "HEX Editor",
+        "app_url": "https://play.google.com/store/apps/details?id=com.myprog.hexedit",
+        "app_icon": "https://play-lh.googleusercontent.com/qb_ezXXQlsK3darAylqSLudM01tYOXw-sAm2qeODdKXufv1kZmuTb3XSf2fzqwSEvvE=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "ginlemon.iconpackstudio",
+        "app_code": "icon_pack_studio",
+        "app_name": "Icon Pack Studio",
+        "app_url": "https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio",
+        "app_icon": "https://play-lh.googleusercontent.com/Bw64Ft8n9ei2NJ_Et2MxWjSInZrL_6yMJbu7Usw-BcOgjvjo75xP4JnyjsX8VZJM9_E=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "net.binarymode.android.irplus",
+        "app_code": "irplus",
+        "app_name": "irplus - Infrared Remote",
+        "app_url": "https://play.google.com/store/apps/details?id=net.binarymode.android.irplus",
+        "app_icon": "https://play-lh.googleusercontent.com/xNQNgiKHPtYE0Zk_bRd0ZOp9rOOJTy2puzOx8CUBq2Ja4yhOQwdrBdeOrDTGQA9aSg=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.zombodroid.MemeGenerator",
+        "app_code": "meme_generator",
+        "app_name": "Meme Generator",
+        "app_url": "https://play.google.com/store/apps/details?id=com.zombodroid.MemeGenerator",
+        "app_icon": "https://play-lh.googleusercontent.com/YNBUh-8PzcAXryawZ559rEUDowEOgXsPDfTDBOi4AQQR6NTsWGvYTU1tMRctN3uoRqw8=w64-h64",
+        "target_version": "4.6377"
+    },
+    {
+        "app_package": "com.ithebk.expensemanager",
+        "app_code": "expensemanager",
+        "app_name": "Money Manager- Expense, Budget",
+        "app_url": "https://play.google.com/store/apps/details?id=com.ithebk.expensemanager",
+        "app_icon": "https://play-lh.googleusercontent.com/N_KBHHLEjLXKXF2kWQPbcPmoFMNZkAvlT2PNpNOwmbm1s-vb9ZmYiRl8E0KOanwJWObV=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "org.totschnig.myexpenses",
+        "app_code": "my-expenses",
+        "app_name": "My Expenses",
+        "app_url": "https://play.google.com/store/apps/details?id=org.totschnig.myexpenses",
+        "app_icon": "https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64",
+        "target_version": "3.4.9"
+    },
+    {
+        "app_package": "com.teslacoilsw.launcher",
+        "app_code": "nova_launcher",
+        "app_name": "Nova Launcher",
+        "app_url": "https://play.google.com/store/apps/details?id=com.teslacoilsw.launcher",
+        "app_icon": "https://play-lh.googleusercontent.com/Et6Ha-3AtD1XVbSHn68xCRFkQcPiZIKnl2q5y9EoRT5Y7u2NHRb35ii_Jot-hNLfvv3y=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.awedea.nyx",
+        "app_code": "nyx-music-player",
+        "app_name": "Nyx Music Player",
+        "app_url": "https://play.google.com/store/apps/details?id=com.awedea.nyx",
+        "app_icon": "https://play-lh.googleusercontent.com/qg5vyfgAD_p05a9c82y0X7BvMVYq74YBK3-75y2SViOfX6zJJWHvnyc57BzKMnJJX-g=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.google.android.apps.recorder",
+        "app_code": "google_recorder",
+        "app_name": "Recorder",
+        "app_url": "https://play.google.com/store/apps/details?id=com.google.android.apps.recorder",
+        "app_icon": "https://play-lh.googleusercontent.com/OfRwK6rMr4i7gu1AKeNbK-qnYPuL6EVQ5j6AYYQc0ge-I-NPYoBUsweVPuJLSOtHYag=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.reddit.frontpage",
+        "app_code": "reddit",
+        "app_name": "Reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=com.reddit.frontpage",
+        "app_icon": "https://play-lh.googleusercontent.com/nlptFyxNsb8J0g8ZLux6016kunduV4jCxIrOJ7EEy-IobSN1RCDXAJ6DTGP81z7rr5Zq=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.sony.songpal.mdr",
+        "app_code": "sony_headphones_connect",
+        "app_name": "Sony | Headphones Connect",
+        "app_url": "https://play.google.com/store/apps/details?id=com.sony.songpal.mdr",
+        "app_icon": "https://play-lh.googleusercontent.com/BpJMwIjqHja-cZL_p2JREBTuG8d-Nyp9gUiQzciP9HvHAsF69mt9HFzouFTdimiuiWIH=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.spotify.music",
+        "app_code": "spotify",
+        "app_name": "Spotify: Music and Podcasts",
+        "app_url": "https://play.google.com/store/apps/details?id=com.spotify.music",
+        "app_icon": "https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.laurencedawson.reddit_sync",
+        "app_code": "reddit_sync",
+        "app_name": "Sync for Reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync",
+        "app_icon": "https://play-lh.googleusercontent.com/rneSvN2UXjglI5q6Cl7Hiim84n5bIUBghhSZNfDQk7Zjw8gWCWgxA5zW_c2i-TNYfEbv=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "net.dinglisch.android.taskerm",
+        "app_code": "tasker",
+        "app_name": "Tasker",
+        "app_url": "https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm",
+        "app_icon": "https://play-lh.googleusercontent.com/8IkkhPNnxNVYhnUxcidu0-Yp72aSb3H0gQJ1U-_ImQ7SCGLz1zgXtV7wi2Hpd6Odghg=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.ticktick.task",
+        "app_code": "ticktick",
+        "app_name": "TickTick:To Do List & Calendar",
+        "app_url": "https://play.google.com/store/apps/details?id=com.ticktick.task",
+        "app_icon": "https://play-lh.googleusercontent.com/JkYolPNuRAlrXEI9vlk-XOid3VFJ0IPjDj2eM_xrriuE3Zu8IX9cuMkI7JOTw1upNxbW=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.ss.android.ugc.trill",
+        "app_code": "tiktok",
+        "app_name": "TikTok",
+        "app_url": "https://play.google.com/store/apps/details?id=com.ss.android.ugc.trill",
+        "app_icon": "https://play-lh.googleusercontent.com/Ui_-OW6UJI147ySDX9guWWDiCPSq1vtxoC-xG17BU2FpU0Fi6qkWwuLdpddmT9fqrA=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "tv.trakt.trakt",
+        "app_code": "trakt",
+        "app_name": "Trakt",
+        "app_url": "https://play.google.com/store/apps/details?id=tv.trakt.trakt",
+        "app_icon": "https://play-lh.googleusercontent.com/n0SqzImml-_GwGHQJRIRQs2IgHELIZPH_GZIwSl7c71qhok8dgZh7rQvOH1jihkVhw=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "tv.twitch.android.app",
+        "app_code": "twitch",
+        "app_name": "Twitch: Live Game Streaming",
+        "app_url": "https://play.google.com/store/apps/details?id=tv.twitch.android.app",
+        "app_icon": "https://play-lh.googleusercontent.com/QLQzL-MXtxKEDlbhrQCDw-REiDsA9glUH4m16syfar_KVLRXlzOhN7tmAceiPerv4Jg=w64-h64",
+        "target_version": "15.4.1"
+    },
+    {
+        "app_package": "com.twitter.android",
+        "app_code": "twitter",
+        "app_name": "Twitter",
+        "app_url": "https://play.google.com/store/apps/details?id=com.twitter.android",
+        "app_icon": "https://play-lh.googleusercontent.com/wIf3HtczQDjHzHuu7vezhqNs0zXAG85F7VmP7nhsTxO3OHegrVXlqIh_DWBYi86FTIGk=w64-h64",
+        "target_version": "9.71.0-release.0"
+    },
+    {
+        "app_package": "com.vsco.cam",
+        "app_code": "vsco",
+        "app_name": "VSCO: Photo & Video Editor",
+        "app_url": "https://play.google.com/store/apps/details?id=com.vsco.cam",
+        "app_icon": "https://play-lh.googleusercontent.com/RdCklOFg3SLN5QF8OR7cU-5bs1ESYo_pqGYrK2ena3XZDcrLOpjf7vLtNQELOR7Uo4MH=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "de.dwd.warnapp",
+        "app_code": "warnwetter",
+        "app_name": "WarnWetter",
+        "app_url": "https://play.google.com/store/apps/details?id=de.dwd.warnapp",
+        "app_icon": "https://play-lh.googleusercontent.com/vzWpHOJbMbaWc2FgHWNcp_xIQyn0qHxZVaG1ly0kYTxrhNfWD3DAnwmnQRPx36yauxs=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "co.windyapp.android",
+        "app_code": "windy",
+        "app_name": "Wind speed — Windy.app",
+        "app_url": "https://play.google.com/store/apps/details?id=co.windyapp.android",
+        "app_icon": "https://play-lh.googleusercontent.com/0Q7_rftv0zXIKEFV6NBJTc0noPO4mVkCbPNbx-o8kC7bR740Tw3S6eb9AulWpFqbCvg=w64-h64",
+        "target_version": "Any"
+    }
+]
