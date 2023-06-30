@@ -9,7 +9,7 @@ json_file = "apps/apps.json"
 md_file = "apps/apps.md"
 
 # Step 1: Parse the online .py file to extract package names and app codes
-py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/patches.py"
+py_file_url = "https://raw.githubusercontent.com/test/repo/main/src/patches.py"
 response = requests.get(py_file_url)
 python_code = response.text
 # Extract package_name and app_code from the Python code
