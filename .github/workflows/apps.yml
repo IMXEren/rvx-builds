@@ -3,6 +3,7 @@ name: Get Patch Apps Info
 on:
   schedule:
     - cron: "*/5 * * * *"
+  workflow_dispatch:
 
 jobs:
   run_script:
