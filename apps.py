@@ -95,7 +95,7 @@ timezone = pytz.timezone("Asia/Kolkata")
 current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
 content = "# Apps\n\n"
 content += "## Here is a list of apps that can be patched\n\n"
-content += f"Generated at {current_time} IST)\n\n"
+content += f"Generated at {current_time} IST\n\n"
 table = "| Icon | Name | Code | Package |\n"
 table += "|--------------|----------|----------|----------|\n"
 for entry in data:
