@@ -1,3 +1,7 @@
+# Apps
+
+## Here is a list of apps that can be patched
+
 | Icon | Name | Code | Package |
 |--------------|----------|----------|----------|
 | ![https://play.google.com/store/apps/details?id=com.google.android.youtube](https://play-lh.googleusercontent.com/lMoItBgdPPVDJsNOVtP26EKHePkwBg-PkuY9NOrc-fumRtTFP4XhpUNk_22syN4Datc=w64-h64) | [**YouTube**](https://play.google.com/store/apps/details?id=com.google.android.youtube) | `youtube` | `com.google.android.youtube` |
@@ -6,6 +10,7 @@
 | ![https://play.google.com/store/apps/details?id=com.rubenmayayo.reddit](https://play-lh.googleusercontent.com/GF71STDEmTKhbEexCYbePXAjYym_ee8E6WR7_R8jr5_Xf10jfL0Kibkjfl33zDrJBw=w64-h64) | [**Boost for reddit**](https://play.google.com/store/apps/details?id=com.rubenmayayo.reddit) | `reddit_boost` | `com.rubenmayayo.reddit` |
 | ![https://play.google.com/store/apps/details?id=com.myprog.hexedit](https://play-lh.googleusercontent.com/qb_ezXXQlsK3darAylqSLudM01tYOXw-sAm2qeODdKXufv1kZmuTb3XSf2fzqwSEvvE=w64-h64) | [**HEX Editor**](https://play.google.com/store/apps/details?id=com.myprog.hexedit) | `hex-editor` | `com.myprog.hexedit` |
 | ![https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio](https://play-lh.googleusercontent.com/Bw64Ft8n9ei2NJ_Et2MxWjSInZrL_6yMJbu7Usw-BcOgjvjo75xP4JnyjsX8VZJM9_E=w64-h64) | [**Icon Pack Studio**](https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio) | `icon_pack_studio` | `ginlemon.iconpackstudio` |
+| ![https://play.google.com/store/apps/details?id=net.binarymode.android.irplus](https://play-lh.googleusercontent.com/xNQNgiKHPtYE0Zk_bRd0ZOp9rOOJTy2puzOx8CUBq2Ja4yhOQwdrBdeOrDTGQA9aSg=w64-h64) | [**irplus - Infrared Remote**](https://play.google.com/store/apps/details?id=net.binarymode.android.irplus) | `irplus` | `net.binarymode.android.irplus` |
 | ![https://play.google.com/store/apps/details?id=com.zombodroid.MemeGenerator](https://play-lh.googleusercontent.com/YNBUh-8PzcAXryawZ559rEUDowEOgXsPDfTDBOi4AQQR6NTsWGvYTU1tMRctN3uoRqw8=w64-h64) | [**Meme Generator**](https://play.google.com/store/apps/details?id=com.zombodroid.MemeGenerator) | `meme_generator` | `com.zombodroid.MemeGenerator` |
 | ![https://play.google.com/store/apps/details?id=com.ithebk.expensemanager](https://play-lh.googleusercontent.com/N_KBHHLEjLXKXF2kWQPbcPmoFMNZkAvlT2PNpNOwmbm1s-vb9ZmYiRl8E0KOanwJWObV=w64-h64) | [**Money Manager- Expense, Budget**](https://play.google.com/store/apps/details?id=com.ithebk.expensemanager) | `expensemanager` | `com.ithebk.expensemanager` |
 | ![https://play.google.com/store/apps/details?id=org.totschnig.myexpenses](https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64) | [**My Expenses**](https://play.google.com/store/apps/details?id=org.totschnig.myexpenses) | `my-expenses` | `org.totschnig.myexpenses` |
@@ -25,4 +30,5 @@
 | ![https://play.google.com/store/apps/details?id=com.vsco.cam](https://play-lh.googleusercontent.com/RdCklOFg3SLN5QF8OR7cU-5bs1ESYo_pqGYrK2ena3XZDcrLOpjf7vLtNQELOR7Uo4MH=w64-h64) | [**VSCO: Photo & Video Editor**](https://play.google.com/store/apps/details?id=com.vsco.cam) | `vsco` | `com.vsco.cam` |
 | ![https://play.google.com/store/apps/details?id=de.dwd.warnapp](https://play-lh.googleusercontent.com/vzWpHOJbMbaWc2FgHWNcp_xIQyn0qHxZVaG1ly0kYTxrhNfWD3DAnwmnQRPx36yauxs=w64-h64) | [**WarnWetter**](https://play.google.com/store/apps/details?id=de.dwd.warnapp) | `warnwetter` | `de.dwd.warnapp` |
 | ![https://play.google.com/store/apps/details?id=co.windyapp.android](https://play-lh.googleusercontent.com/0Q7_rftv0zXIKEFV6NBJTc0noPO4mVkCbPNbx-o8kC7bR740Tw3S6eb9AulWpFqbCvg=w64-h64) | [**Wind speed — Windy.app**](https://play.google.com/store/apps/details?id=co.windyapp.android) | `windy` | `co.windyapp.android` |
-| ![https://play.google.com/store/apps/details?id=net.binarymode.android.irplus](https://play-lh.googleusercontent.com/xNQNgiKHPtYE0Zk_bRd0ZOp9rOOJTy2puzOx8CUBq2Ja4yhOQwdrBdeOrDTGQA9aSg=w64-h64) | [**irplus - Infrared Remote**](https://play.google.com/store/apps/details?id=net.binarymode.android.irplus) | `irplus` | `net.binarymode.android.irplus` |
+
+**Note: Not all apps that can be patched using ReVanced are present in this list. Try raising an issue for me to add that app or you may do it yourself. [Look here]()**.
