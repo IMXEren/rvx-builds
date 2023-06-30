@@ -22,7 +22,7 @@ jobs:
         run: pip install -r apps/requirements.txt
 
       - name: Run Python script
-        run: python apps.py
+        run: python apps/apps.py
         
       - name: Commit and push changes
         run: |
