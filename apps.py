@@ -2,9 +2,11 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import re
+import datetime
+import pytz
 
-json_file = "apps.json"
-md_file = "apps.md"
+json_file = "apps/apps.json"
+md_file = "apps/apps.md"
 
 # Step 1: Parse the online .py file to extract package names and app codes
 py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/patches.py"
@@ -89,8 +91,11 @@ print("Apps json data has been dumped to 'apps.json'!!")
 with open(json_file, "r", encoding="utf-8") as f:
     data = json.load(f)
 # Write apps.md
+timezone = pytz.timezone("Asia/Kolkata")
+current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
 content = "# Apps\n\n"
 content += "## Here is a list of apps that can be patched\n\n"
+content += f"Generated at {current_time} IST)\n\n"
 table = "| Icon | Name | Code | Package |\n"
 table += "|--------------|----------|----------|----------|\n"
 for entry in data:
