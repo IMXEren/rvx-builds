@@ -5,8 +5,8 @@ from selenium.webdriver.common.by import By
 # Set up Chrome options
 chrome_options = Options()
 # chrome_options.add_argument("--headless")  # Run Chrome in headless mode
-chrome_options.add_arguments("--no-sandbox");
-chrome_options.add_arguments("--disable-dev-shm-usage");
+chrome_options.add_argument("--no-sandbox");
+chrome_options.add_argument("--disable-dev-shm-usage");
 
 # Create a new instance of the Chrome driver
 driver = webdriver.Chrome(options=chrome_options)
