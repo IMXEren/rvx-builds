@@ -22,7 +22,13 @@ jobs:
         run: pip install -r apps/requirements.txt
       
       - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1.2.0
+      - uses: browser-actions/setup-chrome@v1.2.0
+        with:
+          chrome-version: stable
+        id: setup-chrome
+      - run: |
+          echo Installed chromium version: ${{ steps.setup-chrome.outputs.chrome-version }}
+          ${{ steps.setup-chrome.outputs.chrome-path }} --version
  
       - name: Update py_file_url
         run: |
