@@ -98,8 +98,8 @@ for package_name in compatible_packages_names:
             app_icon = app_icon.replace("=w240-h480", "=w64-h64")
         if app_name_element:
             app_name = app_name_element.text
-        if app_name_element or app_icon_element is None:
-            app_name, app_icon = apk_mirror_scrape("reddit_sync")
+        else:
+            app_name, app_icon = apk_mirror_scrape(app_codename)
         print(app_name)
         json_data.append({"app_package": package_name, "app_code": app_codename, "app_name": app_name, "app_url": url, "app_icon": app_icon, "target_version": target_version})
 
