@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 
 # Set up Chrome options
 chrome_options = Options()
-chrome_options.add_argument("--headless")  # Run Chrome in headless mode
+# chrome_options.add_argument("--headless")  # Run Chrome in headless mode
 chrome_options.add_arguments("--no-sandbox");
 chrome_options.add_arguments("--disable-dev-shm-usage");
 
