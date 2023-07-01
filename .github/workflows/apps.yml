@@ -20,23 +20,10 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r apps/requirements.txt
-        
-      - name: Set up Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget curl unzip
-          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-
-      - name: Set up ChromeDriver
-        run: |
-          wget -N https://chromedriver.storage.googleapis.com/94.0.4606.41/chromedriver_linux64.zip
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/
-          sudo chown root:root /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
+      
+      - name: Setup Chrome
+      - uses: browser-actions/setup-chrome@v1
+      - run: chrome --version
         
       - name: Update py_file_url
         run: |
