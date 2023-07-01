@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r apps/requirements.txt
       
-      - name: Setup Chrome
-      - uses: browser-actions/setup-chrome@v1
-      - run: chrome --version
         
       - name: Update py_file_url
         run: |
