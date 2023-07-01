@@ -96,18 +96,18 @@
         "target_version": "3.4.9"
     },
     {
-        "app_package": "com.laurencedawson.reddit_sync",
-        "app_code": "reddit_sync",
-        "app_name": "NA",
-        "app_url": "https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync",
-        "app_icon": "",
-        "target_version": "All"
-    },
-    {
         "app_package": "com.andrewshu.android.reddit",
         "app_code": "reddit_isfun",
         "app_name": "NA",
         "app_url": "https://play.google.com/store/apps/details?id=com.andrewshu.android.reddit",
+        "app_icon": "",
+        "target_version": "All"
+    },
+    {
+        "app_package": "com.laurencedawson.reddit_sync",
+        "app_code": "reddit_sync",
+        "app_name": "NA",
+        "app_url": "https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync",
         "app_icon": "",
         "target_version": "All"
     },
