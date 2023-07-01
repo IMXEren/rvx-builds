@@ -96,22 +96,6 @@
         "target_version": "3.4.9"
     },
     {
-        "app_package": "com.laurencedawson.reddit_sync",
-        "app_code": "reddit_sync",
-        "app_name": "NA",
-        "app_url": "https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync",
-        "app_icon": "",
-        "target_version": "All"
-    },
-    {
-        "app_package": "com.andrewshu.android.reddit",
-        "app_code": "reddit_isfun",
-        "app_name": "NA",
-        "app_url": "https://play.google.com/store/apps/details?id=com.andrewshu.android.reddit",
-        "app_icon": "",
-        "target_version": "All"
-    },
-    {
         "app_package": "com.teslacoilsw.launcher",
         "app_code": "nova_launcher",
         "app_name": "Nova Launcher",
@@ -152,6 +136,14 @@
         "target_version": "All"
     },
     {
+        "app_package": "com.andrewshu.android.reddit",
+        "app_code": "reddit_isfun",
+        "app_name": "rif is fun for Reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=com.andrewshu.android.reddit",
+        "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F08%2F6486686b1d551_com.andrewshu.android.reddit.png&w=64&h=64&q=100",
+        "target_version": "All"
+    },
+    {
         "app_package": "com.sony.songpal.mdr",
         "app_code": "sony_headphones_connect",
         "app_name": "Sony | Headphones Connect",
@@ -165,6 +157,14 @@
         "app_name": "Spotify: Music and Podcasts",
         "app_url": "https://play.google.com/store/apps/details?id=com.spotify.music",
         "app_icon": "https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs=w64-h64",
+        "target_version": "All"
+    },
+    {
+        "app_package": "com.laurencedawson.reddit_sync",
+        "app_code": "reddit_sync",
+        "app_name": "Sync for reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync",
+        "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F28%2F649f9d78c7ab5_com.laurencedawson.reddit_sync.png&w=64&h=64&q=100",
         "target_version": "All"
     },
     {
