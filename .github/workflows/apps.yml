@@ -26,6 +26,9 @@ jobs:
         with:
           chrome-version: stable
         id: setup-chrome
+
+      - name: Chrome Path
+        id: path-chrome
       - run: |
           echo Installed chromium version: ${{ steps.setup-chrome.outputs.chrome-version }}
           ${{ steps.setup-chrome.outputs.chrome-path }} --version
