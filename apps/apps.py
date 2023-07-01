@@ -6,6 +6,7 @@ import datetime
 import pytz
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from pyvirtualdisplay import Display
 
 json_file = "apps/apps.json"
