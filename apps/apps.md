@@ -2,7 +2,7 @@
 
 ## Here is a list of apps that can be patched
 
-Generated at 2023-07-01 19:10:52 IST
+Generated at 2023-07-01 19:16:04 IST
 
 | Icon | Name | Code | Package |
 |--------------|----------|----------|----------|
@@ -18,8 +18,8 @@ Generated at 2023-07-01 19:10:52 IST
 | ![https://play.google.com/store/apps/details?id=com.zombodroid.MemeGenerator](https://play-lh.googleusercontent.com/YNBUh-8PzcAXryawZ559rEUDowEOgXsPDfTDBOi4AQQR6NTsWGvYTU1tMRctN3uoRqw8=w64-h64) | [**Meme Generator**](https://play.google.com/store/apps/details?id=com.zombodroid.MemeGenerator) | `meme_generator` | `com.zombodroid.MemeGenerator` |
 | ![https://play.google.com/store/apps/details?id=com.ithebk.expensemanager](https://play-lh.googleusercontent.com/N_KBHHLEjLXKXF2kWQPbcPmoFMNZkAvlT2PNpNOwmbm1s-vb9ZmYiRl8E0KOanwJWObV=w64-h64) | [**Money Manager- Expense, Budget**](https://play.google.com/store/apps/details?id=com.ithebk.expensemanager) | `expensemanager` | `com.ithebk.expensemanager` |
 | ![https://play.google.com/store/apps/details?id=org.totschnig.myexpenses](https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64) | [**My Expenses**](https://play.google.com/store/apps/details?id=org.totschnig.myexpenses) | `my-expenses` | `org.totschnig.myexpenses` |
-| ![https://play.google.com/store/apps/details?id=com.andrewshu.android.reddit]() | [**NA**](https://play.google.com/store/apps/details?id=com.andrewshu.android.reddit) | `reddit_isfun` | `com.andrewshu.android.reddit` |
 | ![https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync]() | [**NA**](https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync) | `reddit_sync` | `com.laurencedawson.reddit_sync` |
+| ![https://play.google.com/store/apps/details?id=com.andrewshu.android.reddit]() | [**NA**](https://play.google.com/store/apps/details?id=com.andrewshu.android.reddit) | `reddit_isfun` | `com.andrewshu.android.reddit` |
 | ![https://play.google.com/store/apps/details?id=com.teslacoilsw.launcher](https://play-lh.googleusercontent.com/Et6Ha-3AtD1XVbSHn68xCRFkQcPiZIKnl2q5y9EoRT5Y7u2NHRb35ii_Jot-hNLfvv3y=w64-h64) | [**Nova Launcher**](https://play.google.com/store/apps/details?id=com.teslacoilsw.launcher) | `nova_launcher` | `com.teslacoilsw.launcher` |
 | ![https://play.google.com/store/apps/details?id=com.awedea.nyx](https://play-lh.googleusercontent.com/qg5vyfgAD_p05a9c82y0X7BvMVYq74YBK3-75y2SViOfX6zJJWHvnyc57BzKMnJJX-g=w64-h64) | [**Nyx Music Player**](https://play.google.com/store/apps/details?id=com.awedea.nyx) | `nyx-music-player` | `com.awedea.nyx` |
 | ![https://play.google.com/store/apps/details?id=com.google.android.apps.recorder](https://play-lh.googleusercontent.com/OfRwK6rMr4i7gu1AKeNbK-qnYPuL6EVQ5j6AYYQc0ge-I-NPYoBUsweVPuJLSOtHYag=w64-h64) | [**Recorder**](https://play.google.com/store/apps/details?id=com.google.android.apps.recorder) | `google_recorder` | `com.google.android.apps.recorder` |
