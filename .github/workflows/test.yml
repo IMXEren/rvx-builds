@@ -20,4 +20,4 @@ jobs:
         pip install selenium
 
     - name: Run Selenium script
-      run: python test.py  # Replace with the name of your Python file
+      run: python .github/workflows/test.py  # Replace with the name of your Python file
