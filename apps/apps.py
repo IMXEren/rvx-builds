@@ -51,6 +51,30 @@ def version_key(version):
     # Converts the version string to a tuple of integers
     return tuple(map(int, re.findall(r'\d+', version)))
 
+def apk_mirror_scrape(app_code):
+    apk_mirror = "https://www.apkmirror.com"
+    config_py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/config.py"
+    response = requests.get(config_py_file_url)
+    pattern = r'"{}": f"(.*?)",'.format(app_code)
+    match = re.search(pattern, response.text)
+    if match:
+        app_url = match.group(1)
+        app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
+        print(app_url)
+        driver = webdriver.Chrome()
+        driver.get(app_url)
+        app_name_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.f-grow > h1")
+        app_icon_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.p-relative.icon-container > img")
+        app_name = app_name_element.text if app_name_element else "NA"
+        app_icon = app_icon_element.get_attribute("src") if app_icon_element else "NA"
+        app_icon = app_icon.replace("&w=96&h=96", "&w=64&h=64")
+        driver.quit()
+        print("App Name:", app_name)
+        print("Icon URL:", app_icon)
+        return app_name, app_icon
+    else:
+        print("APKMirror URL not found for the specified app code")
+
 # Step 3: Match package names and scraping
 json_data = []
 for package_name in compatible_packages_names:
@@ -67,12 +91,13 @@ for package_name in compatible_packages_names:
         app_icon_element = soup.select_one("div.Il7kR > img")
         if app_icon_element is None:
             app_icon_element = soup.select_one("div.qxNhq > img")
+        if app_icon_element:
+            app_icon = app_icon_element["src"] if app_icon_element else ""
+            app_icon = app_icon.replace("=w240-h480", "=w64-h64")
         if app_name_element:
             app_name = app_name_element.text
-        else:
-            app_name = 'NA'
-        app_icon = app_icon_element["src"] if app_icon_element else ""
-        app_icon = app_icon.replace("=w240-h480", "=w64-h64")
+        if app_name_element or app_icon_element is None:
+            app_name, app_icon = apk_mirror_scrape(app_codename)
         print(app_name)
         json_data.append({"app_package": package_name, "app_code": app_codename, "app_name": app_name, "app_url": url, "app_icon": app_icon, "target_version": target_version})
 
