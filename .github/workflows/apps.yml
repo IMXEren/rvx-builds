@@ -24,6 +24,8 @@ jobs:
       - name: Update py_file_url
         run: |
           sed -i 's@py_file_url = "https://raw.githubusercontent.com/.*@py_file_url = "https://raw.githubusercontent.com/${{ github.repository }}/main/src/patches.py"@' apps/apps.py
+          sed -i 's@config_py_file_url = "https://raw.githubusercontent.com/.*@config_py_file_url = "https://raw.githubusercontent.com/${{ github.repository }}/main/src/config.py"@' apps/apps.py
+
 
       - name: Run Python script
         run: python apps/apps.py
