@@ -24,6 +24,14 @@
         "target_version": "4.52"
     },
     {
+        "app_package": "com.onelouder.baconreader",
+        "app_code": "reddit_baconreader",
+        "app_name": "BaconReader for Reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=com.onelouder.baconreader",
+        "app_icon": "https://play-lh.googleusercontent.com/5f2PEiUgMtuj8WS93oSt0LvFZIJjufQ55l4HDTUrp8AycXqZ68ZXqqzz_wweAIiOR2U=w64-h64",
+        "target_version": "Any"
+    },
+    {
         "app_package": "com.rubenmayayo.reddit",
         "app_code": "reddit_boost",
         "app_name": "Boost for reddit",
@@ -45,6 +53,14 @@
         "app_name": "Icon Pack Studio",
         "app_url": "https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio",
         "app_icon": "https://play-lh.googleusercontent.com/Bw64Ft8n9ei2NJ_Et2MxWjSInZrL_6yMJbu7Usw-BcOgjvjo75xP4JnyjsX8VZJM9_E=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "ml.docilealligator.infinityforreddit",
+        "app_code": "reddit_infinity",
+        "app_name": "Infinity for Reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=ml.docilealligator.infinityforreddit",
+        "app_icon": "https://play-lh.googleusercontent.com/ZgV5YIzb5katDKcJqke7uXkKFg1F4ZpMR4RKy-5RHa1vadRHrZjMBpmSXfo-m1QV3GY=w64-h64",
         "target_version": "Any"
     },
     {
@@ -109,6 +125,14 @@
         "app_name": "Reddit",
         "app_url": "https://play.google.com/store/apps/details?id=com.reddit.frontpage",
         "app_icon": "https://play-lh.googleusercontent.com/nlptFyxNsb8J0g8ZLux6016kunduV4jCxIrOJ7EEy-IobSN1RCDXAJ6DTGP81z7rr5Zq=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "free.reddit.news",
+        "app_code": "reddit_relay",
+        "app_name": "Relay for reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=free.reddit.news",
+        "app_icon": "https://play-lh.googleusercontent.com/cwoYUgBTgdLheFnXTWSgfFTV1w4-TyqaGJTA4l7X9VicxuwoWhSjWr0LHafd3eWcQTjq=w64-h64",
         "target_version": "Any"
     },
     {
