@@ -63,7 +63,18 @@ def apk_mirror_scrape(app_code):
         app_url = match.group(1)
         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
         print(app_url)
-        driver = webdriver.Chrome()
+        # Set the path to the ChromeDriver executable
+        chromedriver_path = "/usr/local/bin/chromedriver"
+        # Update the ChromeDriver version according to the installed Chrome version
+        version = subprocess.check_output(['google-chrome-stable', '--version']).decode('utf-8').split()[2].split('.')[0]
+        chromedriver_version = f"https://chromedriver.storage.googleapis.com/{version}.0.3497.106/chromedriver_linux64.zip"
+        # Download and extract the updated ChromeDriver
+        chromedriver_url = f"https://chromedriver.storage.googleapis.com/{version}.0.3497.106/chromedriver_linux64.zip"
+        urllib.request.urlretrieve(chromedriver_url, "chromedriver.zip")
+        with zipfile.ZipFile("chromedriver.zip", "r") as zip_ref:
+            zip_ref.extractall()
+        os.chmod(chromedriver_path, 0o755)
+        driver = webdriver.Chrome(executable_path=chromedriver_path)
         driver.get(app_url)
         app_name_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.f-grow > h1")
         app_icon_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.p-relative.icon-container > img")
