@@ -1,7 +1,7 @@
-name: Selenium Workflow
+name: Selenium Testing
 
-on: [push]  # Trigger the workflow when code is pushed to the repository
-
+on: #[push]  # Trigger the workflow when code is pushed to the repository
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
