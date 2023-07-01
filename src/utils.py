@@ -25,14 +25,18 @@ all_builds = [
     "my-expenses",
     "backdrops",
     "tasker",
-    "reddit_sync",
     "sony_headphones_connect",
-    "reddit_boost",
     "google_recorder",
     "nova_launcher",
     "meme_generator",
     "vsco",
     "trakt",
+    "reddit_sync",
+    "reddit_boost",
+    "reddit_infinity",
+    "reddit_relay",
+    "reddit_baconreader",
+    "reddit_isfun",
 ]
 possible_archs = ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 
