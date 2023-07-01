@@ -10,7 +10,7 @@ chrome_options = Options()
 driver = webdriver.Chrome(options=chrome_options)
 
 # Navigate to a website
-driver.get("https://www.example.com")
+driver.get("https://www.apkmirror.com/apk/red-apps-ltd/sync-for-reddit/")
 
 # Find an element by its CSS selector and interact with it
 element = driver.find_element(By.CSS_SELECTOR, "h1")
