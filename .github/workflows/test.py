@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 
 # Set up Chrome options
 chrome_options = Options()
-# chrome_options.add_argument("--headless")  # Run Chrome in headless mode
+chrome_options.add_argument("--headless")  # Run Chrome in headless mode
 
 # Create a new instance of the Chrome driver
 driver = webdriver.Chrome(options=chrome_options)
