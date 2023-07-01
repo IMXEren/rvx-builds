@@ -70,7 +70,10 @@ def apk_mirror_scrape(app_code):
         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
         print(app_url)
         #driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-        driver = webdriver.Chrome('/usr/lib/chromium-browser/chromedriver')
+        chrome_options = Options()
+        chrome_options.add_arguments("--no-sandbox");
+        chrome_options.add_arguments("--disable-dev-shm-usage");
+        driver = webdriver.Chrome(options=chrome_options)
         driver.get(app_url)
         app_name_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.f-grow > h1")
         app_icon_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.p-relative.icon-container > img")
