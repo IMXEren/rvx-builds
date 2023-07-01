@@ -6,6 +6,7 @@ import datetime
 import pytz
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+import subprocess
 
 json_file = "apps/apps.json"
 md_file = "apps/apps.md"
