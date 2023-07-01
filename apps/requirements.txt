@@ -2,4 +2,4 @@ requests
 beautifulsoup4
 pytz
 selenium
-webdriver_manager
+webdriver-manager
