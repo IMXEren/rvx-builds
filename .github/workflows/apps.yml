@@ -23,10 +23,6 @@ jobs:
       
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1.2.0
-
-      - name: Chrome Path
-        run: |
-          whereis google-chrome
  
       - name: Update py_file_url
         run: |
