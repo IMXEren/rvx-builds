@@ -22,7 +22,7 @@ jobs:
         run: pip install -r apps/requirements.txt
       
       - name: Setup Chrome
-      - uses: browser-actions/setup-chrome@v1.2.0
+        uses: browser-actions/setup-chrome@v1.2.0
 
       - name: Chrome Path
       - run: |
