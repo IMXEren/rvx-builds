@@ -6,12 +6,7 @@ import datetime
 import pytz
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import subprocess
-import urllib.request
-import os
-import zipfile
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
+from pyvirtualdisplay import Display
 
 json_file = "apps/apps.json"
 md_file = "apps/apps.md"
@@ -69,10 +64,9 @@ def apk_mirror_scrape(app_code):
         app_url = match.group(1)
         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
         print(app_url)
-        #driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+        display = Display(visible=0, size=(800, 600))
+        display.start()
         chrome_options = Options()
-        chrome_options.add_arguments("--no-sandbox");
-        chrome_options.add_arguments("--disable-dev-shm-usage");
         driver = webdriver.Chrome(options=chrome_options)
         driver.get(app_url)
         app_name_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.f-grow > h1")
@@ -81,6 +75,7 @@ def apk_mirror_scrape(app_code):
         app_icon = app_icon_element.get_attribute("src") if app_icon_element else "NA"
         app_icon = app_icon.replace("&w=96&h=96", "&w=64&h=64")
         driver.quit()
+        display.stop()
         print("App Name:", app_name)
         print("Icon URL:", app_icon)
         return app_name, app_icon
