@@ -44,7 +44,7 @@ def get_last_version(json_data, package_name):
                 if versions:
                     last_versions.append(versions[-1])
                 else:
-                    last_versions.append("Any")
+                    last_versions.append("All")
     return last_versions
 
 def version_key(version):
@@ -69,10 +69,12 @@ for package_name in compatible_packages_names:
             app_icon_element = soup.select_one("div.qxNhq > img")
         if app_name_element:
             app_name = app_name_element.text
-            app_icon = app_icon_element["src"] if app_icon_element else ""
-            app_icon = app_icon.replace("=w240-h480", "=w64-h64")
-            print(app_name)
-            json_data.append({"app_package": package_name, "app_code": app_codename, "app_name": app_name, "app_url": url, "app_icon": app_icon, "target_version": target_version})
+        else:
+            app_name = 'NA'
+        app_icon = app_icon_element["src"] if app_icon_element else ""
+        app_icon = app_icon.replace("=w240-h480", "=w64-h64")
+        print(app_name)
+        json_data.append({"app_package": package_name, "app_code": app_codename, "app_name": app_name, "app_url": url, "app_icon": app_icon, "target_version": target_version})
 
             
 # Step 4: Drop unmatched package names
