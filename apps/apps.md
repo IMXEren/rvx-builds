@@ -2,7 +2,7 @@
 
 ## Here is a list of apps that can be patched
 
-Generated at 2023-07-01 15:29:44 IST
+Generated at 2023-07-01 15:43:20 IST
 
 | Icon | Name | Code | Package |
 |--------------|----------|----------|----------|
@@ -22,7 +22,6 @@ Generated at 2023-07-01 15:29:44 IST
 | ![https://play.google.com/store/apps/details?id=com.reddit.frontpage](https://play-lh.googleusercontent.com/nlptFyxNsb8J0g8ZLux6016kunduV4jCxIrOJ7EEy-IobSN1RCDXAJ6DTGP81z7rr5Zq=w64-h64) | [**Reddit**](https://play.google.com/store/apps/details?id=com.reddit.frontpage) | `reddit` | `com.reddit.frontpage` |
 | ![https://play.google.com/store/apps/details?id=com.sony.songpal.mdr](https://play-lh.googleusercontent.com/BpJMwIjqHja-cZL_p2JREBTuG8d-Nyp9gUiQzciP9HvHAsF69mt9HFzouFTdimiuiWIH=w64-h64) | [**Sony \| Headphones Connect**](https://play.google.com/store/apps/details?id=com.sony.songpal.mdr) | `sony_headphones_connect` | `com.sony.songpal.mdr` |
 | ![https://play.google.com/store/apps/details?id=com.spotify.music](https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs=w64-h64) | [**Spotify: Music and Podcasts**](https://play.google.com/store/apps/details?id=com.spotify.music) | `spotify` | `com.spotify.music` |
-| ![https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync](https://play-lh.googleusercontent.com/rneSvN2UXjglI5q6Cl7Hiim84n5bIUBghhSZNfDQk7Zjw8gWCWgxA5zW_c2i-TNYfEbv=w64-h64) | [**Sync for Reddit**](https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync) | `reddit_sync` | `com.laurencedawson.reddit_sync` |
 | ![https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm](https://play-lh.googleusercontent.com/8IkkhPNnxNVYhnUxcidu0-Yp72aSb3H0gQJ1U-_ImQ7SCGLz1zgXtV7wi2Hpd6Odghg=w64-h64) | [**Tasker**](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) | `tasker` | `net.dinglisch.android.taskerm` |
 | ![https://play.google.com/store/apps/details?id=com.ticktick.task](https://play-lh.googleusercontent.com/JkYolPNuRAlrXEI9vlk-XOid3VFJ0IPjDj2eM_xrriuE3Zu8IX9cuMkI7JOTw1upNxbW=w64-h64) | [**TickTick:To Do List & Calendar**](https://play.google.com/store/apps/details?id=com.ticktick.task) | `ticktick` | `com.ticktick.task` |
 | ![https://play.google.com/store/apps/details?id=com.ss.android.ugc.trill](https://play-lh.googleusercontent.com/Ui_-OW6UJI147ySDX9guWWDiCPSq1vtxoC-xG17BU2FpU0Fi6qkWwuLdpddmT9fqrA=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.ss.android.ugc.trill) | `tiktok` | `com.ss.android.ugc.trill` |

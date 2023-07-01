@@ -128,14 +128,6 @@
         "target_version": "Any"
     },
     {
-        "app_package": "com.laurencedawson.reddit_sync",
-        "app_code": "reddit_sync",
-        "app_name": "Sync for Reddit",
-        "app_url": "https://play.google.com/store/apps/details?id=com.laurencedawson.reddit_sync",
-        "app_icon": "https://play-lh.googleusercontent.com/rneSvN2UXjglI5q6Cl7Hiim84n5bIUBghhSZNfDQk7Zjw8gWCWgxA5zW_c2i-TNYfEbv=w64-h64",
-        "target_version": "Any"
-    },
-    {
         "app_package": "net.dinglisch.android.taskerm",
         "app_code": "tasker",
         "app_name": "Tasker",
