@@ -2,7 +2,7 @@
 
 ## Here is a list of apps that can be patched
 
-Generated at 2023-07-01 07:07:09 IST
+Generated at 2023-07-01 08:28:36 IST
 
 | Icon | Name | Code | Package |
 |--------------|----------|----------|----------|
