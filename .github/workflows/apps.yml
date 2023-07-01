@@ -21,11 +21,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r apps/requirements.txt
         
-      - name: Update py_file_url
-        run: |
-          sed -i 's@py_file_url = "https://raw.githubusercontent.com/.*@py_file_url = "https://raw.githubusercontent.com/${{ github.repository }}/main/src/patches.py"@' apps/apps.py
-          sed -i 's@config_py_file_url = "https://raw.githubusercontent.com/.*@config_py_file_url = "https://raw.githubusercontent.com/${{ github.repository }}/main/src/config.py"@' apps/apps.py
-        
       - name: Set up Chrome
         run: |
           sudo apt-get update
@@ -41,7 +36,12 @@ jobs:
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/
           sudo chown root:root /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver 
+          sudo chmod +x /usr/local/bin/chromedriver
+        
+      - name: Update py_file_url
+        run: |
+          sed -i 's@py_file_url = "https://raw.githubusercontent.com/.*@py_file_url = "https://raw.githubusercontent.com/${{ github.repository }}/main/src/patches.py"@' apps/apps.py
+          sed -i 's@config_py_file_url = "https://raw.githubusercontent.com/.*@config_py_file_url = "https://raw.githubusercontent.com/${{ github.repository }}/main/src/config.py"@' apps/apps.py
         
       - name: Run Python script
         run: python apps/apps.py
