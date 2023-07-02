@@ -17,7 +17,7 @@ py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/pat
 response = requests.get(py_file_url)
 python_code = response.text
 # Extract package_name and app_code from the Python code
-pattern = r'"([^"]+)":\s*\("([^"]+)",'
+pattern = r'"([^"]+)":\s*"([^"]+)",'
 matches = re.findall(pattern, python_code)
 package_name_from_py = []
 app_code = []
