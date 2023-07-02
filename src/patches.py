@@ -46,7 +46,7 @@ class Patches(object):
         "eu.faircode.netguard": "netguard",
         "com.instagram.android": "instagram",
         "com.nis.app": "inshorts",
-        "com.facebook.orca": "facebook",
+        "com.facebook.orca": "fbmessenger",
     }
     revanced_app_ids = {
         key: (value, "_" + value) for key, value in _revanced_app_ids.items()
