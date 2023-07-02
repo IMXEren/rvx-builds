@@ -8,37 +8,6 @@ default_build = [
     "youtube",
     "youtube_music"
 ]
-all_builds = [
-    "youtube",
-    "youtube_music",
-    "twitter",
-    "reddit",
-    # "tiktok", # Commented because of out of memory issues
-    "warnwetter",
-    "spotify",
-    "nyx-music-player",
-    "icon_pack_studio",
-    "ticktick",
-    "twitch",
-    "hex-editor",
-    "citra",
-    "windy",
-    "my-expenses",
-    "backdrops",
-    "tasker",
-    "sony_headphones_connect",
-    "google_recorder",
-    "nova_launcher",
-    "meme_generator",
-    "vsco",
-    "trakt",
-    "reddit_sync",
-    "reddit_boost",
-    "reddit_infinity",
-    "reddit_relay",
-    "reddit_baconreader",
-    "reddit_isfun",
-]
 possible_archs = ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 
 
