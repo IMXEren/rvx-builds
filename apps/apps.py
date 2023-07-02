@@ -24,6 +24,13 @@ app_code = []
 for package_name, code in matches:
     package_name_from_py.append(package_name.strip())
     app_code.append(code.strip())
+rvx_pattern = r'"([^"]+)":\s*\("([^"]+)",'
+rvx_matches = re.findall(rvx_pattern, python_code)
+rvx_packages = []
+rvx_appcodes = []
+for package_name, code in rvx_matches:
+    rvx_packages.append(package_name.strip())
+    rvx_appcodes.append(code.strip())
 # Print the extracted package_name_from_py and app_code
 print("Package Names:", package_name_from_py)
 print("App Codes:", app_code)
@@ -134,8 +141,8 @@ content += f"## Here is a list of {patch_apps} apps that can be patched\n\n"
 timezone = pytz.timezone("UTC")
 current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
 content += f"Generated at **`{current_time}`**\n\n"
-table = "| S.No. | Icon | Name | Code | Package |\n"
-table += "|:-----:|--------------|----------|----------|----------|\n"
+table = "| S.No. | Icon | Name | Code | ReVanced Extended (RVX) | Package |\n"
+table +="|:-----:|------|------|------|:-----------------------:|---------|\n"
 serial_no = 0
 for entry in data:
     app_package = entry["app_package"]
@@ -144,6 +151,10 @@ for entry in data:
     app_icon = entry["app_icon"]
     app_url = entry["app_url"]
     serial_no += 1
+    if app_package in rvx_packages:
+        extended = ":white_check_mark:"
+    else:
+        extended = ":x:"
     # Escape pipe characters in the data
     app_package = app_package.replace("|", "\\|")
     app_code = app_code.replace("|", "\\|")
@@ -151,7 +162,7 @@ for entry in data:
     app_icon = app_icon.replace("|", "\\|")
     app_url = app_url.replace("|", "\\|")
     # Add a row to the table
-    table += f"| {serial_no}. | ![{app_url}]({app_icon}) | [**{app_name}**]({app_url}) | `{app_code}` | `{app_package}` |\n"
+    table += f"| {serial_no}. | ![]({app_icon}) | [**{app_name}**]({app_url}) | `{app_code}` | {extended} | `{app_package}` |\n"
 # Combine the content and table
 content += table
 # Add more sentences or content
