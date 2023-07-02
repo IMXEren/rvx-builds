@@ -152,15 +152,15 @@ class Patches(object):
         app_names.update(
             {value[0]: value[1] for value in self.revanced_extended_app_ids.values()}
         )
-        
+
         if not (app_name := app_names.get(app)):
             raise AppNotFound(app)
         patches = getattr(self, app_name)
-        version = ""
+        version = "latest"
         try:
             version = next(i["version"] for i in patches if i["version"] != "all")
             logger.debug(f"Recommended Version for patching {app} is {version}")
-        except StopIteration:  # No recommended version available
+        except StopIteration:
             pass
         return patches, version
 
@@ -195,7 +195,7 @@ class Patches(object):
         """Get Configurations for a given app.
 
         :param app: Name of the application
-        :return: All Patches , Its version and whether it is 
+        :return: All Patches , Its version and whether it is
             experimental
         """
         experiment = False
