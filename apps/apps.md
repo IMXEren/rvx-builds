@@ -1,8 +1,8 @@
 # Apps
 
-## Here is a list of {patch_apps} apps that can be patched
+## Here is a list of 30 apps that can be patched
 
-Generated at 2023-07-02 15:04:09 IST
+Generated at 2023-07-02 09:43:23 UTC
 
 | Icon | Name | Code | Package |
 |--------------|----------|----------|----------|
