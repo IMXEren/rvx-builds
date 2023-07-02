@@ -1,5 +1,21 @@
 [
     {
+        "app_package": "com.google.android.youtube",
+        "app_code": "youtube",
+        "app_name": "YouTube",
+        "app_url": "https://play.google.com/store/apps/details?id=com.google.android.youtube",
+        "app_icon": "https://play-lh.googleusercontent.com/lMoItBgdPPVDJsNOVtP26EKHePkwBg-PkuY9NOrc-fumRtTFP4XhpUNk_22syN4Datc=w64-h64",
+        "target_version": "18.19.35"
+    },
+    {
+        "app_package": "com.google.android.apps.youtube.music",
+        "app_code": "youtube-music",
+        "app_name": "YouTube Music",
+        "app_url": "https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music",
+        "app_icon": "https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64",
+        "target_version": "Any"
+    },
+    {
         "app_package": "com.dci.dev.androidtwelvewidgets",
         "app_code": "androidtwelvewidgets",
         "app_name": "Android Widgets (Material U)",
