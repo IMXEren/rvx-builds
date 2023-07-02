@@ -2,7 +2,7 @@
 
 ## Here is a list of 2 apps that can be patched
 
-Generated at **`2023-07-02 10:43:53 UTC`**
+Generated at **`2023-07-02 11:05:47 UTC`**
 
 | S.No. | Icon | Name | Code | Package |
 |:-----:|--------------|----------|----------|----------|
