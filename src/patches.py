@@ -12,40 +12,52 @@ from src.utils import AppNotFound, handle_response
 class Patches(object):
     """Revanced Patches."""
 
-    revanced_app_ids = {
-        "com.reddit.frontpage": ("reddit", "_reddit"),
-        "com.ss.android.ugc.trill": ("tiktok", "_tiktok"),
-        "com.twitter.android": ("twitter", "_twitter"),
-        "de.dwd.warnapp": ("warnwetter", "_warnwetter"),
-        "com.spotify.music": ("spotify", "_spotify"),
-        "com.awedea.nyx": ("nyx-music-player", "_nyx"),
-        "ginlemon.iconpackstudio": ("icon_pack_studio", "_iconpackstudio"),
-        "com.ticktick.task": ("ticktick", "_ticktick"),
-        "tv.twitch.android.app": ("twitch", "_twitch"),
-        "com.myprog.hexedit": ("hex-editor", "_hexeditor"),
-        "org.citra.citra_emu": ("citra", "_citra"),
-        "co.windyapp.android": ("windy", "_windy"),
-        "org.totschnig.myexpenses": ("my-expenses", "_expenses"),
-        "com.backdrops.wallpapers": ("backdrops", "_backdrops"),
-        "com.ithebk.expensemanager": ("expensemanager", "_expensemanager"),
-        "net.dinglisch.android.taskerm": ("tasker", "_tasker"),
-        "net.binarymode.android.irplus": ("irplus", "_irplus"),
-        "com.sony.songpal.mdr": ("sony_headphones_connect", "_sony_headphones_connect"),
-        "com.google.android.apps.recorder": ("google_recorder", "_google_recorder"),
-        "com.teslacoilsw.launcher": ("nova_launcher", "_nova_launcher"),
-        "com.zombodroid.MemeGenerator": ("meme_generator", "_meme_generator"),
-        "com.vsco.cam": ("vsco", "_vsco"),
-        "tv.trakt.trakt": ("trakt", "_trakt"),
-        "com.laurencedawson.reddit_sync": ("reddit_sync", "_reddit_sync"),
-        "com.rubenmayayo.reddit": ("reddit_boost", "_reddit_boost"),
-        "ml.docilealligator.infinityforreddit": ("reddit_infinity", "_reddit_infinity"),
-        "free.reddit.news": ("reddit_relay", "_reddit_relay"),
-        "com.onelouder.baconreader": ("reddit_baconreader", "_reddit_baconreader"),
-        "com.andrewshu.android.reddit": ("reddit_isfun", "_reddit_isfun"),
+    _revanced_app_ids = {
+        "com.reddit.frontpage": "reddit",
+        "com.ss.android.ugc.trill": "tiktok",
+        "com.twitter.android": "twitter",
+        "de.dwd.warnapp": "warnwetter",
+        "com.spotify.music": "spotify",
+        "com.awedea.nyx": "nyx-music-player",
+        "ginlemon.iconpackstudio": "icon_pack_studio",
+        "com.ticktick.task": "ticktick",
+        "tv.twitch.android.app": "twitch",
+        "com.myprog.hexedit": "hex-editor",
+        "co.windyapp.android": "windy",
+        "org.totschnig.myexpenses": "my-expenses",
+        "com.backdrops.wallpapers": "backdrops",
+        "com.ithebk.expensemanager": "expensemanager",
+        "net.dinglisch.android.taskerm": "tasker",
+        "net.binarymode.android.irplus": "irplus",
+        "com.sony.songpal.mdr": "sony_headphones_connect",
+        "com.google.android.apps.recorder": "google_recorder",
+        "com.teslacoilsw.launcher": "nova_launcher",
+        "com.zombodroid.MemeGenerator": "meme_generator",
+        "com.vsco.cam": "vsco",
+        "tv.trakt.trakt": "trakt",
+        "com.laurencedawson.reddit_sync": "reddit_sync",
+        "com.rubenmayayo.reddit": "reddit_boost",
+        "ml.docilealligator.infinityforreddit": "reddit_infinity",
+        "free.reddit.news": "reddit_relay",
+        "com.onelouder.baconreader": "reddit_baconreader",
+        "com.andrewshu.android.reddit": "reddit_isfun",
+        "com.dci.dev.androidtwelvewidgets": "androidtwelvewidgets",
+        "io.yuka.android": "yuka",
+        "eu.faircode.netguard": "netguard",
+        "com.instagram.android": "instagram",
+        "com.nis.app": "inshorts",
+        "com.facebook.orca": "facebook",
     }
-    revanced_extended_app_ids = {
+    revanced_app_ids = {
+        key: (value, "_" + value) for key, value in _revanced_app_ids.items()
+    }
+    _revanced_extended_app_ids = {
         "com.google.android.youtube": ("youtube", "_yt"),
         "com.google.android.apps.youtube.music": ("youtube-music", "_ytm"),
+    }
+    revanced_extended_app_ids = {
+        key: (value[0], "_" + value[0])
+        for key, value in _revanced_extended_app_ids.items()
     }
 
     @staticmethod
@@ -136,50 +148,18 @@ class Patches(object):
         :return: Patches
         """
         logger.debug("Getting patches for %s" % app)
-        app_names = {
-            "reddit": "_reddit",
-            "tiktok": "_tiktok",
-            "twitter": "_twitter",
-            "warnwetter": "_warnwetter",
-            "youtube": "_yt",
-            "youtube_music": "_ytm",
-            "spotify": "_spotify",
-            "nyx-music-player": "_nyx",
-            "icon_pack_studio": "_iconpackstudio",
-            "ticktick": "_ticktick",
-            "twitch": "_twitch",
-            "hex-editor": "_hexeditor",
-            "citra": "_citra",
-            "windy": "_windy",
-            "my-expenses": "_expenses",
-            "backdrops": "_backdrops",
-            "expensemanager": "_expensemanager",
-            "tasker": "_tasker",
-            "irplus": "_irplus",
-            "sony_headphones_connect": "_sony_headphones_connect",
-            "google_recorder": "_google_recorder",
-            "nova_launcher": "_nova_launcher",
-            "meme_generator": "_meme_generator",
-            "vsco": "_vsco",
-            "trakt": "_trakt",
-            "reddit_sync": "_reddit_sync",
-            "reddit_boost": "_reddit_boost",
-            "reddit_infinity": "_reddit_infinity",
-            "reddit_relay": "_reddit_relay",
-            "reddit_baconreader": "_reddit_baconreader",
-            "reddit_isfun": "_reddit_isfun",
-            
-        }
+        app_names = {value[0]: value[1] for value in self.revanced_app_ids.values()}
+        app_names.update(
+            {value[0]: value[1] for value in self.revanced_extended_app_ids.values()}
+        )
+        
         if not (app_name := app_names.get(app)):
             raise AppNotFound(app)
         patches = getattr(self, app_name)
         version = ""
         try:
-            if app in ("youtube", "youtube_music"):
-                version = next(i["version"] for i in patches if i["version"] != "all")
-                logger.debug(f"Recommended Version for patching {app} is {version}")
-            else:
-                logger.debug("No recommended version.")
+            version = next(i["version"] for i in patches if i["version"] != "all")
+            logger.debug(f"Recommended Version for patching {app} is {version}")
         except StopIteration:  # No recommended version available
             pass
         return patches, version
@@ -215,7 +195,8 @@ class Patches(object):
         """Get Configurations for a given app.
 
         :param app: Name of the application
-        :return: All Patches , Its version and whether it is experimental
+        :return: All Patches , Its version and whether it is 
+            experimental
         """
         experiment = False
         total_patches, recommended_version = self.get(app=app)
