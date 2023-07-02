@@ -133,7 +133,7 @@ content = "# Apps\n\n"
 content += f"## Here is a list of {patch_apps} apps that can be patched\n\n"
 timezone = pytz.timezone("UTC")
 current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
-content += f"Generated at {current_time}\n\n"
+content += f"Generated at **`{current_time}`**\n\n"
 table = "| Icon | Name | Code | Package |\n"
 table += "|--------------|----------|----------|----------|\n"
 for entry in data:
