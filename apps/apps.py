@@ -1,13 +1,13 @@
+import re
+import json
+import pytz
+import datetime
 import requests
 from bs4 import BeautifulSoup
-import json
-import re
-import datetime
-import pytz
+from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from pyvirtualdisplay import Display
 
 json_file = "apps/apps.json"
 md_file = "apps/apps.md"
@@ -48,7 +48,7 @@ def get_last_version(json_data, package_name):
                 if versions:
                     last_versions.append(versions[-1])
                 else:
-                    last_versions.append("All")
+                    last_versions.append("Any")
     return last_versions
 
 def version_key(version):
@@ -83,10 +83,13 @@ def apk_mirror_scrape(app_code):
     else:
         print("APKMirror URL not found for the specified app code")
 
+
 # Step 3: Match package names and scraping
 json_data = []
+patch_apps = 0
 for package_name in compatible_packages_names:
     if package_name in package_name_from_py:
+        patch_apps =+ 1
         latest_versions = get_last_version(json_patches, package_name)
         target_version = max(latest_versions, key=version_key)
         print(package_name)
@@ -126,10 +129,10 @@ print("Apps json data has been dumped to 'apps.json'!!")
 with open(json_file, "r", encoding="utf-8") as f:
     data = json.load(f)
 # Write apps.md
+content = "# Apps\n\n"
+content += "## Here is a list of {patch_apps} apps that can be patched\n\n"
 timezone = pytz.timezone("Asia/Kolkata")
 current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
-content = "# Apps\n\n"
-content += "## Here is a list of apps that can be patched\n\n"
 content += f"Generated at {current_time} IST\n\n"
 table = "| Icon | Name | Code | Package |\n"
 table += "|--------------|----------|----------|----------|\n"
