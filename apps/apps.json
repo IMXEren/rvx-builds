@@ -105,7 +105,7 @@
     },
     {
         "app_package": "com.facebook.orca",
-        "app_code": "facebook",
+        "app_code": "fbmessenger",
         "app_name": "Messenger",
         "app_url": "https://play.google.com/store/apps/details?id=com.facebook.orca",
         "app_icon": "https://play-lh.googleusercontent.com/ldcQMpP7OaVmglCF6kGas9cY_K0PsJzSSosx2saw9KF1m3RHaEXpH_9mwBWaYnkmctk=w64-h64",
