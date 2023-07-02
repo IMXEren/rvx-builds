@@ -89,7 +89,7 @@ json_data = []
 patch_apps = 0
 for package_name in compatible_packages_names:
     if package_name in package_name_from_py:
-        patch_apps =+ 1
+        patch_apps += 1
         latest_versions = get_last_version(json_patches, package_name)
         target_version = max(latest_versions, key=version_key)
         print(package_name)
@@ -130,10 +130,10 @@ with open(json_file, "r", encoding="utf-8") as f:
     data = json.load(f)
 # Write apps.md
 content = "# Apps\n\n"
-content += "## Here is a list of {patch_apps} apps that can be patched\n\n"
-timezone = pytz.timezone("Asia/Kolkata")
-current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
-content += f"Generated at {current_time} IST\n\n"
+content += f"## Here is a list of {patch_apps} apps that can be patched\n\n"
+timezone = pytz.timezone("UTC")
+current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
+content += f"Generated at {current_time}\n\n"
 table = "| Icon | Name | Code | Package |\n"
 table += "|--------------|----------|----------|----------|\n"
 for entry in data:
