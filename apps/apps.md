@@ -2,7 +2,7 @@
 
 ## Here is a list of 36 apps that can be patched
 
-Generated at **`2023-07-02 12:49:32 UTC`**
+Generated at **`2023-07-02 13:10:03 UTC`**
 
 | S.No. | Icon | Name | Code | Package |
 |:-----:|--------------|----------|----------|----------|
@@ -10,7 +10,7 @@ Generated at **`2023-07-02 12:49:32 UTC`**
 | 2. | ![https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music](https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64) | [**YouTube Music**](https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music) | `youtube-music` | `com.google.android.apps.youtube.music` |
 | 3. | ![https://play.google.com/store/apps/details?id=com.dci.dev.androidtwelvewidgets](https://play-lh.googleusercontent.com/r-HYXeSDiTHhgXNd8rU2s7zV9QclSjIM0FF-oWdhYWCefa5dxUHLvyf5ujaIm8hqp9w=w64-h64) | [**Android Widgets (Material U)**](https://play.google.com/store/apps/details?id=com.dci.dev.androidtwelvewidgets) | `androidtwelvewidgets` | `com.dci.dev.androidtwelvewidgets` |
 | 4. | ![https://play.google.com/store/apps/details?id=com.backdrops.wallpapers](https://play-lh.googleusercontent.com/ybkU2kHmt5RBz4mXpxyYuO1ZqM3I8uJPhAKA7v51Pj03fwmT7PMMgPP6X2_CymH1cyg=w64-h64) | [**Backdrops - Wallpapers**](https://play.google.com/store/apps/details?id=com.backdrops.wallpapers) | `backdrops` | `com.backdrops.wallpapers` |
-| 5. | ![https://play.google.com/store/apps/details?id=com.onelouder.baconreader](https://play-lh.googleusercontent.com/5f2PEiUgMtuj8WS93oSt0LvFZIJjufQ55l4HDTUrp8AycXqZ68ZXqqzz_wweAIiOR2U=w64-h64) | [**BaconReader for Reddit**](https://play.google.com/store/apps/details?id=com.onelouder.baconreader) | `reddit_baconreader` | `com.onelouder.baconreader` |
+| 5. | ![https://play.google.com/store/apps/details?id=com.onelouder.baconreader](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F92%2F649ae295d56d0_com.onelouder.baconreader.png&w=64&h=64&q=100) | [**BaconReader for Reddit**](https://play.google.com/store/apps/details?id=com.onelouder.baconreader) | `reddit_baconreader` | `com.onelouder.baconreader` |
 | 6. | ![https://play.google.com/store/apps/details?id=com.rubenmayayo.reddit](https://play-lh.googleusercontent.com/GF71STDEmTKhbEexCYbePXAjYym_ee8E6WR7_R8jr5_Xf10jfL0Kibkjfl33zDrJBw=w64-h64) | [**Boost for reddit**](https://play.google.com/store/apps/details?id=com.rubenmayayo.reddit) | `reddit_boost` | `com.rubenmayayo.reddit` |
 | 7. | ![https://play.google.com/store/apps/details?id=com.myprog.hexedit](https://play-lh.googleusercontent.com/qb_ezXXQlsK3darAylqSLudM01tYOXw-sAm2qeODdKXufv1kZmuTb3XSf2fzqwSEvvE=w64-h64) | [**HEX Editor**](https://play.google.com/store/apps/details?id=com.myprog.hexedit) | `hex-editor` | `com.myprog.hexedit` |
 | 8. | ![https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio](https://play-lh.googleusercontent.com/Bw64Ft8n9ei2NJ_Et2MxWjSInZrL_6yMJbu7Usw-BcOgjvjo75xP4JnyjsX8VZJM9_E=w64-h64) | [**Icon Pack Studio**](https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio) | `icon_pack_studio` | `ginlemon.iconpackstudio` |
