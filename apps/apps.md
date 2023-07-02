@@ -2,7 +2,7 @@
 
 ## Here is a list of 30 apps that can be patched
 
-Generated at 2023-07-02 09:43:23 UTC
+Generated at **`2023-07-02 09:46:06 UTC`**
 
 | Icon | Name | Code | Package |
 |--------------|----------|----------|----------|
