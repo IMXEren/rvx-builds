@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-github_repo="IMXEren/rvx-builds"
+github_repo=""
 rename_script_1="apps/apps.py"
 # rename_script_2
 
