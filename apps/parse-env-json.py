@@ -139,6 +139,6 @@ json_data = parse_json_data(env_content)
 json_data = replace_empty_lists(json_data)
 # Convert the JSON to a formatted string
 json_string = json.dumps(json_data, indent=4)
-output_file = "env.json"
+output_file = "apps/env.json"
 write_json_file(json_string, output_file)
 print(json_string)
