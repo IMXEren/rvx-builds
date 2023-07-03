@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-github_repo="$1"
+github_repo="IMXEren/rvx-builds"
 rename_script_1="$2"
 
 # Replace "py_file_url = ..." with a new URL
