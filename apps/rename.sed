@@ -1,6 +1,6 @@
 #!/usr/bin/sed -f
 
-github_repo="owner/repo"
+github_repo="$1"
 
 # Replace "py_file_url = ..." with a new URL
 s@py_file_url = "https://raw\.githubusercontent\.com/.*@py_file_url = "https://raw.githubusercontent.com/$github_repo/main/src/patches.py"@
