@@ -36,7 +36,6 @@ jobs:
         run: |
           python apps/apps.py
           python apps/parse-env-json.py
-          python apps/parse-json-env.py
         
       - name: Commit and push changes
         run: |
