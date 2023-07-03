@@ -56,12 +56,12 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
     print(env_content)
 
 # Get the JSON data
-json_file = open('apps/env.json', 'r')
-json_data = json_file.read()
-json_file.close()
+# json_file = open('apps/env.json', 'r')
+# json_data = json_file.read()
+# json_file.close()
 
-# json_file = ''
-# json_data = requests.get(json_file).text
+json_file = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/apps/env.json"
+json_data = requests.get(json_file).text
 output_file = "apps/.env"
 
 # Define the desired sorting key order
