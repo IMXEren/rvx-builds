@@ -30,7 +30,7 @@ jobs:
           rename_file_1: apps/apps.py
         run: |
           chmod +x $sed_script
-          $sed_script $rename_file_1
+          $sed_script $rename_file_1 "${{ github.repository }}"
         
       - name: Run Python script
         run: python apps/apps.py
