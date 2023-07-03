@@ -36,9 +36,6 @@ jobs:
           sed -i 's@github_repo=.*@github_repo="${{ github.repository }}"@' "$sed_script"
           chmod +x "$sed_script"
           "$sed_script"
-          git add .
-          git commit -m "Updated .py file content urls"
-          git push
         
       - name: Run Python script
         run: |
