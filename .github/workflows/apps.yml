@@ -40,17 +40,20 @@ jobs:
       - name: Run Python script
         run: |
           python apps/apps.py
-          git add .
-          git commit -m "Added generated files - apps.md, apps.json"
-          git push
           python apps/parse-env-json.py
-          git add .
-          git commit -m "Parsed .env file as env.json - env.json"
-          git push
-          python apps/parse-json-env.py
           
       - name: Commit and push changes
         run: |
           git add .
           git commit -m "Added generated files"
+          git push
+          
+      - name: Parse .env file from env.json
+        run: |
+          python apps/parse-json-env.py
+          
+      - name: Commit and push changes
+        run: |
+          git add .
+          git commit -m "Parsed .env file from env.json"
           git push
