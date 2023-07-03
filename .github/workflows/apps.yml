@@ -27,25 +27,25 @@ jobs:
       - name: Update .py file contents
         env:
           sed_script: apps/rename.sh
-          commit-and-push: apps/commit-and-push.sh
+          commit_push: apps/commit-and-push.sh
         run: |
           sed -i 's@github_repo=.*@github_repo="${{ github.repository }}"@' "$sed_script"
-          chmod +x "$sed_script" "$commit-and-push"
+          chmod +x "$sed_script" "$commit_push"
           "$sed_script"
           "$commit-and-push" "Updated .py file content urls"
         
       - name: Run Python script
         env: 
-          commit-and-push: apps/commit-and-push.sh
+          commit_push: apps/commit-and-push.sh
         run: |
           python apps/apps.py
-          "$commit-and-push" "Added generated files - apps.md, apps.json"
+          "$commit_push" "Added generated files - apps.md, apps.json"
           python apps/parse-env-json.py
-          "$commit-and-push" "Parsed .env file as env.json - env.json"
+          "$commit_push" "Parsed .env file as env.json - env.json"
           python apps/parse-json-env.py
           
       - name: Commit and push changes
         env: 
-          commit-and-push: apps/commit-and-push.sh
+          commit_push: apps/commit-and-push.sh
         run: |
-          bash "$commit-and-push"
+          "$commit_push"
