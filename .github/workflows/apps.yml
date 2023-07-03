@@ -12,6 +12,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        
+      - name: Configure git
+        run: |
+          git config --global user.name "actions-user"
+          git config --global user.email "actions@github.com"
       
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -27,25 +32,28 @@ jobs:
       - name: Update .py file contents
         env:
           sed_script: apps/rename.sh
-          commit_push: apps/commit-and-push.sh
         run: |
           sed -i 's@github_repo=.*@github_repo="${{ github.repository }}"@' "$sed_script"
-          chmod +x "$sed_script" "$commit_push"
+          chmod +x "$sed_script"
           "$sed_script"
-          "$commit-and-push" "Updated .py file content urls"
+          git add .
+          git commit -m "Updated .py file content urls"
+          git push
         
       - name: Run Python script
-        env: 
-          commit_push: apps/commit-and-push.sh
         run: |
           python apps/apps.py
-          "$commit_push" "Added generated files - apps.md, apps.json"
+          git add .
+          git commit -m "Added generated files - apps.md, apps.json"
+          git push
           python apps/parse-env-json.py
-          "$commit_push" "Parsed .env file as env.json - env.json"
+          git add .
+          git commit -m "Parsed .env file as env.json - env.json"
+          git push
           python apps/parse-json-env.py
           
       - name: Commit and push changes
-        env: 
-          commit_push: apps/commit-and-push.sh
         run: |
-          "$commit_push"
+          git add .
+          git commit -m "Added generated files"
+          git push
