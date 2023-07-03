@@ -33,7 +33,10 @@ jobs:
           $sed_script
         
       - name: Run Python script
-        run: python apps/apps.py
+        run: |
+          python apps/apps.py
+          python apps/parse-env-json.py
+          python apps/parse-json-env.py
         
       - name: Commit and push changes
         run: |
