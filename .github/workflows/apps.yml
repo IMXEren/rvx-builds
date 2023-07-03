@@ -31,7 +31,7 @@ jobs:
         run: |
           sed -i 's@github_repo=.*@github_repo="${{ github.repository }}"@' $sed_script
           chmod +x $sed_script
-          $sed_script $rename_file_1
+          $sed_script "${{ github.repository }}" $rename_file_1
         
       - name: Run Python script
         run: python apps/apps.py
