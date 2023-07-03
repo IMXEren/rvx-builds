@@ -29,7 +29,6 @@ jobs:
           sed_script: apps/rename.sh
           rename_file_1: apps/apps.py
         run: |
-          sed -i 's@github_repo=.*@github_repo="${{ github.repository }}"@' $sed_script
           chmod +x $sed_script
           $sed_script "${{ github.repository }}" "$rename_file_1"
         
