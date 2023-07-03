@@ -9,7 +9,7 @@
     },
     {
         "app_package": "com.google.android.apps.youtube.music",
-        "app_code": "youtube-music",
+        "app_code": "youtube_music",
         "app_name": "YouTube Music",
         "app_url": "https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music",
         "app_icon": "https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64",
