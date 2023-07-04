@@ -43,7 +43,7 @@ jobs:
           python apps/parse-env-json.py
           
       - name: Update env.json and Parse it to .env
-        id: check_env.json_changes
+        id: check_env_json_changes
         run: |
           if git diff --quiet -- apps/env.json; then
             echo "::set-output name=env_changes::false"
