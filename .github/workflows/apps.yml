@@ -42,12 +42,21 @@ jobs:
           python apps/apps.py
           python apps/parse-env-json.py
           
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --quiet || echo "::set-output name=changes::true"    
+      
       - name: Commit and push changes
+        if: steps.check_changes.outputs.changes
         run: |
           git add apps/env.json
           git commit -m "Parsed env.json from .env file"
           git push
-          
+      
+      - name: Skip Commit and Push
+        if: steps.check_changes.outputs.changes == ''
+      
       - name: Parse .env file from env.json
         run: |
           python apps/parse-json-env.py
