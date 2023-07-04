@@ -42,6 +42,19 @@ jobs:
           python apps/apps.py
           python apps/parse-env-json.py
           
+      - name: Update env.json and Parse it to .env
+        id: check_env.json_changes
+        run: |
+          if git diff --quiet -- apps/env.json; then
+            echo "::set-output name=env_changes::false"
+          else
+            echo "::set-output name=env_changes::true"
+            git add apps/env.json
+            git commit -m "Parsed .env file to env.json"
+            git push
+            python apps/parse-json-env.py
+          fi
+          
       - name: Check for changes
         id: check_changes
         run: |
@@ -50,20 +63,10 @@ jobs:
       - name: Commit and push changes
         if: steps.check_changes.outputs.changes
         run: |
-          git add apps/env.json
-          git commit -m "Parsed env.json from .env file"
+          git add .
+          git commit -m "Add generated files"
           git push
       
       - name: Skip Commit and Push
         if: steps.check_changes.outputs.changes == ''
-        run: echo "Skipped commit and push"
-      
-      - name: Parse .env file from env.json
-        run: |
-          python apps/parse-json-env.py
-          
-      - name: Commit and push changes
-        run: |
-          git add .
-          git commit -m "Add generated files"
-          git push
+        run: echo "Generated files are unchanged. Skipped commiting and pushing!!"
