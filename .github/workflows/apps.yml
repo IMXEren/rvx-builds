@@ -44,8 +44,8 @@ jobs:
           
       - name: Commit and push changes
         run: |
-          git add .
-          git commit -m "Added generated files"
+          git add apps/env.json
+          git commit -m "Parsed env.json from .env file"
           git push
           
       - name: Parse .env file from env.json
@@ -55,5 +55,5 @@ jobs:
       - name: Commit and push changes
         run: |
           git add .
-          git commit -m "Parsed .env file from env.json"
+          git commit -m "Add generated files"
           git push
