@@ -48,6 +48,14 @@
         "target_version": "Any"
     },
     {
+        "app_package": "com.candylink.openvpn",
+        "app_code": "candyvpn",
+        "app_name": "CandyLink VPN",
+        "app_url": "https://play.google.com/store/apps/details?id=com.candylink.openvpn",
+        "app_icon": "https://play-lh.googleusercontent.com/0zHhVlljLtcEiEFKP_GWXorKD9_V6g9RBnyn52Hg3NhVJAbd-wpK8-TRzTI0loxZ8Q=w64-h64",
+        "target_version": "Any"
+    },
+    {
         "app_package": "com.myprog.hexedit",
         "app_code": "hex-editor",
         "app_name": "HEX Editor",
