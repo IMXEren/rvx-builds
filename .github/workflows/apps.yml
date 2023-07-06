@@ -2,7 +2,7 @@ name: Get Patch Apps Info
 
 on:
   schedule:
-    - cron: "5 * * * *"
+    - cron: "*/7 * * * *"
   workflow_dispatch:
 
 jobs:
