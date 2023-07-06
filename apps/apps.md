@@ -2,7 +2,7 @@
 
 ## Here is a list of 36 apps that can be patched
 
-Generated at **`2023-07-06 00:00:17 UTC`**
+Generated at **`2023-07-06 02:02:24 UTC`**
 
 | S.No. | Icon | Name | Code | ReVanced Extended (RVX) | Package |
 |:-----:|------|------|------|:-----------------------:|---------|
