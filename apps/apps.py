@@ -71,7 +71,7 @@ def apk_mirror_scrape(app_code):
     if match:
         app_url = match.group(1)
         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
-        print(app_url, flush=True)
+        print(app_url)
         display = Display(visible=0, size=(800, 600))
         display.start()
         chrome_options = Options()
@@ -86,9 +86,26 @@ def apk_mirror_scrape(app_code):
         display.stop()
         print("App Name:", app_name, flush=True)
         print("Icon URL:", app_icon, flush=True)
-        return app_name, app_icon
+        return app_name, app_icon, app_url
     else:
-        print("APKMirror URL not found for the specified app code", flush=True)
+        print("APKMirror URL not found for the specified app code")
+
+def gplay_scrape(package_name):
+    app_url = f"https://play.google.com/store/apps/details?id={package_name}"
+    response = requests.get(app_url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    app_name_element = soup.select_one("h1 > span")
+    app_icon_element = soup.select_one("div.Il7kR > img")
+    if app_icon_element is None:
+        app_icon_element = soup.select_one("div.qxNhq > img")
+    if app_icon_element:
+        app_icon = app_icon_element["src"] if app_icon_element else ""
+        app_icon = app_icon.replace("=w240-h480", "=w64-h64")
+    if app_name_element:
+        app_name = app_name_element.text
+    else:
+        app_name, app_icon, app_url = apk_mirror_scrape(app_codename)
+    return app_name, app_icon, app_url
 
 
 # Step 3: Match package names and scraping
@@ -102,25 +119,12 @@ for package_name in compatible_packages_names:
         print(package_name, flush=True)
         index = package_name_from_py.index(package_name)
         app_codename = app_code[index]
-        url = f"https://play.google.com/store/apps/details?id={package_name}"
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, "html.parser")
-        app_name_element = soup.select_one("h1 > span")
-        app_icon_element = soup.select_one("div.Il7kR > img")
-        if app_icon_element is None:
-            app_icon_element = soup.select_one("div.qxNhq > img")
-        if app_icon_element:
-            app_icon = app_icon_element["src"] if app_icon_element else ""
-            app_icon = app_icon.replace("=w240-h480", "=w64-h64")
-        if app_name_element:
-            app_name = app_name_element.text
-        else:
-            app_name, app_icon = apk_mirror_scrape(app_codename)
+        app_name, app_icon, app_url = gplay_scrape(package_name)
         print(app_name, flush=True)
-        json_data.append({"app_package": package_name, "app_code": app_codename, "app_name": app_name, "app_url": url, "app_icon": app_icon, "target_version": target_version})
+        json_data.append({"app_package": package_name, "app_code": app_codename, "app_name": app_name, "app_url": app_url, "app_icon": app_icon, "target_version": target_version})
 
             
-# Step 4: Drop unmatched package names
+# Step 4: Handle unmatched package names
 unmatched_packages = compatible_packages_names - set(package_name_from_py)
 for package_name in unmatched_packages:
     print("Missing package:", package_name, flush=True)
