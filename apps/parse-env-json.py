@@ -141,4 +141,4 @@ json_data = replace_empty_lists(json_data)
 json_string = json.dumps(json_data, indent=4)
 output_file = "apps/env.json"
 write_json_file(json_string, output_file)
-print(json_string)
+print(json_string, flush=True)
