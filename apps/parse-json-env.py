@@ -53,7 +53,7 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
     # Write the env_content to a file
     with open(output_file, "w") as file:
         file.write(env_content)
-    print(env_content)
+    print(env_content, flush=True)
 
 # Get the JSON data
 # json_file = open('apps/env.json', 'r')
