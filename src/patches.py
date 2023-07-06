@@ -47,6 +47,7 @@ class Patches(object):
         "com.instagram.android": "instagram",
         "com.nis.app": "inshorts",
         "com.facebook.orca": "fbmessenger",
+        "com.candylink.openvpn": "candyvpn",
     }
     revanced_app_ids = {
         key: (value, "_" + value) for key, value in _revanced_app_ids.items()
