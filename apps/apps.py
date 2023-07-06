@@ -32,8 +32,8 @@ for package_name, code in rvx_matches:
     rvx_packages.append(package_name.strip())
     rvx_appcodes.append(code.strip())
 # Print the extracted package_name_from_py and app_code
-print("Package Names:", package_name_from_py)
-print("App Codes:", app_code)
+print("Package Names:", package_name_from_py, flush=True)
+print("App Codes:", app_code, flush=True)
 
 
 # Step 2: Get all different compatiblePackages names from the revanced/revanced-patches.json file
@@ -71,7 +71,7 @@ def apk_mirror_scrape(app_code):
     if match:
         app_url = match.group(1)
         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
-        print(app_url)
+        print(app_url, flush=True)
         display = Display(visible=0, size=(800, 600))
         display.start()
         chrome_options = Options()
@@ -84,11 +84,11 @@ def apk_mirror_scrape(app_code):
         app_icon = app_icon.replace("&w=96&h=96", "&w=64&h=64")
         driver.quit()
         display.stop()
-        print("App Name:", app_name)
-        print("Icon URL:", app_icon)
+        print("App Name:", app_name, flush=True)
+        print("Icon URL:", app_icon, flush=True)
         return app_name, app_icon
     else:
-        print("APKMirror URL not found for the specified app code")
+        print("APKMirror URL not found for the specified app code", flush=True)
 
 
 # Step 3: Match package names and scraping
@@ -99,7 +99,7 @@ for package_name in compatible_packages_names:
         patch_apps += 1
         latest_versions = get_last_version(json_patches, package_name)
         target_version = max(latest_versions, key=version_key)
-        print(package_name)
+        print(package_name, flush=True)
         index = package_name_from_py.index(package_name)
         app_codename = app_code[index]
         url = f"https://play.google.com/store/apps/details?id={package_name}"
@@ -116,21 +116,21 @@ for package_name in compatible_packages_names:
             app_name = app_name_element.text
         else:
             app_name, app_icon = apk_mirror_scrape(app_codename)
-        print(app_name)
+        print(app_name, flush=True)
         json_data.append({"app_package": package_name, "app_code": app_codename, "app_name": app_name, "app_url": url, "app_icon": app_icon, "target_version": target_version})
 
             
 # Step 4: Drop unmatched package names
 unmatched_packages = compatible_packages_names - set(package_name_from_py)
 for package_name in unmatched_packages:
-    print("Missing package:", package_name)
+    print("Missing package:", package_name, flush=True)
 
 # Sort the output data by app_name in ascending order
 json_data.sort(key=lambda x: (x["app_name"] != "YouTube", x["app_name"] != "YouTube Music", x["app_name"].lower()))
 # Dump json data to JSON file
 with open(json_file, "w", encoding="utf-8") as f:
     json.dump(json_data, f, indent=4, ensure_ascii=False)
-print("Apps json data has been dumped to 'apps.json'!!")
+print("Apps json data has been dumped to 'apps.json'!!", flush=True)
 
 # Load the data from the JSON file
 with open(json_file, "r", encoding="utf-8") as f:
