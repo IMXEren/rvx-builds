@@ -45,7 +45,7 @@ jobs:
           
       - name: Parse .env to env.json
         run: |
-          git add apps/env.json
+          git add apps/json/env.json
           git commit --allow-empty -m "Parsed .env file to env.json"
           git push
           python apps/scripts/parse-json-env.py    
