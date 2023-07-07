@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import requests
@@ -129,6 +130,7 @@ def replace_empty_lists(data):
 
 # Write generated json_data into file
 def write_json_file(json_string, output_file):
+    os.makedirs(os.path.dirname(output_file), exist_ok=True) # Create the directories if they don't exist
     with open(output_file, "w") as file:
         file.write(json_string)
 
@@ -139,6 +141,6 @@ json_data = parse_json_data(env_content)
 json_data = replace_empty_lists(json_data)
 # Convert the JSON to a formatted string
 json_string = json.dumps(json_data, indent=4)
-output_file = "apps/env.json"
+output_file = "apps/json/env.json"
 write_json_file(json_string, output_file)
 print(json_string, flush=True)
