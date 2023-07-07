@@ -32,8 +32,8 @@ def get_options_json(url):
 # Convert to formatted JSON string
 def format_options_json(opjson):
     opjson_str = json.dumps(opjson, indent=1, separators=(",", " : "), ensure_ascii=False)
-    opjson_str = re.sub(r'(\[|\})\n(?:(?:\s+?)?)(\{|\])', r'\1 \2', opjson_str) # [ { or } ]
-    opjson_str = re.sub(r'\},\n\s+?\{', r'}, {', opjson_str) # }, {
+    opjson_str = re.sub(r'(\[| \})\n(?:(?:\s+?)?)(\{|\])', r'\1 \2', opjson_str) # [ { or } ]
+    opjson_str = re.sub(r' \},\n\s+?\{', r'}, {', opjson_str) # }, {
     print(opjson_str)
     return opjson_str
 
