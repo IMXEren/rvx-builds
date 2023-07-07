@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 
@@ -49,7 +50,8 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
             env_content += f"# {key}={value}\n"
         elif value:
             env_content += f"{key}={value}\n"
-    
+
+    os.makedirs(os.path.dirname(output_file), exist_ok=True) # Create the directories if they don't exist
     # Write the env_content to a file
     with open(output_file, "w") as file:
         file.write(env_content)
