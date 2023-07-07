@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import pytz
@@ -9,8 +10,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
-json_file = "apps/apps.json"
-md_file = "apps/apps.md"
+json_file = "apps/json/apps.json"
+md_file = "apps/docs/apps.md"
 
 # Step 1: Parse the online .py file to extract package names and app codes
 py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/patches.py"
@@ -131,6 +132,7 @@ for package_name in unmatched_packages:
 
 # Sort the output data by app_name in ascending order
 json_data.sort(key=lambda x: (x["app_name"] != "YouTube", x["app_name"] != "YouTube Music", x["app_name"].lower()))
+os.makedirs(os.path.dirname(json_file), exist_ok=True) # Create the directories if they don't exist
 # Dump json data to JSON file
 with open(json_file, "w", encoding="utf-8") as f:
     json.dump(json_data, f, indent=4, ensure_ascii=False)
@@ -171,6 +173,7 @@ for entry in data:
 content += table
 # Add more sentences or content
 content += "\n**Note: Not all apps that can be patched using ReVanced are present in this list. Try raising an issue for me to add that app or you may do it yourself. [Look here]()**.\n"
+os.makedirs(os.path.dirname(md_file), exist_ok=True) # Create the directories if they don't exist
 # Write the content to the Markdown file
 with open(md_file, "w", encoding="utf-8") as f:
     f.write(content)
