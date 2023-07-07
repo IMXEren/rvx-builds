@@ -24,14 +24,14 @@ jobs:
           python-version: "3.11"  # Replace with your desired Python version
 
       - name: Install dependencies
-        run: pip install -r apps/requirements.txt
+        run: pip install -r apps/scripts/requirements.txt
       
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1.2.0
  
       - name: Update .py file contents
         env:
-          sed_script: apps/rename.sh
+          sed_script: apps/scripts/rename.sh
         run: |
           sed -i 's@github_repo=.*@github_repo="${{ github.repository }}"@' "$sed_script"
           chmod +x "$sed_script"
@@ -39,15 +39,16 @@ jobs:
         
       - name: Run Python script
         run: |
-          python apps/apps.py
-          python apps/parse-env-json.py
+          python apps/scripts/apps.py
+          python apps/scripts/get-options.py
+          python apps/scripts/parse-env-json.py
           
       - name: Parse .env to env.json
         run: |
           git add apps/env.json
           git commit --allow-empty -m "Parsed .env file to env.json"
           git push
-          python apps/parse-json-env.py    
+          python apps/scripts/parse-json-env.py    
       
       - name: Commit and push all changes
         run: |
