@@ -1,0 +1,49 @@
+[ {
+    "patchName" : "custom-branding-microg-name",
+    "options" : [ {
+        "key" : "MicroGAppName",
+        "value" : null
+      } ]
+  }, {
+    "patchName" : "custom-branding-music-name",
+    "options" : [ {
+        "key" : "MusicLongName",
+        "value" : null
+      }, {
+        "key" : "MusicShortName",
+        "value" : null
+      } ]
+  }, {
+    "patchName" : "custom-branding-youtube-name",
+    "options" : [ {
+        "key" : "YouTubeAppName",
+        "value" : null
+      } ]
+  }, {
+    "patchName" : "custom-double-tap-length",
+    "options" : [ {
+        "key" : "DoubleTapLengthArrays",
+        "value" : null
+      } ]
+  }, {
+    "patchName" : "custom-package-name",
+    "options" : [ {
+        "key" : "YouTubePackageName",
+        "value" : null
+      }, {
+        "key" : "MusicPackageName",
+        "value" : null
+      } ]
+  }, {
+    "patchName" : "reddit-settings",
+    "options" : [ {
+        "key" : "RedditSettings",
+        "value" : null
+      } ]
+  }, {
+    "patchName" : "theme",
+    "options" : [ {
+        "key" : "darkThemeBackgroundColor",
+        "value" : null
+      } ]
+  } ]
