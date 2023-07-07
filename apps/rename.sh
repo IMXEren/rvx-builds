@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 github_repo="IMXEren/rvx-builds"
-rename_script_1="apps/apps.py"
+rename_script_1="apps/scripts/apps.py"
 # rename_script_2
 
 # Replace "py_file_url = ..." with a new URL
