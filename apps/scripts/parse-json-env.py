@@ -62,7 +62,8 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
 # json_data = json_file.read()
 # json_file.close()
 
-json_file = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/apps/env.json"
+json_path = "apps/json/env.json"
+json_file = f"https://raw.githubusercontent.com/IMXEren/rvx-builds/main/{json_path}"
 json_data = requests.get(json_file).text
 output_file = "apps/.env"
 
