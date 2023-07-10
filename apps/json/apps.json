@@ -282,9 +282,9 @@
     {
         "app_package": "co.windyapp.android",
         "app_code": "windy",
-        "app_name": "Wind speed — Windy.app",
+        "app_name": "Windy.app: Windy Weather Map",
         "app_url": "https://play.google.com/store/apps/details?id=co.windyapp.android",
-        "app_icon": "https://play-lh.googleusercontent.com/0Q7_rftv0zXIKEFV6NBJTc0noPO4mVkCbPNbx-o8kC7bR740Tw3S6eb9AulWpFqbCvg=w64-h64",
+        "app_icon": "https://play-lh.googleusercontent.com/6dXNbnL3ge2DfM4cQ1XXIHZsOzg9LZtgMTmNWqY-7oI9dDDbL9dd8ct2DzaTVa0hNAq1=w64-h64",
         "target_version": "Any"
     },
     {

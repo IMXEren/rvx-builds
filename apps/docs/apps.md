@@ -2,7 +2,7 @@
 
 ## Here is a list of 37 apps that can be patched
 
-Generated at **`2023-07-10 10:43:35 UTC`**
+Generated at **`2023-07-10 10:54:24 UTC`**
 
 | S.No. | Icon | Name | Code | ReVanced Extended (RVX) | Package |
 |:-----:|------|------|------|:-----------------------:|---------|
@@ -41,7 +41,7 @@ Generated at **`2023-07-10 10:43:35 UTC`**
 | 33. | ![](https://play-lh.googleusercontent.com/wIf3HtczQDjHzHuu7vezhqNs0zXAG85F7VmP7nhsTxO3OHegrVXlqIh_DWBYi86FTIGk=w64-h64) | [**Twitter**](https://play.google.com/store/apps/details?id=com.twitter.android) | `twitter` | :x: | `com.twitter.android` |
 | 34. | ![](https://play-lh.googleusercontent.com/RdCklOFg3SLN5QF8OR7cU-5bs1ESYo_pqGYrK2ena3XZDcrLOpjf7vLtNQELOR7Uo4MH=w64-h64) | [**VSCO: Photo & Video Editor**](https://play.google.com/store/apps/details?id=com.vsco.cam) | `vsco` | :x: | `com.vsco.cam` |
 | 35. | ![](https://play-lh.googleusercontent.com/vzWpHOJbMbaWc2FgHWNcp_xIQyn0qHxZVaG1ly0kYTxrhNfWD3DAnwmnQRPx36yauxs=w64-h64) | [**WarnWetter**](https://play.google.com/store/apps/details?id=de.dwd.warnapp) | `warnwetter` | :x: | `de.dwd.warnapp` |
-| 36. | ![](https://play-lh.googleusercontent.com/0Q7_rftv0zXIKEFV6NBJTc0noPO4mVkCbPNbx-o8kC7bR740Tw3S6eb9AulWpFqbCvg=w64-h64) | [**Wind speed — Windy.app**](https://play.google.com/store/apps/details?id=co.windyapp.android) | `windy` | :x: | `co.windyapp.android` |
+| 36. | ![](https://play-lh.googleusercontent.com/6dXNbnL3ge2DfM4cQ1XXIHZsOzg9LZtgMTmNWqY-7oI9dDDbL9dd8ct2DzaTVa0hNAq1=w64-h64) | [**Windy.app: Windy Weather Map**](https://play.google.com/store/apps/details?id=co.windyapp.android) | `windy` | :x: | `co.windyapp.android` |
 | 37. | ![](https://play-lh.googleusercontent.com/fmGc9NGmf0ZTV2PQIhZ7lprvqNaUOaZEFXZg6MIG5fDaUiTua4Y2D7IxA3jaHDj2xQ=w64-h64) | [**Yuka - Food & cosmetic scan**](https://play.google.com/store/apps/details?id=io.yuka.android) | `yuka` | :x: | `io.yuka.android` |
 
 **Note: Not all apps that can be patched using ReVanced are present in this list. Try raising an issue for me to add that app or you may do it yourself. [Look here]()**.
