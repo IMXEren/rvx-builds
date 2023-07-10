@@ -1,5 +1,5 @@
 [ {
-  "patchName" : "Change oauth client id",
+  "patchName" : "Change OAuth client id",
   "options" : [ {
     "key" : "client-id",
     "value" : null
