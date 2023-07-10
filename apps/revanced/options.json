@@ -1,17 +1,17 @@
 [ {
-  "patchName" : "change-oauth-client-id",
+  "patchName" : "Change oauth client id",
   "options" : [ {
     "key" : "client-id",
     "value" : null
   } ]
 }, {
-  "patchName" : "change-package-name",
+  "patchName" : "Change package name",
   "options" : [ {
     "key" : "packageName",
     "value" : null
   } ]
 }, {
-  "patchName" : "custom-branding",
+  "patchName" : "Custom branding",
   "options" : [ {
     "key" : "appName",
     "value" : null
@@ -20,7 +20,7 @@
     "value" : null
   } ]
 }, {
-  "patchName" : "spotify-theme",
+  "patchName" : "Spotify theme",
   "options" : [ {
     "key" : "backgroundColor",
     "value" : null
@@ -32,7 +32,7 @@
     "value" : null
   } ]
 }, {
-  "patchName" : "theme",
+  "patchName" : "Theme",
   "options" : [ {
     "key" : "darkThemeBackgroundColor",
     "value" : null
