@@ -1,11 +1,11 @@
 [ {
-  "patchName" : "custom-branding-microg-name",
+  "patchName" : "Custom branding Microg name",
   "options" : [ {
     "key" : "MicroGAppName",
     "value" : null
   } ]
 }, {
-  "patchName" : "custom-branding-music-name",
+  "patchName" : "Custom branding Music name",
   "options" : [ {
     "key" : "MusicLongName",
     "value" : null
@@ -14,19 +14,19 @@
     "value" : null
   } ]
 }, {
-  "patchName" : "custom-branding-youtube-name",
+  "patchName" : "Custom branding YouTube name",
   "options" : [ {
     "key" : "YouTubeAppName",
     "value" : null
   } ]
 }, {
-  "patchName" : "custom-double-tap-length",
+  "patchName" : "Custom double tap length",
   "options" : [ {
     "key" : "DoubleTapLengthArrays",
     "value" : null
   } ]
 }, {
-  "patchName" : "custom-package-name",
+  "patchName" : "Custom package name",
   "options" : [ {
     "key" : "YouTubePackageName",
     "value" : null
@@ -35,13 +35,13 @@
     "value" : null
   } ]
 }, {
-  "patchName" : "reddit-settings",
+  "patchName" : "Reddit settings",
   "options" : [ {
     "key" : "RedditSettings",
     "value" : null
   } ]
 }, {
-  "patchName" : "theme",
+  "patchName" : "Theme",
   "options" : [ {
     "key" : "darkThemeBackgroundColor",
     "value" : null
