@@ -136,10 +136,15 @@ class Downloader(object):
                 ["inotia00", "revanced-integrations", self.config.integrations_apk],
                 ["inotia00", "revanced-patches", self.config.patches_jar],
             ]
-        if "youtube" in self.config.apps or "youtube_music" in self.config.apps:
-            assets += [
-                ["inotia00", "mMicroG", "mMicroG-output.apk"],
-            ]
+        if "youtube" in self.config.apps or "youtube_music" in self.config.apps or "MicroG" in self.config.apps:
+            if self.config.build_extended and "MicroG" in self.config.apps:
+                assets += [
+                    ["inotia00", "mMicroG", "MicroG.apk"],
+                ]
+            else:
+                assets += [
+                    ["inotia00", "mMicroG", "mMicroG-output.apk"],
+                ]
         with ThreadPoolExecutor(7) as executor:
             executor.map(lambda repo: self.repository(*repo), assets)
         logger.info("Downloaded revanced microG ,cli, integrations and patches.")
