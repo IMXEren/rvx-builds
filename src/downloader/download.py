@@ -143,7 +143,7 @@ class Downloader(object):
                 ]
             else:
                 assets += [
-                    ["inotia00", "mMicroG", "mMicroG.apk"],
+                    ["inotia00", "mMicroG", "mMicroG-output.apk"],
                 ]
         with ThreadPoolExecutor(7) as executor:
             executor.map(lambda repo: self.repository(*repo), assets)
