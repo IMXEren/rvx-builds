@@ -79,7 +79,7 @@ def apk_mirror_scrape(app_code):
         # display = Display(visible=0, size=(800, 600))
         # display.start()
         chrome_options = Options()
-        driver = uc.Chrome(headless=True, version_main=113)
+        driver = uc.Chrome(headless=True, version_main=117)
         # driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
         driver.get(app_url)
         app_name_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.f-grow > h1")
