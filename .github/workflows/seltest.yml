@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r apps/requirements.txt
+        pip install -r apps/scripts/requirements.txt
 
     - name: Run Selenium script
-      run: python apps/seltest.py
+      run: python apps/scripts/test.py
