@@ -1,0 +1,29 @@
+name: Setup Chrome
+
+on: [push]
+
+jobs:
+  setup-chrome:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Determine Chrome Version
+        id: chrome_version
+        run: |
+          echo "::set-output name=version::$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE)"
+
+      - name: Download Chrome
+        run: |
+          curl -sSLO "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${{ steps.chrome_version.outputs.version }}_amd64.deb"
+
+      - name: Install Chrome
+        run: |
+          sudo dpkg -i "google-chrome-stable_${{ steps.chrome_version.outputs.version }}_amd64.deb"
+          sudo apt-get -fy install
+
+      - name: Set Up Chrome
+        run: |
+          google-chrome --version
