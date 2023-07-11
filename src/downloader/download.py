@@ -136,7 +136,7 @@ class Downloader(object):
                 ["inotia00", "revanced-integrations", self.config.integrations_apk],
                 ["inotia00", "revanced-patches", self.config.patches_jar],
             ]
-        if "youtube" in self.config.apps or "youtube_music" in self.config.apps:
+        if "youtube" in self.config.apps or "youtube_music" in self.config.apps or "MicroG" in self.config.apps:
             assets += [
                 ["inotia00", "mMicroG", "MicroG.apk"],
             ]
