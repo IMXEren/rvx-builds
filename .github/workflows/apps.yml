@@ -2,7 +2,7 @@ name: Get Patch Apps Info
 
 on:
   schedule:
-    - cron: "*/7 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -45,6 +45,7 @@ jobs:
           
       - name: Parse .env to env.json
         run: |
+          git pull
           git add apps/json/env.json
           git commit --allow-empty -m "Parsed .env file to env.json"
           git push
@@ -52,6 +53,7 @@ jobs:
       
       - name: Commit and push all changes
         run: |
+          git pull
           git add .
           git commit --allow-empty -m "Add generated files"
           git push
