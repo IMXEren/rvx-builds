@@ -3,4 +3,5 @@ beautifulsoup4
 pytz
 selenium
 pyvirtualdisplay
+webdriver-manager
 undetected-chromedriver
