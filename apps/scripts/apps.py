@@ -6,6 +6,9 @@ import datetime
 import requests
 from bs4 import BeautifulSoup
 from pyvirtualdisplay import Display
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -73,10 +76,11 @@ def apk_mirror_scrape(app_code):
         app_url = match.group(1)
         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
         print(app_url)
-        # display = Display(visible=0, size=(800, 600))
-        # display.start()
+        display = Display(visible=0, size=(800, 600))
+        display.start()
         chrome_options = Options()
-        driver = uc.Chrome(headless=True, version_main=113)
+        # driver = uc.Chrome(headless=True, version_main=113)
+        driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
         driver.get(app_url)
         app_name_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.f-grow > h1")
         app_icon_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.p-relative.icon-container > img")
@@ -84,7 +88,7 @@ def apk_mirror_scrape(app_code):
         app_icon = app_icon_element.get_attribute("src") if app_icon_element else "NA"
         app_icon = app_icon.replace("&w=96&h=96", "&w=64&h=64")
         driver.quit()
-        # display.stop()
+        display.stop()
         print("App Name:", app_name, flush=True)
         print("Icon URL:", app_icon, flush=True)
         return app_name, app_icon, app_url
