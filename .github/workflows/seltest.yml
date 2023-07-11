@@ -20,4 +20,4 @@ jobs:
         pip install -r apps/scripts/requirements.txt
 
     - name: Run Selenium script
-      run: python apps/scripts/test.py
+      run: python apps/scripts/seltest.py
