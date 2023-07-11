@@ -6,7 +6,7 @@ import datetime
 import requests
 from bs4 import BeautifulSoup
 from pyvirtualdisplay import Display
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
