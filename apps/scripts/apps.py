@@ -94,6 +94,39 @@ def apk_mirror_scrape(app_code):
     else:
         print("APKMirror URL not found for the specified app code")
 
+def apk_mirror_req_scrape(app_code):
+    apk_mirror = "https://www.apkmirror.com"
+    config_py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/config.py"
+    response = requests.get(config_py_file_url)
+    pattern = r'"{}": f"(.*?)",'.format(app_code)
+    match = re.search(pattern, response.text)
+    if match:
+        app_url = match.group(1)
+        app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
+        print(app_url)
+        s = requests
+        hdr = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Encoding': 'none',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Connection': 'keep-alive',
+            }
+        r = s.get(app_url, headers=hdr)
+        soup = BeautifulSoup(r.text, "html.parser")
+        app_name_element = soup.select_one("#masthead > header > div > div > div.f-grow > h1")
+        app_icon_element = soup.select_one("#masthead > header > div > div > div.p-relative.icon-container > img")
+        if app_icon_element:
+            app_icon = app_icon_element["src"] if app_icon_element else ""
+            app_icon = f'{apk_mirror}{app_icon.replace("&w=96&h=96", "&w=64&h=64")}'
+        if app_name_element:
+            app_name = app_name_element.text
+        print("App Name:", app_name, flush=True)
+        print("Icon URL:", app_icon, flush=True)
+        return app_name, app_icon, app_url
+    else:
+        print("APKMirror URL not found for the specified app code")
+
 def gplay_scrape(package_name):
     app_url = f"https://play.google.com/store/apps/details?id={package_name}"
     response = requests.get(app_url)
@@ -108,7 +141,7 @@ def gplay_scrape(package_name):
     if app_name_element:
         app_name = app_name_element.text
     else:
-        app_name, app_icon, app_url = apk_mirror_scrape(app_codename)
+        app_name, app_icon, app_url = apk_mirror_req_scrape(app_codename)
     return app_name, app_icon, app_url
 
 
