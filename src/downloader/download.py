@@ -3,15 +3,16 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from queue import PriorityQueue
 from time import perf_counter
-from typing import Tuple
+from typing import Any, Tuple
 
 import requests
 from loguru import logger
 from tqdm import tqdm
 
 from src.config import RevancedConfig
+from src.downloader.utils import implement_method
 from src.patches import Patches
-from src.utils import handle_response, update_changelog
+from src.utils import handle_response
 
 
 class Downloader(object):
@@ -61,7 +62,7 @@ class Downloader(object):
 
     def extract_download_link(self, page: str, app: str) -> None:
         """Extract download link from web page."""
-        raise NotImplementedError("Please implement the method")
+        raise NotImplementedError(implement_method)
 
     def specific_version(self, app: str, version: str) -> None:
         """Function to download the specified version of app from  apkmirror.
@@ -70,17 +71,17 @@ class Downloader(object):
         :param version: Version of the application to download
         :return: Version of downloaded apk
         """
-        raise NotImplementedError("Please implement the method")
+        raise NotImplementedError(implement_method)
 
-    def latest_version(self, app: str) -> None:
+    def latest_version(self, app: str, **kwargs: Any) -> None:
         """Function to download the latest version of app.
 
         :param app: Name of the application
         :return: Version of downloaded apk
         """
-        raise NotImplementedError("Please implement the method")
+        raise NotImplementedError(implement_method)
 
-    def download(self, version: str, app: str) -> None:
+    def download(self, version: str, app: str, **kwargs: Any) -> None:
         """Public function to download apk to patch.
 
         :param version: version to download
@@ -148,3 +149,4 @@ class Downloader(object):
         with ThreadPoolExecutor(7) as executor:
             executor.map(lambda repo: self.repository(*repo), assets)
         logger.info("Downloaded revanced microG ,cli, integrations and patches.")
+            self.latest_version(app, **kwargs)
