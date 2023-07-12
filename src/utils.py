@@ -6,7 +6,7 @@ from requests import Response
 
 default_build = [
     "youtube",
-    "youtube_music"
+    "youtube_music",
 ]
 possible_archs = ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 
