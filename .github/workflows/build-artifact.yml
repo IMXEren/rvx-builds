@@ -49,8 +49,8 @@ jobs:
       - name: Build Revanced APKs
         run: |
           docker-compose up --build
-          
-      - name: Resolve Invalid Characters in file names
+
+      - name: Handle Invalid Characters in file names
         run: |
           sudo apt install rename
           rename 's/[":<>|*?\r\n]/-/g' apks/*-output.apk apks/VancedMicroG.apk
