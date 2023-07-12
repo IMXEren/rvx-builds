@@ -49,14 +49,18 @@ jobs:
       - name: Build Revanced APKs
         run: |
           docker-compose up --build
-
+          
+      - name: Resolve Invalid Characters in file names
+        run: |
+          rename 's/[":<>|*?\r\n]/-/g' apks/*-output.apk apks/VancedMicroG.apk
+          
       - name: Upload Build APKS
         uses: actions/upload-artifact@v3.1.2
         with:
           name: Built-APKs
           path: |
             apks/*-output.apk
-            apks/VancedMicroG.apk"
+            apks/VancedMicroG.apk
           if-no-files-found: error
 
       - name: Commit Update file
