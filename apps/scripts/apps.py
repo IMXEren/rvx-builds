@@ -2,6 +2,7 @@ import os
 import re
 import json
 import pytz
+import time
 import datetime
 import requests
 from bs4 import BeautifulSoup
@@ -86,7 +87,8 @@ def apk_mirror_scrape(app_code):
         app_name = app_name_element.text if app_name_element else "NA"
         app_icon = app_icon_element.get_attribute("src") if app_icon_element else "NA"
         app_icon = app_icon.replace("&w=96&h=96", "&w=64&h=64")
-        driver.quit()
+        time.sleep(10)
+        # driver.quit()
         # display.stop()
         print("App Name:", app_name, flush=True)
         print("Icon URL:", app_icon, flush=True)
