@@ -2,7 +2,6 @@ import os
 import re
 import json
 import pytz
-import time
 import datetime
 import requests
 from bs4 import BeautifulSoup
@@ -15,38 +14,47 @@ from selenium.webdriver.chrome.options import Options
 json_file = "apps/json/apps.json"
 md_file = "apps/docs/apps.md"
 
-# Step 1: Parse the online .py file to extract package names and app codes
-py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/patches.py"
-response = requests.get(py_file_url)
-python_code = response.text
-# Extract package_name and app_code from the Python code
-pattern = r'"([^"]+)":\s*\(?"([^"]+)",'
-matches = re.findall(pattern, python_code)
-package_name_from_py = []
-app_code = []
-for package_name, code in matches:
-    package_name_from_py.append(package_name.strip())
-    app_code.append(code.strip())
-rvx_pattern = r'"([^"]+)":\s*\("([^"]+)",'
-rvx_matches = re.findall(rvx_pattern, python_code)
-rvx_packages = []
-rvx_appcodes = []
-for package_name, code in rvx_matches:
-    rvx_packages.append(package_name.strip())
-    rvx_appcodes.append(code.strip())
-# Print the extracted package_name_from_py and app_code
-print("Package Names:", package_name_from_py, flush=True)
-print("App Codes:", app_code, flush=True)
+def get_available_patch_apps(url):
+    response = requests.get(url)
+    python_code = response.text
+    # Extract package_name and app_code from the Python code
+    pattern = r'"([^"]+)":\s*\(?"([^"]+)",'
+    matches = re.findall(pattern, python_code)
+    package_name = []
+    app_code = []
+    for package, code in matches:
+        package_name.append(package.strip())
+        app_code.append(code.strip())
+    return package_name, app_code
 
+def get_app_code(package):
+    if isinstance(package, list):
+        code = []
+        for pkg in package:
+            i = available_packages.index(pkg)
+            code.append(app_code[i])
+    elif isinstance(package, str):
+        i = available_packages.index(package)
+        code = app_code[i]
+    return code
 
-# Step 2: Get all different compatiblePackages names from the revanced/revanced-patches.json file
-json_file_url = "https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json"
-response = requests.get(json_file_url)
-json_patches = response.json()
-compatible_packages_names = set()
-for item in json_patches:
-    for package in item["compatiblePackages"]:
-        compatible_packages_names.add(package["name"])
+def get_patches_json(i):
+    i = 0 if i == "rv" else (1 if i == "rvx" else i)
+    urls = [
+        'https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json',
+        'https://raw.githubusercontent.com/inotia00/revanced-patches/revanced-extended/patches.json',
+    ]
+    url = urls[i]
+    r = requests.get(url)
+    patches = r.json()
+    return patches
+
+def get_packages_from_patches(patches):
+    packages = set()
+    for item in patches:
+        for package in item["compatiblePackages"]:
+            packages.add(package["name"])
+    return packages
 
 def get_last_version(json_data, package_name):
     last_versions = []
@@ -65,7 +73,22 @@ def version_key(version):
     # Converts the version string to a tuple of integers
     return tuple(map(int, re.findall(r'\d+', version)))
 
-def apk_mirror_scrape(app_code):
+def gplay_scrape(package_name):
+    app_url = f"https://play.google.com/store/apps/details?id={package_name}"
+    response = requests.get(app_url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    app_name_element = soup.select_one("h1 > span")
+    app_icon_element = soup.select_one("div.Il7kR > img")
+    if app_icon_element is None:
+        app_icon_element = soup.select_one("div.qxNhq > img")
+    if app_icon_element:
+        app_icon = app_icon_element["src"] if app_icon_element else ""
+        app_icon = app_icon.replace("=w240-h480", "=w64-h64")
+    if app_name_element:
+        app_name = app_name_element.text
+    return app_name, app_icon, app_url
+
+def apk_mirror_selenium_scrape(app_code):
     apk_mirror = "https://www.apkmirror.com"
     config_py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/config.py"
     response = requests.get(config_py_file_url)
@@ -75,26 +98,26 @@ def apk_mirror_scrape(app_code):
         app_url = match.group(1)
         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
         print(app_url)
-        # display = Display(visible=0, size=(800, 600))
-        # display.start()
+        display = Display(visible=0, size=(800, 600))
+        display.start()
         chrome_options = Options()
-        driver = uc.Chrome(headless=True, options=chrome_options)
+        # driver = uc.Chrome(headless=True, options=chrome_options)
+        driver = webdriver.Chrome(options=chrome_options)
         driver.get(app_url)
         app_name_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.f-grow > h1")
         app_icon_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.p-relative.icon-container > img")
         app_name = app_name_element.text if app_name_element else "NA"
         app_icon = app_icon_element.get_attribute("src") if app_icon_element else "NA"
         app_icon = app_icon.replace("&w=96&h=96", "&w=64&h=64")
-        time.sleep(10)
-        # driver.quit()
-        # display.stop()
+        driver.quit()
+        display.stop()
         print("App Name:", app_name, flush=True)
         print("Icon URL:", app_icon, flush=True)
         return app_name, app_icon, app_url
     else:
         print("APKMirror URL not found for the specified app code")
 
-def apk_mirror_req_scrape(app_code):
+def apk_mirror_requests_scrape(app_code):
     apk_mirror = "https://www.apkmirror.com"
     config_py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/config.py"
     response = requests.get(config_py_file_url)
@@ -127,42 +150,103 @@ def apk_mirror_req_scrape(app_code):
     else:
         print("APKMirror URL not found for the specified app code")
 
-def gplay_scrape(package_name):
-    app_url = f"https://play.google.com/store/apps/details?id={package_name}"
-    response = requests.get(app_url)
-    soup = BeautifulSoup(response.text, "html.parser")
-    app_name_element = soup.select_one("h1 > span")
-    app_icon_element = soup.select_one("div.Il7kR > img")
-    if app_icon_element is None:
-        app_icon_element = soup.select_one("div.qxNhq > img")
-    if app_icon_element:
-        app_icon = app_icon_element["src"] if app_icon_element else ""
-        app_icon = app_icon.replace("=w240-h480", "=w64-h64")
-    if app_name_element:
-        app_name = app_name_element.text
-    else:
-        app_name, app_icon, app_url = apk_mirror_req_scrape(app_codename)
+def get_json_data(key, value, url):
+    response = requests.get(url)
+    data = response.json()
+    matched_objects = [obj for obj in data if obj.get(key) == value]
+    return matched_objects
+
+def scraper(package_name, code_name):
+    # Parameter variables    
+    key = "app_package"
+    value = package_name
+    url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/apps/json/extras.json"
+    
+    # Ordered List of functions
+    scrapers = [get_json_data, gplay_scrape, apk_mirror_requests_scrape, apk_mirror_selenium_scrape]
+    
+    # Ordered List of parameter variables
+    params = [
+        (key, value, url,),
+        (package_name,),
+        (code_name,),
+        (code_name,),
+    ]
+    
+    # Calling functions with parameter variables
+    for scraper, param in zip(scrapers, params):
+        # print("Scraper:", scraper.__name__)
+        # print("Params:", param)
+        try:
+            # global app_name, app_icon, app_url
+            # del app_name, app_icon, app_url
+            if scraper == get_json_data:
+                result = scraper(*param)
+                app_name, app_icon, app_url = result[0]['app_name'], result[0]['app_icon'], result[0]['app_url']
+                # result = result[0]
+                # for key, value in result.items():
+                #     setattr(locals(), key, value)
+                # for obj in result:
+                #     for ex_key in obj:
+                #         ex_value = obj[ex_key]
+                #         globals()[ex_key] = ex_value
+            else:
+                app_name, app_icon, app_url = scraper(*param)
+            # if app_name and app_icon and app_url:
+            #     break
+            break
+        except Exception as e:
+            app_name, app_icon, app_url = "NA", "NA", "NA"
+            # print("ERROR:", str(e))
+            continue
     return app_name, app_icon, app_url
 
+rv_patches = get_patches_json("rv")
+rvx_patches = get_patches_json("rvx")
+all_patches = rv_patches + rvx_patches
+all_packages = get_packages_from_patches(all_patches)
+all_rv_packages = get_packages_from_patches(rv_patches)
+all_rvx_packages = get_packages_from_patches(rvx_patches)
+
+py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/patches.py"
+available_packages, app_code = get_available_patch_apps(py_file_url)
+rv_packages = list(set(all_rv_packages) & set(available_packages))
+rvx_packages = list(set(all_rvx_packages) & set(available_packages))
+supported_packages = list(set(all_packages) & set(available_packages))
+rv_appcodes = get_app_code(rv_packages)
+rvx_appcodes = get_app_code(rvx_packages)
+supported_appcodes = get_app_code(supported_packages)
+print("Package Names:", supported_packages, flush=True)
+print("App Codes:", supported_appcodes, flush=True)
 
 # Step 3: Match package names and scraping
 json_data = []
 patch_apps = 0
-for package_name in compatible_packages_names:
-    if package_name in package_name_from_py:
-        patch_apps += 1
-        latest_versions = get_last_version(json_patches, package_name)
-        target_version = max(latest_versions, key=version_key)
-        print(package_name, flush=True)
-        index = package_name_from_py.index(package_name)
-        app_codename = app_code[index]
-        app_name, app_icon, app_url = gplay_scrape(package_name)
-        print(app_name, flush=True)
-        json_data.append({"app_package": package_name, "app_code": app_codename, "app_name": app_name, "app_url": app_url, "app_icon": app_icon, "target_version": target_version})
+for package_name in supported_packages:
+    if package_name in rv_packages:
+        app_extended = False
+    if package_name in rvx_packages:
+        app_extended = True
+    patch_apps += 1
+    latest_versions = get_last_version(all_patches, package_name)
+    target_version = max(latest_versions, key=version_key)
+    print(package_name, flush=True)
+    app_codename = get_app_code(package_name)
+    app_name, app_icon, app_url = scraper(package_name, app_codename)
+    print(app_name, flush=True)
+    json_data.append({
+            "app_package": package_name,
+            "app_code": app_codename,
+            "app_name": app_name,
+            "app_url": app_url,
+            "app_icon": app_icon,
+            "target_version": target_version,
+            "app_extended": app_extended,
+        })
 
             
 # Step 4: Handle unmatched package names
-unmatched_packages = compatible_packages_names - set(package_name_from_py)
+unmatched_packages = all_packages - set(available_packages)
 for package_name in unmatched_packages:
     print("Missing package:", package_name, flush=True)
 
