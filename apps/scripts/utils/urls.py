@@ -13,7 +13,7 @@ class GitHubURLs:
         return f"https://raw.githubusercontent.com/{self.repo}/{self.branch}/src/config.py"
     
     def get_extras_json(self):
-        return f"https://raw.githubusercontent.com/{self.repo}/{self.branch}/main/apps/json/extras.json"
+        return f"https://raw.githubusercontent.com/{self.repo}/{self.branch}/apps/json/extras.json"
     
     def get_rv_json(self):
         return f"https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json"
