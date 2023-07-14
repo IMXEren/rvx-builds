@@ -46,6 +46,8 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
     env_content = ""
     for key in key_order:
         value = env_dict.get(key)
+        if key.endswith("_VERSION"):
+            env_content += f"\n"
         if key.endswith("_VERSION") and value == "latest_supported":
             env_content += f"# {key}={value}\n"
         elif value:
