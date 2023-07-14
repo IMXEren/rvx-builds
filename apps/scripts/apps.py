@@ -10,7 +10,8 @@ from selenium import webdriver
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from scraper import scraper
+
+from utils.scraper import scraper
 
 json_file = "apps/json/apps.json"
 md_file = "apps/docs/apps.md"

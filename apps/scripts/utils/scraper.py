@@ -8,8 +8,8 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
-from utils.repo import GitHubRepo
-from utils.urls import GitHubURLs
+from repo import GitHubRepo
+from urls import GitHubURLs
 
 # Constants for GitHub URLs
 gh = GitHubRepo()
@@ -17,7 +17,7 @@ repo = gh.get_repo()
 branch = gh.get_branch()
 urls = GitHubURLs(repo, branch)
 config_py_file_url = urls.get_config_py()
-extras_json_url = urls.get_extras_json
+extras_json_url = urls.get_extras_json()
 
 def gplay_scrape(package_name):
     app_url = f"https://play.google.com/store/apps/details?id={package_name}"
