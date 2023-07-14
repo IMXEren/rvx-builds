@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options
 
 # Constants for GitHub URLs
 repo_owner = "IMXEren"
-repo_name = "rvx-builds"
+repo_name = "rvx-build"
 
 # Construct the URLs using the repo owner and repo name
 config_py_file_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/main/src/config.py"
