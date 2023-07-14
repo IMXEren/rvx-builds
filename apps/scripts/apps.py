@@ -12,6 +12,16 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 from utils.scraper import scraper
+from utils.repo import GitHubRepo
+from utils.urls import GitHubURLs
+
+gh = GitHubRepo()
+repo = gh.get_repo()
+branch = gh.get_branch()
+urls = GitHubURLs(repo, branch)
+patches_py_url = urls.get_patches_py()
+rv_json_url = urls.get_rv_json()
+rvx_json_url = urls.get_rvx_json()
 
 json_file = "apps/json/apps.json"
 md_file = "apps/docs/apps.md"
@@ -43,8 +53,8 @@ def get_app_code(package):
 def get_patches_json(i):
     i = 0 if i == "rv" else (1 if i == "rvx" else i)
     urls = [
-        'https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json',
-        'https://raw.githubusercontent.com/inotia00/revanced-patches/revanced-extended/patches.json',
+        rv_json_url,
+        rvx_json_url,
     ]
     url = urls[i]
     r = requests.get(url)
@@ -199,8 +209,7 @@ all_packages = get_packages_from_patches(all_patches)
 all_rv_packages = get_packages_from_patches(rv_patches)
 all_rvx_packages = get_packages_from_patches(rvx_patches)
 
-py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/patches.py"
-available_packages, app_code = get_available_patch_apps(py_file_url)
+available_packages, app_code = get_available_patch_apps(patches_py_url)
 rv_packages = list(set(all_rv_packages) & set(available_packages))
 rvx_packages = list(set(all_rvx_packages) & set(available_packages))
 supported_packages = list(set(all_packages) & set(available_packages))
