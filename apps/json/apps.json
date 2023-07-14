@@ -135,6 +135,15 @@
         "app_extended": false
     },
     {
+        "app_package": "com.mgoogle.android.gms",
+        "app_code": "MicroG",
+        "app_name": "MicroG",
+        "app_url": "https://github.com/inotia00/mMicroG",
+        "app_icon": "/apps/icons/microg/ic_microg_launcher-64x64.png",
+        "target_version": "Any",
+        "app_extended": true
+    },
+    {
         "app_package": "com.ithebk.expensemanager",
         "app_code": "expensemanager",
         "app_name": "Money Manager- Expense, Budget",
@@ -151,15 +160,6 @@
         "app_icon": "https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64",
         "target_version": "3.4.9",
         "app_extended": false
-    },
-    {
-        "app_package": "com.mgoogle.android.gms",
-        "app_code": "MicroG",
-        "app_name": "NA",
-        "app_url": "NA",
-        "app_icon": "NA",
-        "target_version": "Any",
-        "app_extended": true
     },
     {
         "app_package": "eu.faircode.netguard",

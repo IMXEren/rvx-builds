@@ -2,7 +2,7 @@
 
 ## Here is a list of 39 apps that can be patched
 
-Generated at **`2023-07-14 16:02:43 UTC`**
+Generated at **`2023-07-14 16:07:43 UTC`**
 
 | S.No. | Icon | Name | Code | ReVanced Extended (RVX) | Package |
 |:-----:|------|------|------|:-----------------------:|---------|
@@ -21,9 +21,9 @@ Generated at **`2023-07-14 16:02:43 UTC`**
 | 13. | ![](https://play-lh.googleusercontent.com/xNQNgiKHPtYE0Zk_bRd0ZOp9rOOJTy2puzOx8CUBq2Ja4yhOQwdrBdeOrDTGQA9aSg=w64-h64) | [**irplus - Infrared Remote**](https://play.google.com/store/apps/details?id=net.binarymode.android.irplus) | `irplus` | :x: | `net.binarymode.android.irplus` |
 | 14. | ![](https://play-lh.googleusercontent.com/YNBUh-8PzcAXryawZ559rEUDowEOgXsPDfTDBOi4AQQR6NTsWGvYTU1tMRctN3uoRqw8=w64-h64) | [**Meme Generator**](https://play.google.com/store/apps/details?id=com.zombodroid.MemeGenerator) | `meme_generator` | :x: | `com.zombodroid.MemeGenerator` |
 | 15. | ![](https://play-lh.googleusercontent.com/ldcQMpP7OaVmglCF6kGas9cY_K0PsJzSSosx2saw9KF1m3RHaEXpH_9mwBWaYnkmctk=w64-h64) | [**Messenger**](https://play.google.com/store/apps/details?id=com.facebook.orca) | `fbmessenger` | :x: | `com.facebook.orca` |
-| 16. | ![](https://play-lh.googleusercontent.com/N_KBHHLEjLXKXF2kWQPbcPmoFMNZkAvlT2PNpNOwmbm1s-vb9ZmYiRl8E0KOanwJWObV=w64-h64) | [**Money Manager- Expense, Budget**](https://play.google.com/store/apps/details?id=com.ithebk.expensemanager) | `expensemanager` | :x: | `com.ithebk.expensemanager` |
-| 17. | ![](https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64) | [**My Expenses**](https://play.google.com/store/apps/details?id=org.totschnig.myexpenses) | `my-expenses` | :x: | `org.totschnig.myexpenses` |
-| 18. | ![](NA) | [**NA**](NA) | `MicroG` | :white_check_mark: | `com.mgoogle.android.gms` |
+| 16. | ![](/apps/icons/microg/ic_microg_launcher-64x64.png) | [**MicroG**](https://github.com/inotia00/mMicroG) | `MicroG` | :white_check_mark: | `com.mgoogle.android.gms` |
+| 17. | ![](https://play-lh.googleusercontent.com/N_KBHHLEjLXKXF2kWQPbcPmoFMNZkAvlT2PNpNOwmbm1s-vb9ZmYiRl8E0KOanwJWObV=w64-h64) | [**Money Manager- Expense, Budget**](https://play.google.com/store/apps/details?id=com.ithebk.expensemanager) | `expensemanager` | :x: | `com.ithebk.expensemanager` |
+| 18. | ![](https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64) | [**My Expenses**](https://play.google.com/store/apps/details?id=org.totschnig.myexpenses) | `my-expenses` | :x: | `org.totschnig.myexpenses` |
 | 19. | ![](https://play-lh.googleusercontent.com/XEd1PsXgOSNNpD2hlZMvigIOJ9e5JCL2KhCJ4X984Az5EFw6YiecDebqdsZ12VNU2kPu=w64-h64) | [**NetGuard - no-root firewall**](https://play.google.com/store/apps/details?id=eu.faircode.netguard) | `netguard` | :x: | `eu.faircode.netguard` |
 | 20. | ![](https://play-lh.googleusercontent.com/Et6Ha-3AtD1XVbSHn68xCRFkQcPiZIKnl2q5y9EoRT5Y7u2NHRb35ii_Jot-hNLfvv3y=w64-h64) | [**Nova Launcher**](https://play.google.com/store/apps/details?id=com.teslacoilsw.launcher) | `nova_launcher` | :x: | `com.teslacoilsw.launcher` |
 | 21. | ![](https://play-lh.googleusercontent.com/qg5vyfgAD_p05a9c82y0X7BvMVYq74YBK3-75y2SViOfX6zJJWHvnyc57BzKMnJJX-g=w64-h64) | [**Nyx Music Player**](https://play.google.com/store/apps/details?id=com.awedea.nyx) | `nyx-music-player` | :x: | `com.awedea.nyx` |
