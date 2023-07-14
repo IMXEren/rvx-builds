@@ -4,7 +4,7 @@ A little python script that will help you in building Revanced and Revanced-Exte
 
 **`Note`** - If you are a root user and want magisk module (Extended). Get them [here](https://github.com/nikhilbadyal/revanced-magisk-module)
 
-This is just a builder for revanced and not a revanced support. Please be understanding and refraining from asking
+This is just a builder for revanced and not a revanced support. Please be understanding and refrain from asking
 about revanced features/bugs. Discuss those on proper relevant forums(on Revanced GitHub , Discord)
 
 **`Note`** - I prefer [Revanced Extended](https://github.com/inotia00/revanced-patches/tree/revanced-extended) more
@@ -21,7 +21,7 @@ You can use any of the following methods to build.
 
 - 🚀In GitHub (**_`Recommended`_**)
 
-     1. Clik Star to support the project.<br>
+     1. Click Star to support the project.<br>
        <img src="https://i.imgur.com/FFyXaWY.png" width="400" style="left"><br>
      2. Fork the project.<br>
      <img src="https://i.imgur.com/R5HdByI.png" width="400" style="left"><br>
@@ -48,7 +48,7 @@ You can use any of the following methods to build.
 
         </details>
 
-     5. If the building process is successful, you’ll get your APKs in the <br>
+     5. If the building process is successful, you’ll get your APKs in the<br>
         <img src="https://i.imgur.com/S5d7qAO.png" width="700" style="left">
 
 - 🐳With Docker Compose
@@ -94,7 +94,7 @@ You can use any of the following methods to build.
        ```shell
        docker run -v "$(pwd)"/apks:/app/apks/  nikhilbadyal/docker-py-revanced
        ```
-       You can pass below envs(See notes) with `-e` flag or use `--env-file`
+       You can pass the below environment variables (See notes) with the `-e` flag or use the `--env-file`
        [flag](https://docs.docker.com/engine/reference/commandline/run/#options).
 
 - 🫠Without Docker
@@ -137,13 +137,33 @@ By default, script build the version as recommended by Revanced team.
     10. [ticktick](https://www.apkmirror.com/apk/appest-inc/ticktick-to-do-list-with-reminder-day-planner/)
     11. [twitch](https://www.apkmirror.com/apk/twitch-interactive-inc/twitch/)
     12. [hex-editor](https://m.apkpure.com/hex-editor/com.myprog.hexedit)
-    13. [citra](https://www.apkmirror.com/apk/citra-emulator/citra-emulator/)
-    14. [windy](https://www.apkmirror.com/apk/windy-weather-world-inc/windy-wind-weather-forecast/)
-    15. [my-expenses](https://my-expenses.en.uptodown.com/android)
-    16. [backdrops](https://backdrops.en.uptodown.com/android)
-    17. [expensemanager](https://apksos.com/app/com.ithebk.expensemanager)
-    18. [tasker](https://www.apkmirror.com/apk/joaomgcd/tasker-crafty-apps-eu/)
-    19. [irplus](https://irplus.en.uptodown.com/android)
+    13. [windy](https://www.apkmirror.com/apk/windy-weather-world-inc/windy-wind-weather-forecast/)
+    14. [my-expenses](https://my-expenses.en.uptodown.com/android)
+    15. [backdrops](https://backdrops.en.uptodown.com/android)
+    16. [expensemanager](https://apksos.com/app/com.ithebk.expensemanager)
+    17. [tasker](https://www.apkmirror.com/apk/joaomgcd/tasker-crafty-apps-eu/)
+    18. [irplus](https://irplus.en.uptodown.com/android)
+    19. [vsco](https://www.apkmirror.com/apk/vsco/vsco-cam/)
+    20. [meme-generator-free](https://meme-generator-free.en.uptodown.com/android)
+    21. [nova_launcher](https://www.apkmirror.com/apk/teslacoil-software/nova-launcher/)
+    22. [netguard](https://www.apkmirror.com/apk/marcel-bokhorst/netguard-no-root-firewall/)
+    23. [instagram](https://www.apkmirror.com/apk/instagram/instagram-instagram/)
+    24. [inshorts](https://www.apkmirror.com/apk/inshorts-formerly-news-in-shorts/)
+    25. [facebook](https://www.apkmirror.com/apk/facebook-2/facebook/)
+    26. [grecorder](https://www.apkmirror.com/apk/google-inc/google-recorder/)
+    27. [trakt](https://www.apkmirror.com/apk/trakt/trakt/)
+    28. [candyvpn](https://www.apkmirror.com/apk/liondev-io/candylink-vpn/)
+    29. [sonyheadphone](https://www.apkmirror.com/apk/sony-corporation/sony-headphones-connect/)
+    30. [androidtwelvewidgets](https://m.apkpure.com/android-12-widgets-twelve/com.dci.dev.androidtwelvewidgets)
+    31. [yuka](https://yuka.en.uptodown.com/android)
+    32. [relay](https://www.apkmirror.com/apk/dbrady/relay-for-reddit-2/)
+    33. [boost](https://www.apkmirror.com/apk/ruben-mayayo/boost-for-reddit/)
+    34. [rif](https://www.apkmirror.com/apk/talklittle/reddit-is-fun/)
+    35. [sync](https://www.apkmirror.com/apk/red-apps-ltd/sync-for-reddit/)
+    36. [infinity](https://www.apkmirror.com/apk/red-apps-ltd/sync-for-reddit/)
+    37. [slide](https://www.apkmirror.com/apk/haptic-apps/slide-for-reddit/)
+    38. [bacon](https://www.apkmirror.com/apk/onelouder-apps/baconreader-for-reddit/)
+    39. [microg](https://github.com/inotia00/mMicroG/releases)
 
     <br>Please verify the source of original APKs yourself with links provided. I'm not responsible for any damaged caused.
     If you know any better/safe source to download clean. Please raise a PR.
@@ -160,8 +180,7 @@ By default, script build the version as recommended by Revanced team.
    PATCH_APPS=youtube,twitter,reddit
    ```
 4. If you want to exclude any patch. Set comma separated patch in `.env` file or in `ENVS` in `GitHub secrets`
-   (Recommended) in
-   the format
+   (Recommended) in the format
    ```ini
    EXCLUDE_PATCH_<REVANCED_APPS_NAME>=<PATCH_TO_EXCLUDE-1,PATCH_TO_EXCLUDE-2>
    ```
@@ -176,6 +195,26 @@ By default, script build the version as recommended by Revanced team.
     EXCLUDE_PATCH_YOUTUBE_EXTENDED=custom-branding-red,custom-branding-blue,materialyou
     EXCLUDE_PATCH_YOUTUBE_MUSIC_EXTENDED=custom-branding-music
    ```
+   **_All the patches for an app are included by default._**.<br><br>If you want to apply a universal patch. You can
+   include it
+   manually. See below for more information.<br>
+   If you want to include any universal patch. Set comma separated patch in `.env` file or in `ENVS` in `GitHub
+   secrets`
+   (Recommended) in the format
+   ```ini
+   INCLUDE_PATCH_<REVANCED_APPS_NAME>=<PATCH_TO_EXCLUDE-1,PATCH_TO_EXCLUDE-2>
+   ```
+   Example:
+   ```dotenv
+    INCLUDE_PATCH_YOUTUBE=remove-screenshot-restriction
+   ```
+   If you are using `Revanced Extended.` Add `_EXTENDED` in exclude options.
+   Example:
+   ```dotenv
+    INCLUDE_PATCH_YOUTUBE_EXTENDED=remove-screenshot-restriction
+   ```
+   **_Remember_** - Revanced patches are provided space separated, make sure you type those **-** separated here. It means a
+   patch named _**Hey There**_ will be entered as **_hey-there_** in the above example.
 5. If you want to build a specific version . Add `version` in `.env` file or in `ENVS` in `GitHub secrets` (Recommended)
    in the format
    ```ini
@@ -245,7 +284,7 @@ By default, script build the version as recommended by Revanced team.
     ```
     Possible values for `ARCHS_TO_BUILD` are: `armeabi-v7a`,`x86`,`x86_64`,`arm64-v8a`
     Make sure you are using `revanced-extended` as `revanced` doesn't support this.
-11. You can scan your build apks files with VirusTotal. For that, Add `VT_API_KEY` in `GitHub secrets`.
+11. You can scan your built apks files with VirusTotal. For that, Add `VT_API_KEY` in `GitHub secrets`.
 12. Configuration defined in `ENVS` in `GitHub secrets` will override the configuration in `.env` file. You can use this
     fact to define your normal configurations in `.env` file and sometimes if you want to build something different just
     once. Add it in `GitHub secrets`.<br>
@@ -271,8 +310,11 @@ By default, script build the version as recommended by Revanced team.
     ```
 15. Sample Envs<br>
     <img src="https://i.imgur.com/ajSE5nA.png" width="600" style="left">
-16. Make your Action has write access. If not click [here](https://github.
-    com/nikhilbadyal/docker-py-revanced/settings/actions). In the bottom give read and write access to Actions.
+16. Make your Action has write access. If not click
+    [here](https://github.com/nikhilbadyal/docker-py-revanced/settings/actions).
+    In the bottom give read and write access to Actions.
     <img src="https://i.imgur.com/STSv2D3.png" width="400">
+17. If you want to patch reddit apps using your own Client ID. You can provide your Client ID
+    as secret `REDDIT_CLIENT_ID` in `GitHub secrets`.
 
 Thanks to [@aliharslan0](https://github.com/aliharslan0/pyrevanced) for his work.
