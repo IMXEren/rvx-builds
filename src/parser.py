@@ -86,6 +86,7 @@ class Parser(object):
         cli = self.config.normal_cli_jar
         patches = self.config.normal_patches_jar
         integrations = self.config.normal_integrations_apk
+        options = self.config.normal_options_json
         if self.config.build_extended and app in self.config.extended_apps:
             cli = self.config.cli_jar
             patches = self.config.patches_jar
@@ -104,7 +105,7 @@ class Parser(object):
             "--keystore",
             self.config.keystore_name,
             "--options",
-            "options.json"
+            options,
         ]
         if is_experimental:
             logger.debug("Using experimental features")
