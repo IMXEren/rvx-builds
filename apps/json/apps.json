@@ -225,6 +225,15 @@
         "app_extended": false
     },
     {
+        "app_package": "me.ccrama.redditslide",
+        "app_code": "reddit_slide",
+        "app_name": "Slide for Reddit",
+        "app_url": "https://www.apkmirror.com/apk/haptic-apps/slide-for-reddit/",
+        "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2021%2F06%2F27%2F60cbdda6baa4a.png&w=64&h=64&q=100",
+        "target_version": "Any",
+        "app_extended": false
+    },
+    {
         "app_package": "com.sony.songpal.mdr",
         "app_code": "sony_headphones_connect",
         "app_name": "Sony | Headphones Connect",
