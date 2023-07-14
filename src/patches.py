@@ -41,6 +41,7 @@ class Patches(object):
         "free.reddit.news": "reddit_relay",
         "com.onelouder.baconreader": "reddit_baconreader",
         "com.andrewshu.android.reddit": "reddit_isfun",
+        "me.ccrama.redditslide": "reddit_slide",
         "com.dci.dev.androidtwelvewidgets": "androidtwelvewidgets",
         "io.yuka.android": "yuka",
         "eu.faircode.netguard": "netguard",
