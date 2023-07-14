@@ -13,6 +13,8 @@ on:
     secrets:
       ENVS:
         required: false
+      REDDIT_CLIENT_ID:
+        required: false
     inputs:
       FILES_TO_EXPECT:
         type: string
