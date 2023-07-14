@@ -2,11 +2,6 @@ import re
 import json
 import requests
 from bs4 import BeautifulSoup
-from pyvirtualdisplay import Display
-from selenium import webdriver
-import undetected_chromedriver as uc
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
 
 from utils.repo import GitHubRepo
 from utils.urls import GitHubURLs
