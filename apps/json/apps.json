@@ -153,8 +153,8 @@
         "app_extended": false
     },
     {
-        "app_package": "com.andrewshu.android.reddit",
-        "app_code": "reddit_isfun",
+        "app_package": "com.laurencedawson.reddit_sync",
+        "app_code": "reddit_sync",
         "app_name": "NA",
         "app_url": "NA",
         "app_icon": "NA",
@@ -171,8 +171,17 @@
         "app_extended": false
     },
     {
-        "app_package": "com.laurencedawson.reddit_sync",
-        "app_code": "reddit_sync",
+        "app_package": "me.ccrama.redditslide",
+        "app_code": "reddit_slide",
+        "app_name": "NA",
+        "app_url": "NA",
+        "app_icon": "NA",
+        "target_version": "Any",
+        "app_extended": false
+    },
+    {
+        "app_package": "com.andrewshu.android.reddit",
+        "app_code": "reddit_isfun",
         "app_name": "NA",
         "app_url": "NA",
         "app_icon": "NA",
@@ -187,15 +196,6 @@
         "app_icon": "NA",
         "target_version": "Any",
         "app_extended": true
-    },
-    {
-        "app_package": "me.ccrama.redditslide",
-        "app_code": "reddit_slide",
-        "app_name": "NA",
-        "app_url": "NA",
-        "app_icon": "NA",
-        "target_version": "Any",
-        "app_extended": false
     },
     {
         "app_package": "eu.faircode.netguard",
