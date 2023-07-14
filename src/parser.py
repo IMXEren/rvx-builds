@@ -8,7 +8,7 @@ from loguru import logger
 
 from src.config import RevancedConfig
 from src.patches import Patches
-from src.utils import possible_archs
+from src.utils import possible_archs, slugify
 
 
 class Parser(object):
