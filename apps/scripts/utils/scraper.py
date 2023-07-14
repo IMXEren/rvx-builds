@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 from utils.repo import GitHubRepo
-from utils.urls import GitHubURLs
+from urls import GitHubURLs
 
 # Constants for GitHub URLs
 gh = GitHubRepo()
