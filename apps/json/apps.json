@@ -5,8 +5,7 @@
         "app_name": "YouTube",
         "app_url": "https://play.google.com/store/apps/details?id=com.google.android.youtube",
         "app_icon": "https://play-lh.googleusercontent.com/lMoItBgdPPVDJsNOVtP26EKHePkwBg-PkuY9NOrc-fumRtTFP4XhpUNk_22syN4Datc=w64-h64",
-        "target_version": "18.25.40",
-        "app_extended": true
+        "target_version": "18.23.35"
     },
     {
         "app_package": "com.google.android.apps.youtube.music",
@@ -14,8 +13,7 @@
         "app_name": "YouTube Music",
         "app_url": "https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music",
         "app_icon": "https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64",
-        "target_version": "Any",
-        "app_extended": true
+        "target_version": "Any"
     },
     {
         "app_package": "com.dci.dev.androidtwelvewidgets",
@@ -23,8 +21,7 @@
         "app_name": "Android Widgets (Material U)",
         "app_url": "https://play.google.com/store/apps/details?id=com.dci.dev.androidtwelvewidgets",
         "app_icon": "https://play-lh.googleusercontent.com/r-HYXeSDiTHhgXNd8rU2s7zV9QclSjIM0FF-oWdhYWCefa5dxUHLvyf5ujaIm8hqp9w=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.backdrops.wallpapers",
@@ -32,8 +29,7 @@
         "app_name": "Backdrops - Wallpapers",
         "app_url": "https://play.google.com/store/apps/details?id=com.backdrops.wallpapers",
         "app_icon": "https://play-lh.googleusercontent.com/ybkU2kHmt5RBz4mXpxyYuO1ZqM3I8uJPhAKA7v51Pj03fwmT7PMMgPP6X2_CymH1cyg=w64-h64",
-        "target_version": "4.52",
-        "app_extended": false
+        "target_version": "4.52"
     },
     {
         "app_package": "com.onelouder.baconreader",
@@ -41,8 +37,7 @@
         "app_name": "BaconReader for Reddit",
         "app_url": "https://www.apkmirror.com/apk/onelouder-apps/baconreader-for-reddit/",
         "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F92%2F649ae295d56d0_com.onelouder.baconreader.png&w=64&h=64&q=100",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.rubenmayayo.reddit",
@@ -50,8 +45,7 @@
         "app_name": "Boost for reddit",
         "app_url": "https://play.google.com/store/apps/details?id=com.rubenmayayo.reddit",
         "app_icon": "https://play-lh.googleusercontent.com/GF71STDEmTKhbEexCYbePXAjYym_ee8E6WR7_R8jr5_Xf10jfL0Kibkjfl33zDrJBw=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.candylink.openvpn",
@@ -59,8 +53,7 @@
         "app_name": "CandyLink VPN",
         "app_url": "https://play.google.com/store/apps/details?id=com.candylink.openvpn",
         "app_icon": "https://play-lh.googleusercontent.com/0zHhVlljLtcEiEFKP_GWXorKD9_V6g9RBnyn52Hg3NhVJAbd-wpK8-TRzTI0loxZ8Q=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.myprog.hexedit",
@@ -68,8 +61,7 @@
         "app_name": "HEX Editor",
         "app_url": "https://play.google.com/store/apps/details?id=com.myprog.hexedit",
         "app_icon": "https://play-lh.googleusercontent.com/qb_ezXXQlsK3darAylqSLudM01tYOXw-sAm2qeODdKXufv1kZmuTb3XSf2fzqwSEvvE=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "ginlemon.iconpackstudio",
@@ -77,8 +69,7 @@
         "app_name": "Icon Pack Studio",
         "app_url": "https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio",
         "app_icon": "https://play-lh.googleusercontent.com/Bw64Ft8n9ei2NJ_Et2MxWjSInZrL_6yMJbu7Usw-BcOgjvjo75xP4JnyjsX8VZJM9_E=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "ml.docilealligator.infinityforreddit",
@@ -86,8 +77,7 @@
         "app_name": "Infinity for Reddit",
         "app_url": "https://play.google.com/store/apps/details?id=ml.docilealligator.infinityforreddit",
         "app_icon": "https://play-lh.googleusercontent.com/ZgV5YIzb5katDKcJqke7uXkKFg1F4ZpMR4RKy-5RHa1vadRHrZjMBpmSXfo-m1QV3GY=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.nis.app",
@@ -95,8 +85,7 @@
         "app_name": "Inshorts - News in 60 words",
         "app_url": "https://play.google.com/store/apps/details?id=com.nis.app",
         "app_icon": "https://play-lh.googleusercontent.com/lvAGNNFIBMC3ZgS-JJcSwDzpSjOGMg7FGY14FrffJobLOed9-H2DiuZwknsIwVwKwTjo=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.instagram.android",
@@ -104,8 +93,7 @@
         "app_name": "Instagram",
         "app_url": "https://play.google.com/store/apps/details?id=com.instagram.android",
         "app_icon": "https://play-lh.googleusercontent.com/VRMWkE5p3CkWhJs6nv-9ZsLAs1QOg5ob1_3qg-rckwYW7yp1fMrYZqnEFpk0IoVP4LM=w64-h64",
-        "target_version": "275.0.0.27.98",
-        "app_extended": false
+        "target_version": "275.0.0.27.98"
     },
     {
         "app_package": "net.binarymode.android.irplus",
@@ -113,8 +101,7 @@
         "app_name": "irplus - Infrared Remote",
         "app_url": "https://play.google.com/store/apps/details?id=net.binarymode.android.irplus",
         "app_icon": "https://play-lh.googleusercontent.com/xNQNgiKHPtYE0Zk_bRd0ZOp9rOOJTy2puzOx8CUBq2Ja4yhOQwdrBdeOrDTGQA9aSg=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.zombodroid.MemeGenerator",
@@ -122,8 +109,7 @@
         "app_name": "Meme Generator",
         "app_url": "https://play.google.com/store/apps/details?id=com.zombodroid.MemeGenerator",
         "app_icon": "https://play-lh.googleusercontent.com/YNBUh-8PzcAXryawZ559rEUDowEOgXsPDfTDBOi4AQQR6NTsWGvYTU1tMRctN3uoRqw8=w64-h64",
-        "target_version": "4.6377",
-        "app_extended": false
+        "target_version": "4.6377"
     },
     {
         "app_package": "com.facebook.orca",
@@ -131,17 +117,7 @@
         "app_name": "Messenger",
         "app_url": "https://play.google.com/store/apps/details?id=com.facebook.orca",
         "app_icon": "https://play-lh.googleusercontent.com/ldcQMpP7OaVmglCF6kGas9cY_K0PsJzSSosx2saw9KF1m3RHaEXpH_9mwBWaYnkmctk=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
-    },
-    {
-        "app_package": "com.mgoogle.android.gms",
-        "app_code": "microg",
-        "app_name": "MicroG",
-        "app_url": "https://github.com/inotia00/mMicroG",
-        "app_icon": "/apps/icons/microg/ic_microg_launcher-64x64.png",
-        "target_version": "Any",
-        "app_extended": true
+        "target_version": "Any"
     },
     {
         "app_package": "com.ithebk.expensemanager",
@@ -149,8 +125,7 @@
         "app_name": "Money Manager- Expense, Budget",
         "app_url": "https://play.google.com/store/apps/details?id=com.ithebk.expensemanager",
         "app_icon": "https://play-lh.googleusercontent.com/N_KBHHLEjLXKXF2kWQPbcPmoFMNZkAvlT2PNpNOwmbm1s-vb9ZmYiRl8E0KOanwJWObV=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "org.totschnig.myexpenses",
@@ -158,8 +133,7 @@
         "app_name": "My Expenses",
         "app_url": "https://play.google.com/store/apps/details?id=org.totschnig.myexpenses",
         "app_icon": "https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64",
-        "target_version": "3.4.9",
-        "app_extended": false
+        "target_version": "3.4.9"
     },
     {
         "app_package": "eu.faircode.netguard",
@@ -167,8 +141,7 @@
         "app_name": "NetGuard - no-root firewall",
         "app_url": "https://play.google.com/store/apps/details?id=eu.faircode.netguard",
         "app_icon": "https://play-lh.googleusercontent.com/XEd1PsXgOSNNpD2hlZMvigIOJ9e5JCL2KhCJ4X984Az5EFw6YiecDebqdsZ12VNU2kPu=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.teslacoilsw.launcher",
@@ -176,8 +149,7 @@
         "app_name": "Nova Launcher",
         "app_url": "https://play.google.com/store/apps/details?id=com.teslacoilsw.launcher",
         "app_icon": "https://play-lh.googleusercontent.com/Et6Ha-3AtD1XVbSHn68xCRFkQcPiZIKnl2q5y9EoRT5Y7u2NHRb35ii_Jot-hNLfvv3y=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.awedea.nyx",
@@ -185,8 +157,7 @@
         "app_name": "Nyx Music Player",
         "app_url": "https://play.google.com/store/apps/details?id=com.awedea.nyx",
         "app_icon": "https://play-lh.googleusercontent.com/qg5vyfgAD_p05a9c82y0X7BvMVYq74YBK3-75y2SViOfX6zJJWHvnyc57BzKMnJJX-g=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.google.android.apps.recorder",
@@ -194,8 +165,7 @@
         "app_name": "Recorder",
         "app_url": "https://play.google.com/store/apps/details?id=com.google.android.apps.recorder",
         "app_icon": "https://play-lh.googleusercontent.com/OfRwK6rMr4i7gu1AKeNbK-qnYPuL6EVQ5j6AYYQc0ge-I-NPYoBUsweVPuJLSOtHYag=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.reddit.frontpage",
@@ -203,8 +173,7 @@
         "app_name": "Reddit",
         "app_url": "https://play.google.com/store/apps/details?id=com.reddit.frontpage",
         "app_icon": "https://play-lh.googleusercontent.com/nlptFyxNsb8J0g8ZLux6016kunduV4jCxIrOJ7EEy-IobSN1RCDXAJ6DTGP81z7rr5Zq=w64-h64",
-        "target_version": "2023.16.1",
-        "app_extended": true
+        "target_version": "Any"
     },
     {
         "app_package": "free.reddit.news",
@@ -212,8 +181,7 @@
         "app_name": "Relay for reddit",
         "app_url": "https://www.apkmirror.com/apk/dbrady/relay-for-reddit-2/",
         "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F07%2F11%2F64b0b42d5e90d_free.reddit.news.png&w=64&h=64&q=100",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.andrewshu.android.reddit",
@@ -221,8 +189,7 @@
         "app_name": "rif is fun for Reddit",
         "app_url": "https://www.apkmirror.com/apk/talklittle/reddit-is-fun/",
         "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F08%2F6486686b1d551_com.andrewshu.android.reddit.png&w=64&h=64&q=100",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "me.ccrama.redditslide",
@@ -230,8 +197,7 @@
         "app_name": "Slide for Reddit",
         "app_url": "https://www.apkmirror.com/apk/haptic-apps/slide-for-reddit/",
         "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2021%2F06%2F27%2F60cbdda6baa4a.png&w=64&h=64&q=100",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.sony.songpal.mdr",
@@ -239,8 +205,7 @@
         "app_name": "Sony | Headphones Connect",
         "app_url": "https://play.google.com/store/apps/details?id=com.sony.songpal.mdr",
         "app_icon": "https://play-lh.googleusercontent.com/BpJMwIjqHja-cZL_p2JREBTuG8d-Nyp9gUiQzciP9HvHAsF69mt9HFzouFTdimiuiWIH=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.spotify.music",
@@ -248,8 +213,7 @@
         "app_name": "Spotify: Music and Podcasts",
         "app_url": "https://play.google.com/store/apps/details?id=com.spotify.music",
         "app_icon": "https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.laurencedawson.reddit_sync",
@@ -257,8 +221,7 @@
         "app_name": "Sync for reddit",
         "app_url": "https://www.apkmirror.com/apk/red-apps-ltd/sync-for-reddit/",
         "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F28%2F649f9d78c7ab5_com.laurencedawson.reddit_sync.png&w=64&h=64&q=100",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "net.dinglisch.android.taskerm",
@@ -266,8 +229,7 @@
         "app_name": "Tasker",
         "app_url": "https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm",
         "app_icon": "https://play-lh.googleusercontent.com/8IkkhPNnxNVYhnUxcidu0-Yp72aSb3H0gQJ1U-_ImQ7SCGLz1zgXtV7wi2Hpd6Odghg=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.ticktick.task",
@@ -275,8 +237,7 @@
         "app_name": "TickTick:To Do List & Calendar",
         "app_url": "https://play.google.com/store/apps/details?id=com.ticktick.task",
         "app_icon": "https://play-lh.googleusercontent.com/JkYolPNuRAlrXEI9vlk-XOid3VFJ0IPjDj2eM_xrriuE3Zu8IX9cuMkI7JOTw1upNxbW=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "com.ss.android.ugc.trill",
@@ -284,8 +245,7 @@
         "app_name": "TikTok",
         "app_url": "https://play.google.com/store/apps/details?id=com.ss.android.ugc.trill",
         "app_icon": "https://play-lh.googleusercontent.com/Ui_-OW6UJI147ySDX9guWWDiCPSq1vtxoC-xG17BU2FpU0Fi6qkWwuLdpddmT9fqrA=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "tv.trakt.trakt",
@@ -293,8 +253,7 @@
         "app_name": "Trakt",
         "app_url": "https://play.google.com/store/apps/details?id=tv.trakt.trakt",
         "app_icon": "https://play-lh.googleusercontent.com/n0SqzImml-_GwGHQJRIRQs2IgHELIZPH_GZIwSl7c71qhok8dgZh7rQvOH1jihkVhw=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "tv.twitch.android.app",
@@ -302,8 +261,7 @@
         "app_name": "Twitch: Live Game Streaming",
         "app_url": "https://play.google.com/store/apps/details?id=tv.twitch.android.app",
         "app_icon": "https://play-lh.googleusercontent.com/QLQzL-MXtxKEDlbhrQCDw-REiDsA9glUH4m16syfar_KVLRXlzOhN7tmAceiPerv4Jg=w64-h64",
-        "target_version": "15.4.1",
-        "app_extended": false
+        "target_version": "15.4.1"
     },
     {
         "app_package": "com.twitter.android",
@@ -311,8 +269,7 @@
         "app_name": "Twitter",
         "app_url": "https://play.google.com/store/apps/details?id=com.twitter.android",
         "app_icon": "https://play-lh.googleusercontent.com/wIf3HtczQDjHzHuu7vezhqNs0zXAG85F7VmP7nhsTxO3OHegrVXlqIh_DWBYi86FTIGk=w64-h64",
-        "target_version": "9.71.0-release.0",
-        "app_extended": false
+        "target_version": "9.71.0-release.0"
     },
     {
         "app_package": "com.vsco.cam",
@@ -320,8 +277,7 @@
         "app_name": "VSCO: Photo & Video Editor",
         "app_url": "https://play.google.com/store/apps/details?id=com.vsco.cam",
         "app_icon": "https://play-lh.googleusercontent.com/RdCklOFg3SLN5QF8OR7cU-5bs1ESYo_pqGYrK2ena3XZDcrLOpjf7vLtNQELOR7Uo4MH=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "de.dwd.warnapp",
@@ -329,8 +285,7 @@
         "app_name": "WarnWetter",
         "app_url": "https://play.google.com/store/apps/details?id=de.dwd.warnapp",
         "app_icon": "https://play-lh.googleusercontent.com/vzWpHOJbMbaWc2FgHWNcp_xIQyn0qHxZVaG1ly0kYTxrhNfWD3DAnwmnQRPx36yauxs=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "co.windyapp.android",
@@ -338,8 +293,7 @@
         "app_name": "Windy.app: Windy Weather Map",
         "app_url": "https://play.google.com/store/apps/details?id=co.windyapp.android",
         "app_icon": "https://play-lh.googleusercontent.com/6dXNbnL3ge2DfM4cQ1XXIHZsOzg9LZtgMTmNWqY-7oI9dDDbL9dd8ct2DzaTVa0hNAq1=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     },
     {
         "app_package": "io.yuka.android",
@@ -347,7 +301,6 @@
         "app_name": "Yuka - Food & cosmetic scan",
         "app_url": "https://play.google.com/store/apps/details?id=io.yuka.android",
         "app_icon": "https://play-lh.googleusercontent.com/fmGc9NGmf0ZTV2PQIhZ7lprvqNaUOaZEFXZg6MIG5fDaUiTua4Y2D7IxA3jaHDj2xQ=w64-h64",
-        "target_version": "Any",
-        "app_extended": false
+        "target_version": "Any"
     }
 ]
