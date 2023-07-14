@@ -1,7 +1,7 @@
 requests
 beautifulsoup4
 pytz
-selenium
-pyvirtualdisplay
-webdriver-manager
-undetected-chromedriver
+# selenium
+# pyvirtualdisplay
+# webdriver-manager
+# undetected-chromedriver
