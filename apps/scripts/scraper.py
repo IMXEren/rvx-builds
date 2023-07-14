@@ -8,13 +8,16 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
-# Constants for GitHub URLs
-repo_owner = "IMXEren"
-repo_name = "rvx-build"
+from utils.repo import GitHubRepo
+from utils.urls import GitHubURLs
 
-# Construct the URLs using the repo owner and repo name
-config_py_file_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/main/src/config.py"
-extras_json_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/main/apps/json/extras.json"
+# Constants for GitHub URLs
+gh = GitHubRepo()
+repo = gh.get_repo()
+branch = gh.get_branch()
+urls = GitHubURLs(repo, branch)
+config_py_file_url = urls.get_config_py()
+extras_json_url = urls.get_extras_json
 
 def gplay_scrape(package_name):
     app_url = f"https://play.google.com/store/apps/details?id={package_name}"
