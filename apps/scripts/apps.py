@@ -24,7 +24,7 @@ rv_json_url = urls.get_rv_json()
 rvx_json_url = urls.get_rvx_json()
 
 json_file = "apps/json/apps.json"
-md_file = "apps/docs/README.md"
+md_file = "apps/docs/apps.md"
 
 def get_available_patch_apps(url):
     response = requests.get(url)
@@ -85,123 +85,6 @@ def version_key(version):
     # Converts the version string to a tuple of integers
     return tuple(map(int, re.findall(r'\d+', version)))
 
-# def gplay_scrape(package_name):
-#     app_url = f"https://play.google.com/store/apps/details?id={package_name}"
-#     response = requests.get(app_url)
-#     soup = BeautifulSoup(response.text, "html.parser")
-#     app_name_element = soup.select_one("h1 > span")
-#     app_icon_element = soup.select_one("div.Il7kR > img")
-#     if app_icon_element is None:
-#         app_icon_element = soup.select_one("div.qxNhq > img")
-#     if app_icon_element:
-#         app_icon = app_icon_element["src"] if app_icon_element else ""
-#         app_icon = app_icon.replace("=w240-h480", "=w64-h64")
-#     if app_name_element:
-#         app_name = app_name_element.text
-#     return app_name, app_icon, app_url
-
-# def apk_mirror_selenium_scrape(app_code):
-#     apk_mirror = "https://www.apkmirror.com"
-#     config_py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/config.py"
-#     response = requests.get(config_py_file_url)
-#     pattern = r'"{}": f"(.*?)",'.format(app_code)
-#     match = re.search(pattern, response.text)
-#     if match:
-#         app_url = match.group(1)
-#         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
-#         print(app_url)
-#         display = Display(visible=0, size=(800, 600))
-#         display.start()
-#         chrome_options = Options()
-#         # driver = uc.Chrome(headless=True, options=chrome_options)
-#         driver = webdriver.Chrome(options=chrome_options)
-#         driver.get(app_url)
-#         app_name_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.f-grow > h1")
-#         app_icon_element = driver.find_element(By.CSS_SELECTOR, "#masthead > header > div > div > div.p-relative.icon-container > img")
-#         app_name = app_name_element.text if app_name_element else "NA"
-#         app_icon = app_icon_element.get_attribute("src") if app_icon_element else "NA"
-#         app_icon = app_icon.replace("&w=96&h=96", "&w=64&h=64")
-#         driver.quit()
-#         display.stop()
-#         print("App Name:", app_name, flush=True)
-#         print("Icon URL:", app_icon, flush=True)
-#         return app_name, app_icon, app_url
-#     else:
-#         print("APKMirror URL not found for the specified app code")
-
-# def apk_mirror_requests_scrape(app_code):
-#     apk_mirror = "https://www.apkmirror.com"
-#     config_py_file_url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/src/config.py"
-#     response = requests.get(config_py_file_url)
-#     pattern = r'"{}": f"(.*?)",'.format(app_code)
-#     match = re.search(pattern, response.text)
-#     if match:
-#         app_url = match.group(1)
-#         app_url = app_url.replace("{self.apk_mirror}", apk_mirror)
-#         print(app_url)
-#         s = requests
-#         hdr = {
-#             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-#             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#             'Accept-Encoding': 'none',
-#             'Accept-Language': 'en-US,en;q=0.9',
-#             'Connection': 'keep-alive',
-#             }
-#         r = s.get(app_url, headers=hdr)
-#         soup = BeautifulSoup(r.text, "html.parser")
-#         app_name_element = soup.select_one("#masthead > header > div > div > div.f-grow > h1")
-#         app_icon_element = soup.select_one("#masthead > header > div > div > div.p-relative.icon-container > img")
-#         if app_icon_element:
-#             app_icon = app_icon_element["src"] if app_icon_element else ""
-#             app_icon = f'{apk_mirror}{app_icon.replace("&w=96&h=96", "&w=64&h=64")}'
-#         if app_name_element:
-#             app_name = app_name_element.text
-#         print("App Name:", app_name, flush=True)
-#         print("Icon URL:", app_icon, flush=True)
-#         return app_name, app_icon, app_url
-#     else:
-#         print("APKMirror URL not found for the specified app code")
-
-# def get_json_data(key, value, url):
-#     response = requests.get(url)
-#     data = response.json()
-#     matched_objects = [obj for obj in data if obj.get(key) == value]
-#     return matched_objects
-
-# def scraper(package_name, code_name):
-#     # Parameter variables    
-#     key = "app_package"
-#     value = package_name
-#     url = "https://raw.githubusercontent.com/IMXEren/rvx-builds/main/apps/json/extras.json"
-    
-#     # Ordered List of functions
-#     scrapers = [get_json_data, gplay_scrape, apk_mirror_requests_scrape, apk_mirror_selenium_scrape]
-    
-#     # Ordered List of parameter variables
-#     params = [
-#         (key, value, url,),
-#         (package_name,),
-#         (code_name,),
-#         (code_name,),
-#     ]
-    
-#     # Calling functions with parameter variables
-#     for scraper, param in zip(scrapers, params):
-#         # print("Scraper:", scraper.__name__)
-#         # print("Params:", param)
-#         try:
-#             if scraper == get_json_data:
-#                 result = scraper(*param)
-#                 app_name, app_icon, app_url = result[0]['app_name'], result[0]['app_icon'], result[0]['app_url']
-#             else:
-#                 app_name, app_icon, app_url = scraper(*param)
-#             break
-#         except Exception as e:
-#             app_name, app_icon, app_url = "NA", "NA", "NA"
-#             # print("ERROR:", str(e))
-#             continue
-#     return app_name, app_icon, app_url
-
 rv_patches = get_patches_json("rv")
 rvx_patches = get_patches_json("rvx")
 all_patches = rv_patches + rvx_patches
@@ -220,80 +103,101 @@ print("Package Names:", supported_packages, flush=True)
 print("App Codes:", supported_appcodes, flush=True)
 
 # Step 3: Match package names and scraping
-json_data = []
-patch_apps = 0
-for package_name in supported_packages:
-    if package_name in rv_packages:
-        app_extended = False
-    if package_name in rvx_packages:
-        app_extended = True
-    patch_apps += 1
-    latest_versions = get_last_version(all_patches, package_name)
-    target_version = max(latest_versions, key=version_key)
-    print(package_name, flush=True)
-    app_codename = get_app_code(package_name)
-    app_name, app_icon, app_url = scraper(package_name, app_codename)
-    print(app_name, flush=True)
-    json_data.append({
-            "app_package": package_name,
-            "app_code": app_codename,
-            "app_name": app_name,
-            "app_url": app_url,
-            "app_icon": app_icon,
-            "target_version": target_version,
-            "app_extended": app_extended,
-        })
+def make_json_data(packages, patches=[]):
+    json_data = []
+    patch_apps = 0
+    for package_name in packages:
+        patch_apps += 1
+        latest_versions = get_last_version(patches, package_name)
+        target_version = max(latest_versions, key=version_key)
+        print(package_name, flush=True)
+        app_codename = get_app_code(package_name)
+        app_name, app_icon, app_url = scraper(package_name, app_codename)
+        print(app_name, flush=True)
+        json_data.append({
+                "app_package": package_name,
+                "app_code": app_codename,
+                "app_name": app_name,
+                "app_url": app_url,
+                "app_icon": app_icon,
+                "target_version": target_version,
+            })
+    return patch_apps, json_data
 
+rv_patch_apps, rv_json_data = make_json_data(rv_packages, rv_patches)
+# rvx_patch_apps, rvx_json_data = make_json_data(rvx_packages, rvx_patches)
             
 # Step 4: Handle unmatched package names
-unmatched_packages = all_packages - set(available_packages)
-for package_name in unmatched_packages:
+unadded_packages = list(all_packages - set(available_packages))
+removed_packages = list(set(available_packages) - all_packages)
+for package_name in unadded_packages:
     print("Missing package:", package_name, flush=True)
 
-# Sort the output data by app_name in ascending order
-json_data.sort(key=lambda x: (x["app_name"] != "YouTube", x["app_name"] != "YouTube Music", x["app_name"].lower()))
-os.makedirs(os.path.dirname(json_file), exist_ok=True) # Create the directories if they don't exist
-# Dump json data to JSON file
-with open(json_file, "w", encoding="utf-8") as f:
-    json.dump(json_data, f, indent=4, ensure_ascii=False)
-print("Apps json data has been dumped to 'apps.json'!!", flush=True)
+# unadded_scrape = []
+# removed_scrape = []
+# for package_name in unadded_packages:
+#     app_name, app_icon, app_url = scraper(package_name, None)
+#     if app_name == "NA":
+#         print("Unadded package:", package_name)
+#     else:
+#         unadded_scrape.append([app_name, app_icon, app_url])
+# for package_name in removed_packages:
+#     app_name, app_icon, app_url = scraper(package_name, None)
+#     if app_name == "NA":
+#         print("Removed package:", package_name)
+#     else:
+#         removed_scrape.append([app_name, app_icon, app_url])
+# print("Unadded Scrape:", unadded_scrape)
+# print("Removed Scrape:", removed_scrape)
+# exit()
 
-# Load the data from the JSON file
-with open(json_file, "r", encoding="utf-8") as f:
-    data = json.load(f)
-# Write apps.md
-content = "# Apps\n\n"
-content += f"## Here is a list of {patch_apps} apps that can be patched\n\n"
-timezone = pytz.timezone("UTC")
-current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
-content += f"Generated at **`{current_time}`**\n\n"
-table = "| S.No. | Icon | Name | Code | ReVanced Extended (RVX) | Package |\n"
-table +="|:-----:|------|------|------|:-----------------------:|---------|\n"
-serial_no = 0
-for entry in data:
-    app_package = entry["app_package"]
-    app_code = entry["app_code"]
-    app_name = entry["app_name"]
-    app_icon = entry["app_icon"]
-    app_url = entry["app_url"]
-    serial_no += 1
-    if app_package in rvx_packages:
-        extended = ":white_check_mark:"
-    else:
-        extended = ":x:"
-    # Escape pipe characters in the data
-    app_package = app_package.replace("|", "\\|")
-    app_code = app_code.replace("|", "\\|")
-    app_name = app_name.replace("|", "\\|")
-    app_icon = app_icon.replace("|", "\\|")
-    app_url = app_url.replace("|", "\\|")
-    # Add a row to the table
-    table += f"| {serial_no}. | ![]({app_icon}) | [**{app_name}**]({app_url}) | `{app_code}` | {extended} | `{app_package}` |\n"
-# Combine the content and table
-content += table
-# Add more sentences or content
-content += "\n**Note: Not all apps that can be patched using ReVanced are present in this list. Try raising an issue for me to add that app or you may do it yourself. [Look here]()**.\n"
-os.makedirs(os.path.dirname(md_file), exist_ok=True) # Create the directories if they don't exist
-# Write the content to the Markdown file
-with open(md_file, "w", encoding="utf-8") as f:
-    f.write(content)
+def write_md(patch_apps, json_data):
+    # Sort the output data by app_name in ascending order
+    json_data.sort(key=lambda x: (x["app_name"] != "YouTube", x["app_name"] != "YouTube Music", x["app_name"].lower()))
+    os.makedirs(os.path.dirname(json_file), exist_ok=True) # Create the directories if they don't exist
+    # Dump json data to JSON file
+    with open(json_file, "w", encoding="utf-8") as f:
+        json.dump(json_data, f, indent=4, ensure_ascii=False)
+    print("Apps json data has been dumped to 'apps.json'!!", flush=True)
+
+    # Load the data from the JSON file
+    with open(json_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    # Write apps.md
+    content = "# Apps\n\n"
+    content += f"## Here is a list of {patch_apps} apps that can be patched\n\n"
+    timezone = pytz.timezone("UTC")
+    current_time = datetime.datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
+    content += f"Generated at **`{current_time}`**\n\n"
+    table = "| S.No. | Icon | Name | Code | ReVanced Extended (RVX) | Package |\n"
+    table +="|:-----:|------|------|------|:-----------------------:|---------|\n"
+    serial_no = 0
+    for entry in data:
+        app_package = entry["app_package"]
+        app_code = entry["app_code"]
+        app_name = entry["app_name"]
+        app_icon = entry["app_icon"]
+        app_url = entry["app_url"]
+        serial_no += 1
+        if app_package in rvx_packages:
+            extended = ":white_check_mark:"
+        else:
+            extended = ":x:"
+        # Escape pipe characters in the data
+        app_package = app_package.replace("|", "\\|")
+        app_code = app_code.replace("|", "\\|")
+        app_name = app_name.replace("|", "\\|")
+        app_icon = app_icon.replace("|", "\\|")
+        app_url = app_url.replace("|", "\\|")
+        # Add a row to the table
+        table += f"| {serial_no}. | ![]({app_icon}) | [**{app_name}**]({app_url}) | `{app_code}` | {extended} | `{app_package}` |\n"
+    # Combine the content and table
+    content += table
+    # Add more sentences or content
+    content += "\n**Note: Not all apps that can be patched using ReVanced are present in this list. Try raising an issue for me to add that app or you may do it yourself. [Look here]()**.\n"
+    os.makedirs(os.path.dirname(md_file), exist_ok=True) # Create the directories if they don't exist
+    # Write the content to the Markdown file
+    with open(md_file, "w", encoding="utf-8") as f:
+        f.write(content)
+
+write_md(rv_patch_apps, rv_json_data)
