@@ -1,4 +1,5 @@
 """Revanced Patches."""
+import json
 import subprocess
 from typing import Any, Dict, List, Tuple
 
@@ -67,17 +68,14 @@ class Patches(object):
     def check_java() -> None:
         """Check if Java17 is installed."""
         try:
-            logger.debug("Checking if java is available")
             jd = subprocess.check_output(
                 ["java", "-version"], stderr=subprocess.STDOUT
             ).decode("utf-8")
             jd = jd[1:-1]
             if "Runtime Environment" not in jd:
-                logger.debug("Java Must be installed")
-                exit(-1)
+                raise subprocess.CalledProcessError(-1, "java -version")
             if "17" not in jd:
-                logger.debug("Java 17 Must be installed")
-                exit(-1)
+                raise subprocess.CalledProcessError(-1, "java -version")
             logger.debug("Cool!! Java is available")
         except subprocess.CalledProcessError:
             logger.debug("Java 17 Must be installed")
@@ -87,18 +85,27 @@ class Patches(object):
     def fetch_patches(self) -> None:
         """Function to fetch all patches."""
         session = Session()
-
-        logger.debug("fetching all patches")
-        response = session.get(
-            "https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json"
-        )
-        handle_response(response)
-        patches = response.json()
+        if self.config.dry_run:
+            logger.debug("fetching all patches from local file")
+            with open("patches.json") as f:
+                patches = json.load(f)
+        else:
+            url = "https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json"
+            logger.debug(f"fetching all patches from {url}")
+            response = session.get(url)
+            handle_response(response)
+            patches = response.json()
 
         for app_name in (self.revanced_app_ids[x][1] for x in self.revanced_app_ids):
             setattr(self, app_name, [])
+        setattr(self, "universal_patch", [])
 
         for patch in patches:
+            if not patch["compatiblePackages"]:
+                p = {x: patch[x] for x in ["name", "description"]}
+                p["app"] = "universal"
+                p["version"] = "all"
+                getattr(self, "universal_patch").append(p)
             for compatible_package, version in [
                 (x["name"], x["versions"]) for x in patch["compatiblePackages"]
             ]:
@@ -108,14 +115,16 @@ class Patches(object):
                     p["app"] = compatible_package
                     p["version"] = version[-1] if version else "all"
                     getattr(self, app_name).append(p)
-        if self.config.build_extended:
-            url = "https://raw.githubusercontent.com/inotia00/revanced-patches/revanced-extended/patches.json"
+        if self.config.dry_run:
+            extended_patches = patches
         else:
-            url = "https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json"
-
-        response = session.get(url)
-        handle_response(response)
-        extended_patches = response.json()
+            if self.config.build_extended:
+                url = "https://raw.githubusercontent.com/inotia00/revanced-patches/revanced-extended/patches.json"
+            else:
+                url = "https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json"
+            response = session.get(url)
+            handle_response(response)
+            extended_patches = response.json()
         for app_name in (
             self.revanced_extended_app_ids[x][1] for x in self.revanced_extended_app_ids
         ):
@@ -138,6 +147,8 @@ class Patches(object):
         for app_name, app_id in self.revanced_app_ids.values():
             n_patches = len(getattr(self, app_id))
             logger.debug(f"Total patches in {app_name} are {n_patches}")
+        n_patches = len(getattr(self, "universal_patch"))
+        logger.debug(f"Total universal patches are {n_patches}")
 
     def __init__(self, config: RevancedConfig) -> None:
         self.config = config
@@ -179,13 +190,16 @@ class Patches(object):
         :param parser: Parser Obj
         :param patches: All the patches of a given app
         """
-        logger.debug(f"Excluding patches for app {app}")
         if self.config.build_extended and app in self.config.extended_apps:
             excluded_patches = self.config.env.list(
                 f"EXCLUDE_PATCH_{app}_EXTENDED".upper(), []
             )
+            included_patches = self.config.env.list(
+                f"INCLUDE_PATCH_{app}_EXTENDED".upper(), []
+            )
         else:
             excluded_patches = self.config.env.list(f"EXCLUDE_PATCH_{app}".upper(), [])
+            included_patches = self.config.env.list(f"INCLUDE_PATCH_{app}".upper(), [])
         for patch in patches:
             normalized_patch = patch["name"].lower().replace(" ", "-")
             parser.include(
@@ -193,6 +207,10 @@ class Patches(object):
             ) if normalized_patch not in excluded_patches else parser.exclude(
                 normalized_patch
             )
+        for normalized_patch in included_patches:
+            parser.include(normalized_patch) if normalized_patch not in getattr(
+                self, "universal_patch", []
+            ) else ()
         excluded = parser.get_excluded_patches()
         if excluded:
             logger.debug(f"Excluded patches {excluded} for {app}")
