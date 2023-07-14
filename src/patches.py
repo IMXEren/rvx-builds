@@ -54,14 +54,13 @@ class Patches(object):
         key: (value, "_" + value) for key, value in _revanced_app_ids.items()
     }
     _revanced_extended_app_ids = {
-        "com.google.android.youtube": ("youtube", "_yt"),
-        "com.google.android.apps.youtube.music": ("youtube_music", "_ytm"),
-        "com.mgoogle.android.gms": ("MicroG", "_MicroG"),
-        "com.reddit.frontpage": ("reddit", "_reddit"),
+        "com.google.android.youtube": "youtube",
+        "com.google.android.apps.youtube.music": "youtube_music",
+        "com.mgoogle.android.gms": "MicroG",
+        "com.reddit.frontpage": "reddit",
     }
     revanced_extended_app_ids = {
-        key: (value[0], "_" + value[0])
-        for key, value in _revanced_extended_app_ids.items()
+        key: (value, "_" + value) for key, value in _revanced_extended_app_ids.items()
     }
 
     @staticmethod
@@ -144,6 +143,8 @@ class Patches(object):
         self.config = config
         self.check_java()
         self.fetch_patches()
+        if self.config.dry_run:
+            self.config.apps = list(self._revanced_app_ids.values())
 
     def get(self, app: str) -> Tuple[List[Dict[str, str]], str]:
         """Get all patches for the given app.
