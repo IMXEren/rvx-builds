@@ -8,8 +8,8 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
-from repo import GitHubRepo
-from urls import GitHubURLs
+from utils.repo import GitHubRepo
+from utils.urls import GitHubURLs
 
 # Constants for GitHub URLs
 gh = GitHubRepo()
