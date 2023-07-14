@@ -18,7 +18,7 @@ def get_available_patch_apps(url):
     response = requests.get(url)
     python_code = response.text
     # Extract package_name and app_code from the Python code
-    pattern = r'"([^"]+)":\s*\(?"([^"]+)",'
+    pattern = r'"([^"]+)":\s*"([^"]+)",'
     matches = re.findall(pattern, python_code)
     package_name = []
     app_code = []
