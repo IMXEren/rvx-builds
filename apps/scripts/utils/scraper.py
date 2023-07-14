@@ -18,8 +18,6 @@ branch = gh.get_branch()
 urls = GitHubURLs(repo, branch)
 config_py_file_url = urls.get_config_py()
 extras_json_url = urls.get_extras_json()
-print(config_py_file_url, flush=True)
-print("\n",extras_json_url, flush=True)
 
 def gplay_scrape(package_name):
     app_url = f"https://play.google.com/store/apps/details?id={package_name}"
