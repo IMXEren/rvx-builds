@@ -24,7 +24,7 @@ rv_json_url = urls.get_rv_json()
 rvx_json_url = urls.get_rvx_json()
 
 json_file = "apps/json/apps.json"
-md_file = "apps/docs/apps.md"
+md_file = "apps/docs/README.md"
 
 def get_available_patch_apps(url):
     response = requests.get(url)
