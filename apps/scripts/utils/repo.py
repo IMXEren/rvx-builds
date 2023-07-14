@@ -1,6 +1,6 @@
 class GitHubRepo:
-    repo = "repo"
-    branch = "branch"
+    repo = "IMXEren/rvx-builds"
+    branch = "main"
     @classmethod
     def get_repo(cls):
         return cls.repo
