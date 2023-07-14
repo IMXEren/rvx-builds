@@ -178,22 +178,11 @@ def scraper(package_name, code_name):
         # print("Scraper:", scraper.__name__)
         # print("Params:", param)
         try:
-            # global app_name, app_icon, app_url
-            # del app_name, app_icon, app_url
             if scraper == get_json_data:
                 result = scraper(*param)
                 app_name, app_icon, app_url = result[0]['app_name'], result[0]['app_icon'], result[0]['app_url']
-                # result = result[0]
-                # for key, value in result.items():
-                #     setattr(locals(), key, value)
-                # for obj in result:
-                #     for ex_key in obj:
-                #         ex_value = obj[ex_key]
-                #         globals()[ex_key] = ex_value
             else:
                 app_name, app_icon, app_url = scraper(*param)
-            # if app_name and app_icon and app_url:
-            #     break
             break
         except Exception as e:
             app_name, app_icon, app_url = "NA", "NA", "NA"
