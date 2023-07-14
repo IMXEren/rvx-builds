@@ -162,24 +162,6 @@
         "app_extended": false
     },
     {
-        "app_package": "com.mgoogle.android.gms",
-        "app_code": "MicroG",
-        "app_name": "NA",
-        "app_url": "NA",
-        "app_icon": "NA",
-        "target_version": "Any",
-        "app_extended": true
-    },
-    {
-        "app_package": "com.onelouder.baconreader",
-        "app_code": "reddit_baconreader",
-        "app_name": "NA",
-        "app_url": "NA",
-        "app_icon": "NA",
-        "target_version": "Any",
-        "app_extended": false
-    },
-    {
         "app_package": "me.ccrama.redditslide",
         "app_code": "reddit_slide",
         "app_name": "NA",
@@ -189,8 +171,26 @@
         "app_extended": false
     },
     {
+        "app_package": "com.mgoogle.android.gms",
+        "app_code": "MicroG",
+        "app_name": "NA",
+        "app_url": "NA",
+        "app_icon": "NA",
+        "target_version": "Any",
+        "app_extended": true
+    },
+    {
         "app_package": "com.andrewshu.android.reddit",
         "app_code": "reddit_isfun",
+        "app_name": "NA",
+        "app_url": "NA",
+        "app_icon": "NA",
+        "target_version": "Any",
+        "app_extended": false
+    },
+    {
+        "app_package": "com.onelouder.baconreader",
+        "app_code": "reddit_baconreader",
         "app_name": "NA",
         "app_url": "NA",
         "app_icon": "NA",
