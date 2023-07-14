@@ -2,7 +2,7 @@
 
 ## Here is a list of 39 apps that can be patched
 
-Generated at **`2023-07-14 15:07:54 UTC`**
+Generated at **`2023-07-14 15:25:20 UTC`**
 
 | S.No. | Icon | Name | Code | ReVanced Extended (RVX) | Package |
 |:-----:|------|------|------|:-----------------------:|---------|
@@ -24,10 +24,10 @@ Generated at **`2023-07-14 15:07:54 UTC`**
 | 16. | ![](https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64) | [**My Expenses**](https://play.google.com/store/apps/details?id=org.totschnig.myexpenses) | `my-expenses` | :x: | `org.totschnig.myexpenses` |
 | 17. | ![](NA) | [**NA**](NA) | `reddit_baconreader` | :x: | `com.onelouder.baconreader` |
 | 18. | ![](NA) | [**NA**](NA) | `reddit_isfun` | :x: | `com.andrewshu.android.reddit` |
-| 19. | ![](NA) | [**NA**](NA) | `reddit_sync` | :x: | `com.laurencedawson.reddit_sync` |
-| 20. | ![](NA) | [**NA**](NA) | `reddit_slide` | :x: | `me.ccrama.redditslide` |
+| 19. | ![](NA) | [**NA**](NA) | `reddit_relay` | :x: | `free.reddit.news` |
+| 20. | ![](NA) | [**NA**](NA) | `reddit_sync` | :x: | `com.laurencedawson.reddit_sync` |
 | 21. | ![](NA) | [**NA**](NA) | `MicroG` | :white_check_mark: | `com.mgoogle.android.gms` |
-| 22. | ![](NA) | [**NA**](NA) | `reddit_relay` | :x: | `free.reddit.news` |
+| 22. | ![](NA) | [**NA**](NA) | `reddit_slide` | :x: | `me.ccrama.redditslide` |
 | 23. | ![](https://play-lh.googleusercontent.com/XEd1PsXgOSNNpD2hlZMvigIOJ9e5JCL2KhCJ4X984Az5EFw6YiecDebqdsZ12VNU2kPu=w64-h64) | [**NetGuard - no-root firewall**](https://play.google.com/store/apps/details?id=eu.faircode.netguard) | `netguard` | :x: | `eu.faircode.netguard` |
 | 24. | ![](https://play-lh.googleusercontent.com/Et6Ha-3AtD1XVbSHn68xCRFkQcPiZIKnl2q5y9EoRT5Y7u2NHRb35ii_Jot-hNLfvv3y=w64-h64) | [**Nova Launcher**](https://play.google.com/store/apps/details?id=com.teslacoilsw.launcher) | `nova_launcher` | :x: | `com.teslacoilsw.launcher` |
 | 25. | ![](https://play-lh.googleusercontent.com/qg5vyfgAD_p05a9c82y0X7BvMVYq74YBK3-75y2SViOfX6zJJWHvnyc57BzKMnJJX-g=w64-h64) | [**Nyx Music Player**](https://play.google.com/store/apps/details?id=com.awedea.nyx) | `nyx-music-player` | :x: | `com.awedea.nyx` |

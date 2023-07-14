@@ -162,8 +162,8 @@
         "app_extended": false
     },
     {
-        "app_package": "com.laurencedawson.reddit_sync",
-        "app_code": "reddit_sync",
+        "app_package": "free.reddit.news",
+        "app_code": "reddit_relay",
         "app_name": "NA",
         "app_url": "NA",
         "app_icon": "NA",
@@ -171,8 +171,8 @@
         "app_extended": false
     },
     {
-        "app_package": "me.ccrama.redditslide",
-        "app_code": "reddit_slide",
+        "app_package": "com.laurencedawson.reddit_sync",
+        "app_code": "reddit_sync",
         "app_name": "NA",
         "app_url": "NA",
         "app_icon": "NA",
@@ -189,8 +189,8 @@
         "app_extended": true
     },
     {
-        "app_package": "free.reddit.news",
-        "app_code": "reddit_relay",
+        "app_package": "me.ccrama.redditslide",
+        "app_code": "reddit_slide",
         "app_name": "NA",
         "app_url": "NA",
         "app_icon": "NA",
