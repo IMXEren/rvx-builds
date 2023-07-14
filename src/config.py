@@ -77,6 +77,7 @@ class RevancedConfig(object):
             "reddit_relay": f"{self.apk_mirror}/apk/dbrady/relay-for-reddit-2/",
             "reddit_baconreader": f"{self.apk_mirror}/apk/onelouder-apps/baconreader-for-reddit/",
             "reddit_isfun": f"{self.apk_mirror}/apk/talklittle/reddit-is-fun/",
+            "reddit_slide": f"{self.apk_mirror}/apk/haptic-apps/slide-for-reddit/",
             "yuka": f"{self.apk_mirror}/apk/yuka-apps/yuka-food-cosmetic-scan/",
             "candyvpn": f"{self.apk_mirror}/apk/liondev-io/candylink-vpn/",
             "netguard": f"{self.apk_mirror}/apk/marcel-bokhorst/netguard-no-root-firewall/",
