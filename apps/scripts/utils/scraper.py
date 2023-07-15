@@ -64,6 +64,21 @@ def apkm_scrape(package_name, app_code):
     else:
         print("APKMirror URL not found for the specified app code")
 
+def apksos_scrape(package_name):
+    app_url = f"https://apksos.com/app/{package_name}"
+    print("APKSOS:", package_name)
+    response = requests.get(app_url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    app_name_element = soup.select_one("body > div > div > div > div > div.col-sm-12.col-md-8 > div:nth-child(2) > div:nth-child(1)")
+    app_icon_element = soup.select_one("body > div img")
+    if app_icon_element:
+        app_icon = app_icon_element["src"] if app_icon_element else ""
+        app_icon = app_icon.replace("_1.png", "_2.png")
+    if app_name_element:
+        app_name = app_name_element.text
+        app_name = re.sub(r'.*?\n\s+', '', app_name).strip()
+    return app_name, app_icon, app_url
+
 def get_json_data(key, value, url):
     response = requests.get(url)
     data = response.json()
@@ -80,6 +95,7 @@ def scraper(package_name, code_name):
         get_json_data, 
         gplay_scrape, 
         apkm_scrape,
+        apksos_scrape,
     ]
     
     # Ordered List of parameter variables
@@ -87,6 +103,7 @@ def scraper(package_name, code_name):
         (key, value, extras_json_url,),
         (package_name,),
         (package_name, code_name,),
+        (package_name,),
     ]
     
     # Calling functions with parameter variables
