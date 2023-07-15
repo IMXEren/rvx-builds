@@ -50,6 +50,7 @@ class Patches(object):
         "com.nis.app": "inshorts",
         "com.facebook.orca": "fbmessenger",
         "com.candylink.openvpn": "candyvpn",
+        "org.citra.citra_emu": "citra"
     }
     revanced_app_ids = {
         key: (value, "_" + value) for key, value in _revanced_app_ids.items()
