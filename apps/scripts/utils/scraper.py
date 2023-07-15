@@ -11,7 +11,7 @@ gh = GitHubRepo()
 repo = gh.get_repo()
 branch = gh.get_branch()
 urls = GitHubURLs(repo, branch)
-config_py_file_url = urls.get_config_py()
+config_py_url = urls.get_config_py()
 extras_json_url = urls.get_extras_json()
 
 def gplay_scrape(package_name):
@@ -29,9 +29,9 @@ def gplay_scrape(package_name):
         app_name = app_name_element.text
     return app_name, app_icon, app_url
 
-def apk_mirror_scrape(package_name, app_code):
+def apkm_scrape(package_name, app_code):
     apk_mirror = "https://www.apkmirror.com"
-    response = requests.get(config_py_file_url)
+    response = requests.get(config_py_url)
     pattern = r'"{}": f"(.*?)",'.format(app_code)
     match = re.search(pattern, response.text)
     app_url = ""
@@ -85,7 +85,7 @@ def scraper(package_name, code_name):
     scrapers = [
         get_json_data, 
         gplay_scrape, 
-        apk_mirror_scrape,
+        apkm_scrape,
     ]
     
     # Ordered List of parameter variables
