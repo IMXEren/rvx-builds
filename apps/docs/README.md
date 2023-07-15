@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-15 21:11:20 UTC`***
+***Generated at `2023-07-15 22:14:01 UTC`***
 
 
 ## Table of Contents
@@ -10,8 +10,6 @@
 2. [Unsupported Apps](#unsupported-apps)
 	- [Unadded](#unadded)
 	- [Removed](#removed)
-
-
 
 ## Supported Apps
 
@@ -87,20 +85,24 @@ Here are the listed apps that are ineligible to be patched using this repository
 3. ***Lastly, removed from the patches. In this case, no solution.***
 
 ### Unadded
-Here is a list of 9 apps that are not yet added to be able to patch them.
+Here is a list of 13 apps that are not yet added to be able to patch them.
 
 
 | S.No. | Icon | Name | Package |
 |:-----:|------|------|---------|
-| 1. | ![](https://play-lh.googleusercontent.com/QQdz7x2gcVhe88tgzfT-2CNfh3nD6YNB8_ATmlvmItBZX4hcavVUUbVrODLyYDqQjmg=w64-h64) | [**Digitales Amt**](https://play.google.com/store/apps/details?id=at.gv.oe.app) | `at.gv.oe.app` |
-| 2. | ![](https://play-lh.googleusercontent.com/RP-fPUENlSbVLupGHG_cNAt052M62ySDVn1phxj4LEoYVyeqYTxMhw_Cj-1hLXi_mWk=w64-h64) | [**FinanzOnline [+]**](https://play.google.com/store/apps/details?id=at.gv.bmf.bmf2go) | `at.gv.bmf.bmf2go` |
-| 3. | ![](https://play-lh.googleusercontent.com/E_kpq1HGn5WU2P4S2yu0BwrPEHqiA-VBh2R7qoIjPFXdNvKA0A-8zi0RzRslUtEOnUvA=w64-h64) | [**Photomath**](https://play.google.com/store/apps/details?id=com.microblink.photomath) | `com.microblink.photomath` |
-| 4. | ![](https://play-lh.googleusercontent.com/8pFuLOHF62ADcN0ISUAyEueA5G8IF49mX_6Az6pQNtokNVHxIVbS1L2NM62H-k02rLM=w64-h64) | [**pixiv**](https://play.google.com/store/apps/details?id=jp.pxv.android) | `jp.pxv.android` |
-| 5. | ![](https://play-lh.googleusercontent.com/RLn0U8UaYpMEd0vdcJPVrUvizUTVUvRoup6BQIHF6gZYHdu7__F-3qNYdXoV36bbfKQ=w64-h64) | [**Relay for reddit**](https://play.google.com/store/apps/details?id=reddit.news) | `reddit.news` |
-| 6. | ![](https://play-lh.googleusercontent.com/fRj3gVsSGNq1izt8NON0l6Cdqt2dEK4IRhInLoPLlunZMCA0wwOmVnaeDYQEZ8ejWQ=w64-h64) | [**SCB EASY**](https://play.google.com/store/apps/details?id=com.scb.phone) | `com.scb.phone` |
-| 7. | ![](https://play-lh.googleusercontent.com/ifCatuvGN6UAItrq2ApI0zFm7G1IOciP9jmQ_RXT7GReVVbpK0FEuZSy8sUecdw7hG0=w64-h64) | [**Spotify Lite**](https://play.google.com/store/apps/details?id=com.spotify.lite) | `com.spotify.lite` |
-| 8. | ![](https://play-lh.googleusercontent.com/OS-MhSWOPtlUZLt0_UP5TI4juSf0XhyHxGfJa6pA-UIYkZ1BB6QHTZwaMEzZDPqYsmk=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically) | `com.zhiliaoapp.musically` |
-| 9. | ![](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2019%2F02%2Fyoutube-vanced.jpg&w=64&h=64&q=100) | [**YouTube Vanced**](https://www.apkmirror.com/apk/team-vanced/youtube-vanced/) | `com.vanced.android.youtube` |
+| 1. | ![](https://apksos.com/storage/images/com/onelouder/baconreader/premium/com.onelouder.baconreader.premium_2.png) | [**BaconReader Premium for Reddit**](https://apksos.com/app/com.onelouder.baconreader.premium) | `com.onelouder.baconreader.premium` |
+| 2. | ![](https://play-lh.googleusercontent.com/QQdz7x2gcVhe88tgzfT-2CNfh3nD6YNB8_ATmlvmItBZX4hcavVUUbVrODLyYDqQjmg=w64-h64) | [**Digitales Amt**](https://play.google.com/store/apps/details?id=at.gv.oe.app) | `at.gv.oe.app` |
+| 3. | ![](https://play-lh.googleusercontent.com/RP-fPUENlSbVLupGHG_cNAt052M62ySDVn1phxj4LEoYVyeqYTxMhw_Cj-1hLXi_mWk=w64-h64) | [**FinanzOnline [+]**](https://play.google.com/store/apps/details?id=at.gv.bmf.bmf2go) | `at.gv.bmf.bmf2go` |
+| 4. | ![](https://play-lh.googleusercontent.com/E_kpq1HGn5WU2P4S2yu0BwrPEHqiA-VBh2R7qoIjPFXdNvKA0A-8zi0RzRslUtEOnUvA=w64-h64) | [**Photomath**](https://play.google.com/store/apps/details?id=com.microblink.photomath) | `com.microblink.photomath` |
+| 5. | ![](https://play-lh.googleusercontent.com/8pFuLOHF62ADcN0ISUAyEueA5G8IF49mX_6Az6pQNtokNVHxIVbS1L2NM62H-k02rLM=w64-h64) | [**pixiv**](https://play.google.com/store/apps/details?id=jp.pxv.android) | `jp.pxv.android` |
+| 6. | ![](https://play-lh.googleusercontent.com/RLn0U8UaYpMEd0vdcJPVrUvizUTVUvRoup6BQIHF6gZYHdu7__F-3qNYdXoV36bbfKQ=w64-h64) | [**Relay for reddit**](https://play.google.com/store/apps/details?id=reddit.news) | `reddit.news` |
+| 7. | ![](https://apksos.com/storage/images/com/andrewshu/android/redditdonation/com.andrewshu.android.redditdonation_2.png) | [**rif is fun golden platinum**](https://apksos.com/app/com.andrewshu.android.redditdonation) | `com.andrewshu.android.redditdonation` |
+| 8. | ![](https://play-lh.googleusercontent.com/fRj3gVsSGNq1izt8NON0l6Cdqt2dEK4IRhInLoPLlunZMCA0wwOmVnaeDYQEZ8ejWQ=w64-h64) | [**SCB EASY**](https://play.google.com/store/apps/details?id=com.scb.phone) | `com.scb.phone` |
+| 9. | ![](https://play-lh.googleusercontent.com/ifCatuvGN6UAItrq2ApI0zFm7G1IOciP9jmQ_RXT7GReVVbpK0FEuZSy8sUecdw7hG0=w64-h64) | [**Spotify Lite**](https://play.google.com/store/apps/details?id=com.spotify.lite) | `com.spotify.lite` |
+| 10. | ![](https://apksos.com/storage/images/com/laurencedawson/reddit_sync/dev/com.laurencedawson.reddit_sync.dev_2.png) | [**Sync for Reddit (Dev)**](https://apksos.com/app/com.laurencedawson.reddit_sync.dev) | `com.laurencedawson.reddit_sync.dev` |
+| 11. | ![](https://apksos.com/storage/images/com/laurencedawson/reddit_sync/pro/com.laurencedawson.reddit_sync.pro_2.png) | [**Sync for Reddit (Pro)**](https://apksos.com/app/com.laurencedawson.reddit_sync.pro) | `com.laurencedawson.reddit_sync.pro` |
+| 12. | ![](https://play-lh.googleusercontent.com/OS-MhSWOPtlUZLt0_UP5TI4juSf0XhyHxGfJa6pA-UIYkZ1BB6QHTZwaMEzZDPqYsmk=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically) | `com.zhiliaoapp.musically` |
+| 13. | ![](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2019%2F02%2Fyoutube-vanced.jpg&w=64&h=64&q=100) | [**YouTube Vanced**](https://www.apkmirror.com/apk/team-vanced/youtube-vanced/) | `com.vanced.android.youtube` |
 
 
 ### Removed
