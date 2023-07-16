@@ -66,7 +66,6 @@ def apkm_scrape(package_name, app_code):
 
 def apksos_scrape(package_name):
     app_url = f"https://apksos.com/app/{package_name}"
-    print("APKSOS:", package_name)
     response = requests.get(app_url)
     soup = BeautifulSoup(response.text, "html.parser")
     app_name_element = soup.select_one("body > div > div > div > div > div.col-sm-12.col-md-8 > div:nth-child(2) > div:nth-child(1)")
