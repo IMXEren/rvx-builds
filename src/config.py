@@ -65,7 +65,7 @@ class RevancedConfig(object):
             "twitch": f"{self.apk_mirror}/apk/twitch-interactive-inc/twitch/",
             "windy": f"{self.apk_mirror}/apk/windy-weather-world-inc/windy-wind-weather-forecast/",
             "tasker": f"{self.apk_mirror}/apk/joaomgcd/tasker-crafty-apps-eu/",
-            "sony_headphones_connect": f"{self.apk_mirror}/apk/sony-corporation/sony-headphones-connect/",
+            "sony_headphones": f"{self.apk_mirror}/apk/sony-corporation/sony-headphones-connect/",
             "google_recorder": f"{self.apk_mirror}/apk/google-inc/google-recorder/",
             "nova_launcher": f"{self.apk_mirror}/apk/teslacoil-software/nova-launcher/",
             "meme_generator": f"{self.apk_mirror}/apk/zombodroid/meme-generator-free/",
