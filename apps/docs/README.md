@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-16 13:07:57 UTC`***
+***Generated at `2023-07-16 13:17:13 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -8,7 +8,6 @@
     - [ReVanced Extended](#revanced-extended)
   - [Unsupported Apps](#unsupported-apps)
     - [Unadded](#unadded)
-    - [Removed](#removed)
 
 ## Supported Apps
 
@@ -47,7 +46,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 | 23. | ![relay\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F07%2F73%2F64b361ecbc77c_free.reddit.news.png&w=64&h=64&q=100) | [**Relay for reddit**](https://www.apkmirror.com/apk/dbrady/relay-for-reddit-2/) | `reddit_relay` | `free.reddit.news` |
 | 24. | ![rif\_is\_f\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F08%2F6486686b1d551_com.andrewshu.android.reddit.png&w=64&h=64&q=100) | [**rif is fun for Reddit**](https://www.apkmirror.com/apk/talklittle/reddit-is-fun/) | `reddit_isfun` | `com.andrewshu.android.reddit` |
 | 25. | ![slide\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2021%2F06%2F27%2F60cbdda6baa4a.png&w=64&h=64&q=100) | [**Slide for Reddit**](https://www.apkmirror.com/apk/haptic-apps/slide-for-reddit/) | `reddit_slide` | `me.ccrama.redditslide` |
-| 26. | ![sony\_\|\_\_icon](https://play-lh.googleusercontent.com/BpJMwIjqHja-cZL_p2JREBTuG8d-Nyp9gUiQzciP9HvHAsF69mt9HFzouFTdimiuiWIH=w64-h64) | [**Sony \| Headphones Connect**](https://play.google.com/store/apps/details?id=com.sony.songpal.mdr) | `sony_headphones_connect` | `com.sony.songpal.mdr` |
+| 26. | ![sony\_\|\_\_icon](https://play-lh.googleusercontent.com/BpJMwIjqHja-cZL_p2JREBTuG8d-Nyp9gUiQzciP9HvHAsF69mt9HFzouFTdimiuiWIH=w64-h64) | [**Sony \| Headphones Connect**](https://play.google.com/store/apps/details?id=com.sony.songpal.mdr) | `sony_headphones` | `com.sony.songpal.mdr` |
 | 27. | ![spotify:\_\_icon](https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs=w64-h64) | [**Spotify: Music and Podcasts**](https://play.google.com/store/apps/details?id=com.spotify.music) | `spotify` | `com.spotify.music` |
 | 28. | ![sync\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F28%2F649f9d78c7ab5_com.laurencedawson.reddit_sync.png&w=64&h=64&q=100) | [**Sync for reddit**](https://www.apkmirror.com/apk/red-apps-ltd/sync-for-reddit/) | `reddit_sync` | `com.laurencedawson.reddit_sync` |
 | 29. | ![tasker\_icon](https://play-lh.googleusercontent.com/8IkkhPNnxNVYhnUxcidu0-Yp72aSb3H0gQJ1U-_ImQ7SCGLz1zgXtV7wi2Hpd6Odghg=w64-h64) | [**Tasker**](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) | `tasker` | `net.dinglisch.android.taskerm` |
@@ -103,12 +102,3 @@ Here is a list of 14 apps that are not yet added to be able to patch them.
 | 12. | ![sync\_for\_icon](https://apksos.com/storage/images/com/laurencedawson/reddit_sync/pro/com.laurencedawson.reddit_sync.pro_2.png) | [**Sync for Reddit (Pro)**](https://apksos.com/app/com.laurencedawson.reddit_sync.pro) | `com.laurencedawson.reddit_sync.pro` |
 | 13. | ![tiktok\_icon](https://play-lh.googleusercontent.com/OS-MhSWOPtlUZLt0_UP5TI4juSf0XhyHxGfJa6pA-UIYkZ1BB6QHTZwaMEzZDPqYsmk=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically) | `com.zhiliaoapp.musically` |
 | 14. | ![youtube\_v\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2019%2F02%2Fyoutube-vanced.jpg&w=64&h=64&q=100) | [**YouTube Vanced**](https://www.apkmirror.com/apk/team-vanced/youtube-vanced/) | `com.vanced.android.youtube` |
-
-
-### Removed
-Here is a list of 1 apps that were previously supported but have been removed from the provided patches.
-
-
-| S.No. | Icon | Name | Package |
-|:-----:|------|------|---------|
-| 1. | ![citra\_emu\_icon](https://play-lh.googleusercontent.com/VQt_z3nSGf3ZZRuYnDpSHfWws7Qa61-qNQpsgnrbhSox7icoAhYV5M2dkRoUtGHpqA=w64-h64) | [**Citra Emulator**](https://play.google.com/store/apps/details?id=org.citra.citra_emu) | `org.citra.citra_emu` |
