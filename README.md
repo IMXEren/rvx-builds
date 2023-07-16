@@ -1,10 +1,13 @@
-###### 12/JULY/2023:
+###### 15/JULY/2023:
 ### Merged upstream changes.
-### Added support for RVX Reddit.
+* Now with support for **RVX mMicroG** and **RVX Reddit**.
+
+Also supports the other Reddit clients, such as **RV Sync**.
+* Read the [README-ORIGINAL.md](https://github.com/Spacellary/ReVanced-Extended-Automated-Builds/blob/main/readme-history/README-ORIGINAL.md) for more information about those.
 
 ###### 23/MAR/2023:
 ### Builds are now automated!
-Added scheduled action that checks for patch updates, and if an update is found, automatically triggers the workflow that builds and releases the updated applications. It's not completaly perfect yet, but it works mostly fine.
+Added simple scheduled action that checks for patch updates, and if an update is found, records the new version of patches for future reference and automatically triggers the workflow to build and release the new applications.
 
 
 <hr>
@@ -29,16 +32,11 @@ Let the 'forkception' begin!
 6. Download your patched applications.
 
 #### Set up to build:
-* ReVanced Extended **YouTube** (latest supported) in...
-
-...all available architectures.
-* ReVanced Extended **Reddit** (latest supported) in...
-
-...all available architectures.
-* ReVanced Extended **YouTube Music** (latest) in the...
-
-...**arm64-v8a** architecture.
-
+* ReVanced Extended **YouTube** (latest supported).
+* ReVanced Extended **YouTube Music** (latest) in the **arm64-v8a** architecture.
+* ReVanced Extended **mMicroG** (latest supported).
+* ReVanced **Sync for Reddit** (version most compatible with patches).
+* ReVanced Extended **Reddit** (latest supported).
 
 
 ###### Check [.env](https://github.com/Spacellary/docker-py-revanced/blob/main/.env) for a list of excluded patches and [options.json](https://github.com/Spacellary/docker-py-revanced/blob/main/apks/options.json) for patch options.
