@@ -1,0 +1,34 @@
+[
+    {
+        "app_package": "com.google.android.youtube",
+        "app_code": "youtube",
+        "app_name": "YouTube",
+        "app_url": "https://play.google.com/store/apps/details?id=com.google.android.youtube",
+        "app_icon": "https://play-lh.googleusercontent.com/lMoItBgdPPVDJsNOVtP26EKHePkwBg-PkuY9NOrc-fumRtTFP4XhpUNk_22syN4Datc=w64-h64",
+        "target_version": "18.25.40"
+    },
+    {
+        "app_package": "com.google.android.apps.youtube.music",
+        "app_code": "youtube_music",
+        "app_name": "YouTube Music",
+        "app_url": "https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music",
+        "app_icon": "https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.mgoogle.android.gms",
+        "app_code": "microg",
+        "app_name": "MicroG",
+        "app_url": "https://github.com/inotia00/mMicroG",
+        "app_icon": "/apps/icons/microg/ic_microg_launcher-64x64.png",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.reddit.frontpage",
+        "app_code": "reddit",
+        "app_name": "Reddit",
+        "app_url": "https://play.google.com/store/apps/details?id=com.reddit.frontpage",
+        "app_icon": "https://play-lh.googleusercontent.com/nlptFyxNsb8J0g8ZLux6016kunduV4jCxIrOJ7EEy-IobSN1RCDXAJ6DTGP81z7rr5Zq=w64-h64",
+        "target_version": "2023.16.1"
+    }
+]
