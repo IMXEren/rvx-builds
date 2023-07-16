@@ -84,7 +84,6 @@ class RevancedConfig(object):
             "instagram": f"{self.apk_mirror}/apk/instagram/instagram-instagram/",
             "inshorts": f"{self.apk_mirror}/apk/inshorts-formerly-news-in-shorts/",
             "fbmessenger": f"{self.apk_mirror}/apk/facebook-2/facebook/",
-            "citra": f"{self.apk_mirror}/apk/citra-emulator/citra-emulator/",
         }
         self.apk_mirror_version_urls = {
             key: value + value.split("/")[-2]
