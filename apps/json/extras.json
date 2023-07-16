@@ -8,5 +8,11 @@
     {
         "app_package": "com.vanced.android.youtube",
         "app_url": "https://www.apkmirror.com/apk/team-vanced/youtube-vanced/"
+    },
+    {
+        "app_package": "com.wakdev.apps.nfctools.se",
+        "app_name": "NFC Tools - Standalone Edition",
+        "app_icon": "/apps/icons/nfctoolsse/nfctoolsse-64x64.png",
+        "app_url": "https://www.wakdev.com/en/apps/nfc-tools-se-android.html"
     }
 ]
