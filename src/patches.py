@@ -30,7 +30,7 @@ class Patches(object):
         "com.ithebk.expensemanager": "expensemanager",
         "net.dinglisch.android.taskerm": "tasker",
         "net.binarymode.android.irplus": "irplus",
-        "com.sony.songpal.mdr": "sony_headphones_connect",
+        "com.sony.songpal.mdr": "sony_headphones",
         "com.google.android.apps.recorder": "google_recorder",
         "com.teslacoilsw.launcher": "nova_launcher",
         "com.zombodroid.MemeGenerator": "meme_generator",
