@@ -6,6 +6,8 @@ class GitHubURLs:
         self.repo = repo_full
         self.branch = repo_branch
     
+    def get_env(self):
+        return f"https://raw.githubusercontent.com/{self.repo}/{self.branch}/.env"
     def get_patches_py(self):
         return f"https://raw.githubusercontent.com/{self.repo}/{self.branch}/src/patches.py"
     
