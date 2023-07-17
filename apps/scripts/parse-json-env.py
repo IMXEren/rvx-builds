@@ -2,12 +2,22 @@ import os
 import json
 import requests
 
+import utils.writer as wr
+from utils.repo import GitHubRepo
+from utils.urls import GitHubURLs
+
+gh = GitHubRepo()
+repo = gh.get_repo()
+branch = gh.get_branch()
+urls = GitHubURLs(repo, branch)
+
 def parse_env_json_to_env(json_data, output_file, key_order, key_order_placeholder):
     # Load the JSON data
     data = json.loads(json_data)
 
     # Extract the required values from the JSON
     env_dict = {}
+    env_dict["DRY_RUN"] = data["env"][0].get("dry_run", "")
     env_dict["KEYSTORE_FILE_NAME"] = data["env"][0].get("keystore_file_name", "")
     env_dict["ARCHS_TO_BUILD"] = ",".join(data["env"][0].get("archs_to_build", []))
     env_dict["BUILD_EXTENDED"] = data["env"][0].get("build_extended", "False")
@@ -23,12 +33,14 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
         
         # Extract the required values
         app_version = app_data[app_package][0].get("version", "")
+        include_patch = ",".join(app_data[app_package][0].get("include_patch_app", []))
         exclude_patch = ",".join(app_data[app_package][0].get("exclude_patch_app", []))
         exclude_patch_extended = ",".join(app_data[app_package][0].get("exclude_patch_app_extended", []))
         alternative_patches = ",".join(app_data[app_package][0].get("alternative_app_patches", []))
 
         # Add the keys and values to the environment dictionary
         env_dict[f"{app_name.upper()}_VERSION"] = app_version
+        env_dict[f"INCLUDE_PATCH_{app_name.upper()}"] = include_patch
         env_dict[f"EXCLUDE_PATCH_{app_name.upper()}"] = exclude_patch
         env_dict[f"EXCLUDE_PATCH_{app_name.upper()}_EXTENDED"] = exclude_patch_extended
         env_dict[f"ALTERNATIVE_{app_name.upper()}_PATCHES"] = alternative_patches
@@ -53,7 +65,7 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
         elif value:
             env_content += f"{key}={value}\n"
 
-    os.makedirs(os.path.dirname(output_file), exist_ok=True) # Create the directories if they don't exist
+    wr.check_path(output_file)
     # Write the env_content to a file
     with open(output_file, "w") as file:
         file.write(env_content)
@@ -64,13 +76,13 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
 # json_data = json_file.read()
 # json_file.close()
 
-json_path = "apps/json/env.json"
-json_file = f"https://raw.githubusercontent.com/IMXEren/rvx-builds/main/{json_path}"
+json_file = urls.get_env_json()
 json_data = requests.get(json_file).text
 output_file = "apps/.env"
 
 # Define the desired sorting key order
 key_order = [
+    "DRY_RUN",
     "KEYSTORE_FILE_NAME",
     "ARCHS_TO_BUILD",
     "BUILD_EXTENDED",
@@ -79,6 +91,7 @@ key_order = [
 ]
 key_order_placeholder = [
     "APP_NAME_VERSION",
+    "INCLUDE_PATCH_APP_NAME,"
     "EXCLUDE_PATCH_APP_NAME",
     "EXCLUDE_PATCH_APP_NAME_EXTENDED",
     "ALTERNATIVE_APP_NAME_PATCHES",
