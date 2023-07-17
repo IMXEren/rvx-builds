@@ -15,9 +15,9 @@
                         {
                             "app_name": "youtube",
                             "version": "latest_supported",
+                            "include_patch_app": [],
                             "exclude_patch_app": [],
                             "exclude_patch_app_extended": [],
-                            "include_patch_app": [],
                             "alternative_app_patches": []
                         }
                     ]
@@ -28,9 +28,9 @@
                         {
                             "app_name": "youtube_music",
                             "version": "latest_supported",
+                            "include_patch_app": [],
                             "exclude_patch_app": [],
                             "exclude_patch_app_extended": [],
-                            "include_patch_app": [],
                             "alternative_app_patches": []
                         }
                     ]
