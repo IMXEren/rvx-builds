@@ -1,0 +1,39 @@
+{
+    "env": [
+        {
+            "dry_run": "False",
+            "keystore_file_name": "revanced.keystore",
+            "archs_to_build": [
+                "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
+            ],
+            "build_extended": "False",
+            "existing_downloaded_apks": [],
+            "patch_apps": [
+                {
+                    "app_package": "com.google.android.youtube",
+                    "com.google.android.youtube": [
+                        {
+                            "app_name": "youtube",
+                            "version": "latest_supported",
+                            "exclude_patch_app": [],
+                            "exclude_patch_app_extended": [],
+                            "alternative_app_patches": []
+                        }
+                    ]
+                },
+                {
+                    "app_package": "com.google.android.apps.youtube.music",
+                    "com.google.android.apps.youtube.music": [
+                        {
+                            "app_name": "youtube_music",
+                            "version": "latest_supported",
+                            "exclude_patch_app": [],
+                            "exclude_patch_app_extended": [],
+                            "alternative_app_patches": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
