@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-18 05:27:06 UTC`***
+***Generated at `2023-07-18 05:37:07 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -26,7 +26,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 | 3. | ![android\_w\_icon](https://play-lh.googleusercontent.com/r-HYXeSDiTHhgXNd8rU2s7zV9QclSjIM0FF-oWdhYWCefa5dxUHLvyf5ujaIm8hqp9w=w64-h64) | [**Android Widgets (Material U)**](https://play.google.com/store/apps/details?id=com.dci.dev.androidtwelvewidgets) | `androidtwelvewidgets` | `com.dci.dev.androidtwelvewidgets` |
 | 4. | ![backdrops\_icon](https://play-lh.googleusercontent.com/ybkU2kHmt5RBz4mXpxyYuO1ZqM3I8uJPhAKA7v51Pj03fwmT7PMMgPP6X2_CymH1cyg=w64-h64) | [**Backdrops - Wallpapers**](https://play.google.com/store/apps/details?id=com.backdrops.wallpapers) | `backdrops` | `com.backdrops.wallpapers` |
 | 5. | ![baconreade\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F92%2F649ae295d56d0_com.onelouder.baconreader.png&w=64&h=64&q=100) | [**BaconReader for Reddit**](https://www.apkmirror.com/apk/onelouder-apps/baconreader-for-reddit/) | `reddit_baconreader` | `com.onelouder.baconreader` |
-| 6. | ![boost\_for\_icon](https://play-lh.googleusercontent.com/GF71STDEmTKhbEexCYbePXAjYym_ee8E6WR7_R8jr5_Xf10jfL0Kibkjfl33zDrJBw=w64-h64) | [**Boost for reddit**](https://play.google.com/store/apps/details?id=com.rubenmayayo.reddit) | `reddit_boost` | `com.rubenmayayo.reddit` |
+| 6. | ![boost\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F81%2F649e02dc83ea6_com.rubenmayayo.reddit.png&w=64&h=64&q=100) | [**Boost for reddit**](https://www.apkmirror.com/apk/ruben-mayayo/boost-for-reddit/) | `reddit_boost` | `com.rubenmayayo.reddit` |
 | 7. | ![candylink\_icon](https://play-lh.googleusercontent.com/0zHhVlljLtcEiEFKP_GWXorKD9_V6g9RBnyn52Hg3NhVJAbd-wpK8-TRzTI0loxZ8Q=w64-h64) | [**CandyLink VPN**](https://play.google.com/store/apps/details?id=com.candylink.openvpn) | `candyvpn` | `com.candylink.openvpn` |
 | 8. | ![hex\_edito\_icon](https://play-lh.googleusercontent.com/qb_ezXXQlsK3darAylqSLudM01tYOXw-sAm2qeODdKXufv1kZmuTb3XSf2fzqwSEvvE=w64-h64) | [**HEX Editor**](https://play.google.com/store/apps/details?id=com.myprog.hexedit) | `hex-editor` | `com.myprog.hexedit` |
 | 9. | ![icon\_pack\_icon](https://play-lh.googleusercontent.com/Bw64Ft8n9ei2NJ_Et2MxWjSInZrL_6yMJbu7Usw-BcOgjvjo75xP4JnyjsX8VZJM9_E=w64-h64) | [**Icon Pack Studio**](https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio) | `icon_pack_studio` | `ginlemon.iconpackstudio` |
