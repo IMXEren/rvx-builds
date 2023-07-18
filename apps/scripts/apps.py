@@ -16,6 +16,7 @@ rvx_json_url = urls.get_rvx_json()
 
 rv_json_file = "apps/revanced/apps.json"
 rvx_json_file = "apps/revanced-extended/apps.json"
+rvxm_json_file = "apps/revanced-extended/apps-merged.json"
 md_file = "apps/docs/README.md"
 
 def get_available_patch_apps(url):
@@ -118,6 +119,16 @@ def make_json_data(packages, patches=[]):
 
 rv_patch_apps, rv_json_data = make_json_data(rv_packages, rv_patches)
 rvx_patch_apps, rvx_json_data = make_json_data(rvx_packages, rvx_patches)
+
+def rvx_merge_json():
+    json1_list = rvx_json_data
+    json2_list = rv_json_data
+    merged_dict = {obj['app_package']: obj for obj in json1_list}
+    for obj2 in json2_list:
+        if obj2['app_package'] not in merged_dict:
+            merged_dict[obj2['app_package']] = obj2
+    merged_list = list(merged_dict.values())
+    wr.write_json(rvxm_json_file, merged_list)
             
 # Step 4: Handle unmatched package names
 unadded_packages = list(all_packages - set(available_packages))
@@ -170,3 +181,4 @@ content = (header + content).strip() + "\n"
 wr.write_md(md_file, content)
 wr.write_json(rv_json_file, rv_json_data)
 wr.write_json(rvx_json_file, rvx_json_data)
+rvx_merge_json()
