@@ -253,7 +253,7 @@
         "app_name": "Trakt",
         "app_url": "https://play.google.com/store/apps/details?id=tv.trakt.trakt",
         "app_icon": "https://play-lh.googleusercontent.com/n0SqzImml-_GwGHQJRIRQs2IgHELIZPH_GZIwSl7c71qhok8dgZh7rQvOH1jihkVhw=w64-h64",
-        "target_version": "Any"
+        "target_version": "1.1.1"
     },
     {
         "app_package": "tv.twitch.android.app",
