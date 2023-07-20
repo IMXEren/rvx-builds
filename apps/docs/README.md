@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-20 13:50:09 UTC`***
+***Generated at `2023-07-20 14:11:15 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -42,7 +42,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 | 19. | ![nova\_laun\_icon](https://play-lh.googleusercontent.com/Et6Ha-3AtD1XVbSHn68xCRFkQcPiZIKnl2q5y9EoRT5Y7u2NHRb35ii_Jot-hNLfvv3y=w64-h64) | [**Nova Launcher**](https://play.google.com/store/apps/details?id=com.teslacoilsw.launcher) | `nova_launcher` | `com.teslacoilsw.launcher` |
 | 20. | ![nyx\_music\_icon](https://play-lh.googleusercontent.com/qg5vyfgAD_p05a9c82y0X7BvMVYq74YBK3-75y2SViOfX6zJJWHvnyc57BzKMnJJX-g=w64-h64) | [**Nyx Music Player**](https://play.google.com/store/apps/details?id=com.awedea.nyx) | `nyx-music-player` | `com.awedea.nyx` |
 | 21. | ![recorder\_icon](https://play-lh.googleusercontent.com/OfRwK6rMr4i7gu1AKeNbK-qnYPuL6EVQ5j6AYYQc0ge-I-NPYoBUsweVPuJLSOtHYag=w64-h64) | [**Recorder**](https://play.google.com/store/apps/details?id=com.google.android.apps.recorder) | `google_recorder` | `com.google.android.apps.recorder` |
-| 22. | ![reddit\_icon](https://play-lh.googleusercontent.com/nlptFyxNsb8J0g8ZLux6016kunduV4jCxIrOJ7EEy-IobSN1RCDXAJ6DTGP81z7rr5Zq=w64-h64) | [**Reddit**](https://play.google.com/store/apps/details?id=com.reddit.frontpage) | `reddit` | `com.reddit.frontpage` |
+| 22. | ![reddit\_icon](https://play-lh.googleusercontent.com/Xm6RBzAhQL05D1MaAeUNidcm8SkGJmVXO0L8ZwQjm4yZ5LQzSJQw68Rn4bfinJU2eGQw=w64-h64) | [**Reddit**](https://play.google.com/store/apps/details?id=com.reddit.frontpage) | `reddit` | `com.reddit.frontpage` |
 | 23. | ![relay\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F07%2F73%2F64b361ecbc77c_free.reddit.news.png&w=64&h=64&q=100) | [**Relay for reddit**](https://www.apkmirror.com/apk/dbrady/relay-for-reddit-2/) | `reddit_relay` | `free.reddit.news` |
 | 24. | ![rif\_is\_f\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F08%2F6486686b1d551_com.andrewshu.android.reddit.png&w=64&h=64&q=100) | [**rif is fun for Reddit**](https://www.apkmirror.com/apk/talklittle/reddit-is-fun/) | `reddit_isfun` | `com.andrewshu.android.reddit` |
 | 25. | ![slide\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2021%2F06%2F27%2F60cbdda6baa4a.png&w=64&h=64&q=100) | [**Slide for Reddit**](https://www.apkmirror.com/apk/haptic-apps/slide-for-reddit/) | `reddit_slide` | `me.ccrama.redditslide` |
@@ -72,7 +72,7 @@ Here is a list of 4 apps that can be patched using [**ReVanced Extended (RVX)**]
 | 1. | ![youtube\_icon](https://play-lh.googleusercontent.com/lMoItBgdPPVDJsNOVtP26EKHePkwBg-PkuY9NOrc-fumRtTFP4XhpUNk_22syN4Datc=w64-h64) | [**YouTube**](https://play.google.com/store/apps/details?id=com.google.android.youtube) | `youtube` | `com.google.android.youtube` |
 | 2. | ![youtube\_m\_icon](https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64) | [**YouTube Music**](https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music) | `youtube_music` | `com.google.android.apps.youtube.music` |
 | 3. | ![microg\_icon](/apps/icons/microg/ic_microg_launcher-64x64.png) | [**MicroG**](https://github.com/inotia00/mMicroG) | `microg` | `com.mgoogle.android.gms` |
-| 4. | ![reddit\_icon](https://play-lh.googleusercontent.com/nlptFyxNsb8J0g8ZLux6016kunduV4jCxIrOJ7EEy-IobSN1RCDXAJ6DTGP81z7rr5Zq=w64-h64) | [**Reddit**](https://play.google.com/store/apps/details?id=com.reddit.frontpage) | `reddit` | `com.reddit.frontpage` |
+| 4. | ![reddit\_icon](https://play-lh.googleusercontent.com/Xm6RBzAhQL05D1MaAeUNidcm8SkGJmVXO0L8ZwQjm4yZ5LQzSJQw68Rn4bfinJU2eGQw=w64-h64) | [**Reddit**](https://play.google.com/store/apps/details?id=com.reddit.frontpage) | `reddit` | `com.reddit.frontpage` |
 
 
 ## Unsupported Apps
