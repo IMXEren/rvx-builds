@@ -269,7 +269,7 @@
         "app_name": "Twitter",
         "app_url": "https://play.google.com/store/apps/details?id=com.twitter.android",
         "app_icon": "https://play-lh.googleusercontent.com/wIf3HtczQDjHzHuu7vezhqNs0zXAG85F7VmP7nhsTxO3OHegrVXlqIh_DWBYi86FTIGk=w64-h64",
-        "target_version": "9.71.0-release.0"
+        "target_version": "Any"
     },
     {
         "app_package": "com.vsco.cam",
