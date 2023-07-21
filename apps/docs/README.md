@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-21 05:11:27 UTC`***
+***Generated at `2023-07-21 05:26:09 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -100,5 +100,5 @@ Here is a list of 14 apps that are not yet added to be able to patch them.
 | 10. | ![spotify\_l\_icon](https://play-lh.googleusercontent.com/ifCatuvGN6UAItrq2ApI0zFm7G1IOciP9jmQ_RXT7GReVVbpK0FEuZSy8sUecdw7hG0=w64-h64) | [**Spotify Lite**](https://play.google.com/store/apps/details?id=com.spotify.lite) | `com.spotify.lite` |
 | 11. | ![sync\_for\_icon](https://apksos.com/storage/images/com/laurencedawson/reddit_sync/dev/com.laurencedawson.reddit_sync.dev_2.png) | [**Sync for Reddit (Dev)**](https://apksos.com/app/com.laurencedawson.reddit_sync.dev) | `com.laurencedawson.reddit_sync.dev` |
 | 12. | ![sync\_for\_icon](https://apksos.com/storage/images/com/laurencedawson/reddit_sync/pro/com.laurencedawson.reddit_sync.pro_2.png) | [**Sync for Reddit (Pro)**](https://apksos.com/app/com.laurencedawson.reddit_sync.pro) | `com.laurencedawson.reddit_sync.pro` |
-| 13. | ![tiktok\_icon](https://play-lh.googleusercontent.com/OS-MhSWOPtlUZLt0_UP5TI4juSf0XhyHxGfJa6pA-UIYkZ1BB6QHTZwaMEzZDPqYsmk=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically) | `com.zhiliaoapp.musically` |
+| 13. | ![tiktok\_icon](https://play-lh.googleusercontent.com/BmUViDVOKNJe0GYJe22hsr7juFndRVbvr1fGmHGXqHfJjNAXjd26bfuGRQpVrpJ6YbA=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically) | `com.zhiliaoapp.musically` |
 | 14. | ![youtube\_v\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2019%2F02%2Fyoutube-vanced.jpg&w=64&h=64&q=100) | [**YouTube Vanced**](https://www.apkmirror.com/apk/team-vanced/youtube-vanced/) | `com.vanced.android.youtube` |
