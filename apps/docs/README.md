@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-24 19:09:38 UTC`***
+***Generated at `2023-07-24 19:19:47 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -28,7 +28,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 | 4. | ![backdrops\_icon](https://play-lh.googleusercontent.com/ybkU2kHmt5RBz4mXpxyYuO1ZqM3I8uJPhAKA7v51Pj03fwmT7PMMgPP6X2_CymH1cyg=w64-h64) | [**Backdrops - Wallpapers**](https://play.google.com/store/apps/details?id=com.backdrops.wallpapers) | `backdrops` | `com.backdrops.wallpapers` |
 | 5. | ![baconreade\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F92%2F649ae295d56d0_com.onelouder.baconreader.png&w=64&h=64&q=100) | [**BaconReader for Reddit**](https://www.apkmirror.com/apk/onelouder-apps/baconreader-for-reddit/) | `reddit_baconreader` | `com.onelouder.baconreader` |
 | 6. | ![boost\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F81%2F649e02dc83ea6_com.rubenmayayo.reddit.png&w=64&h=64&q=100) | [**Boost for reddit**](https://www.apkmirror.com/apk/ruben-mayayo/boost-for-reddit/) | `reddit_boost` | `com.rubenmayayo.reddit` |
-| 7. | ![candylink\_icon](https://play-lh.googleusercontent.com/0zHhVlljLtcEiEFKP_GWXorKD9_V6g9RBnyn52Hg3NhVJAbd-wpK8-TRzTI0loxZ8Q=w64-h64) | [**CandyLink VPN**](https://play.google.com/store/apps/details?id=com.candylink.openvpn) | `candyvpn` | `com.candylink.openvpn` |
+| 7. | ![candylink\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F04%2F39%2F64482a2ce0867.png&w=64&h=64&q=100) | [**CandyLink VPN**](https://www.apkmirror.com/apk/liondev-io/candylink-vpn/) | `candyvpn` | `com.candylink.openvpn` |
 | 8. | ![hex\_edito\_icon](https://play-lh.googleusercontent.com/qb_ezXXQlsK3darAylqSLudM01tYOXw-sAm2qeODdKXufv1kZmuTb3XSf2fzqwSEvvE=w64-h64) | [**HEX Editor**](https://play.google.com/store/apps/details?id=com.myprog.hexedit) | `hex-editor` | `com.myprog.hexedit` |
 | 9. | ![icon\_pack\_icon](https://play-lh.googleusercontent.com/Bw64Ft8n9ei2NJ_Et2MxWjSInZrL_6yMJbu7Usw-BcOgjvjo75xP4JnyjsX8VZJM9_E=w64-h64) | [**Icon Pack Studio**](https://play.google.com/store/apps/details?id=ginlemon.iconpackstudio) | `icon_pack_studio` | `ginlemon.iconpackstudio` |
 | 10. | ![infinity\_\_icon](https://play-lh.googleusercontent.com/ZgV5YIzb5katDKcJqke7uXkKFg1F4ZpMR4RKy-5RHa1vadRHrZjMBpmSXfo-m1QV3GY=w64-h64) | [**Infinity for Reddit**](https://play.google.com/store/apps/details?id=ml.docilealligator.infinityforreddit) | `reddit_infinity` | `ml.docilealligator.infinityforreddit` |
