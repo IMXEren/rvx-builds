@@ -1,10 +1,4 @@
 [ {
-  "patchName" : "Custom branding Microg name",
-  "options" : [ {
-    "key" : "MicroGAppName",
-    "value" : null
-  } ]
-}, {
   "patchName" : "Custom branding Music name",
   "options" : [ {
     "key" : "MusicLongName",

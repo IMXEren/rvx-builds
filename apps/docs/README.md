@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-24 17:49:59 UTC`***
+***Generated at `2023-07-24 18:16:29 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -8,6 +8,7 @@
     - [ReVanced Extended](#revanced-extended)
   - [Unsupported Apps](#unsupported-apps)
     - [Unadded](#unadded)
+    - [Removed](#removed)
 
 ## Supported Apps
 
@@ -62,7 +63,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 
 
 ### ReVanced Extended
-Here is a list of 4 apps that can be patched using [**ReVanced Extended (RVX)**](https://www.github.com/inotia00/revanced-patches) provided by **inotia00**. 
+Here is a list of 3 apps that can be patched using [**ReVanced Extended (RVX)**](https://www.github.com/inotia00/revanced-patches) provided by **inotia00**. 
 
 **Note: It supports fewer apps but provides more patches compared to ReVanced.**
 
@@ -71,8 +72,7 @@ Here is a list of 4 apps that can be patched using [**ReVanced Extended (RVX)**]
 |:-----:|------|------|------|---------|
 | 1. | ![youtube\_icon](https://play-lh.googleusercontent.com/lMoItBgdPPVDJsNOVtP26EKHePkwBg-PkuY9NOrc-fumRtTFP4XhpUNk_22syN4Datc=w64-h64) | [**YouTube**](https://play.google.com/store/apps/details?id=com.google.android.youtube) | `youtube` | `com.google.android.youtube` |
 | 2. | ![youtube\_m\_icon](https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64) | [**YouTube Music**](https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music) | `youtube_music` | `com.google.android.apps.youtube.music` |
-| 3. | ![microg\_icon](/apps/icons/microg/ic_microg_launcher-64x64.png) | [**MicroG**](https://github.com/inotia00/mMicroG) | `microg` | `com.mgoogle.android.gms` |
-| 4. | ![reddit\_icon](https://play-lh.googleusercontent.com/Xm6RBzAhQL05D1MaAeUNidcm8SkGJmVXO0L8ZwQjm4yZ5LQzSJQw68Rn4bfinJU2eGQw=w64-h64) | [**Reddit**](https://play.google.com/store/apps/details?id=com.reddit.frontpage) | `reddit` | `com.reddit.frontpage` |
+| 3. | ![reddit\_icon](https://play-lh.googleusercontent.com/Xm6RBzAhQL05D1MaAeUNidcm8SkGJmVXO0L8ZwQjm4yZ5LQzSJQw68Rn4bfinJU2eGQw=w64-h64) | [**Reddit**](https://play.google.com/store/apps/details?id=com.reddit.frontpage) | `reddit` | `com.reddit.frontpage` |
 
 
 ## Unsupported Apps
@@ -102,3 +102,12 @@ Here is a list of 14 apps that are not yet added to be able to patch them.
 | 12. | ![sync\_for\_icon](https://apksos.com/storage/images/com/laurencedawson/reddit_sync/pro/com.laurencedawson.reddit_sync.pro_2.png) | [**Sync for Reddit (Pro)**](https://apksos.com/app/com.laurencedawson.reddit_sync.pro) | `com.laurencedawson.reddit_sync.pro` |
 | 13. | ![tiktok\_icon](https://play-lh.googleusercontent.com/BmUViDVOKNJe0GYJe22hsr7juFndRVbvr1fGmHGXqHfJjNAXjd26bfuGRQpVrpJ6YbA=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically) | `com.zhiliaoapp.musically` |
 | 14. | ![youtube\_v\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2019%2F02%2Fyoutube-vanced.jpg&w=64&h=64&q=100) | [**YouTube Vanced**](https://www.apkmirror.com/apk/team-vanced/youtube-vanced/) | `com.vanced.android.youtube` |
+
+
+### Removed
+Here is a list of 1 apps that were previously supported but have been removed from the provided patches.
+
+
+| S.No. | Icon | Name | Package |
+|:-----:|------|------|---------|
+| 1. | ![microg\_icon](/apps/icons/microg/ic_microg_launcher-64x64.png) | [**MicroG**](https://github.com/inotia00/mMicroG) | `com.mgoogle.android.gms` |

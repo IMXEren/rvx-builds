@@ -16,14 +16,6 @@
         "target_version": "Any"
     },
     {
-        "app_package": "com.mgoogle.android.gms",
-        "app_code": "microg",
-        "app_name": "MicroG",
-        "app_url": "https://github.com/inotia00/mMicroG",
-        "app_icon": "/apps/icons/microg/ic_microg_launcher-64x64.png",
-        "target_version": "Any"
-    },
-    {
         "app_package": "com.reddit.frontpage",
         "app_code": "reddit",
         "app_name": "Reddit",
