@@ -35,12 +35,6 @@
     "value" : null
   } ]
 }, {
-  "patchName" : "Reddit settings",
-  "options" : [ {
-    "key" : "RedditSettings",
-    "value" : null
-  } ]
-}, {
   "patchName" : "Theme",
   "options" : [ {
     "key" : "darkThemeBackgroundColor",
