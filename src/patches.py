@@ -86,9 +86,11 @@ class Patches(object):
         """Function to fetch all patches."""
         session = Session()
         if self.config.dry_run:
-            logger.debug("fetching all patches from local file")
-            with open("patches.json") as f:
-                patches = json.load(f)
+            url = "https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json"
+            logger.debug(f"fetching all patches from {url} for dry run")
+            response = session.get(url)
+            handle_response(response)
+            patches = response.json()
         else:
             url = "https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json"
             logger.debug(f"fetching all patches from {url}")
