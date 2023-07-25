@@ -45,7 +45,9 @@ jobs:
       - name: Compare with local version
         run: |
           BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' .env | cut -d '=' -f2)
-          echo "$BUILD_EXTENDED"
+          if [ "$BUILD_EXTENDED" == "True" ]; then
+            echo "$BUILD_EXTENDED"
+          fi
           LOCAL_VERSION=$(grep '^revanced_extended=' latest-parsed-version.md | cut -d '=' -f2)
           echo "Local revanced_extended version: $LOCAL_VERSION"
           if [ "$BUILD_EXTENDED" == "True" ]; then
