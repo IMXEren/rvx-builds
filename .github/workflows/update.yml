@@ -16,11 +16,23 @@ jobs:
       - name: Check if file exists
         run: |
           if [[ ! -f latest-parsed-version.md ]]; then
-            echo "The file latest-parsed-version.md was not found at the base of the repository. This file is necessary for keeping track of the previously built version and compare it the remote version. To avoid generating failed runs, the workflow will now be interrupted."
+            echo "revanced=0.0" > latest-parsed-version.md
+            echo "revanced_extended=0.0" >> latest-parsed-version.md
+            git add latest-parsed-version.md
+            git commit -m "Create latest-parsed-version.md"
+            git push
+          fi
+      - name: Get latest release from revanced/revanced-patches
+        id: latest-rv-release
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/revanced/revanced-patches/releases/latest | jq -r '.tag_name')
+          if [ "$LATEST_RELEASE" == "null" ]; then
+            echo "Couldn't fetch latest release. Workflow halted!"
             exit 0
           fi
+          echo "::set-output name=tag_name::$LATEST_RELEASE"
       - name: Get latest release from inotia00/revanced-patches
-        id: latest-release
+        id: latest-rvx-release
         run: |
           LATEST_RELEASE=$(curl -s https://api.github.com/repos/inotia00/revanced-patches/releases/latest | jq -r '.tag_name')
           if [ "$LATEST_RELEASE" == "null" ]; then
@@ -30,36 +42,89 @@ jobs:
           echo "::set-output name=tag_name::$LATEST_RELEASE"
       - name: Compare with local version
         run: |
-          LOCAL_VERSION=$(cat latest-parsed-version.md)
-          if [ "$LOCAL_VERSION" == "${{ steps.latest-release.outputs.tag_name }}" ]; then
+          BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' ./.env | cut -d '=' -f2)
+          if [ "$BUILD_EXTENDED" == "True" ]; then
+            LOCAL_VERSION=$(grep '^revanced_extended=' latest-parsed-version.md | cut -d '=' -f2)
+            echo "Local revanced_extended version: $LOCAL_VERSION"
+            UPDATED_VERSION="${{ steps.latest-rvx-release.outputs.tag_name }}"
+          else
+            LOCAL_VERSION=$(grep '^revanced=' latest-parsed-version.md | cut -d '=' -f2)
+            echo "Local revanced version: $LOCAL_VERSION"
+            UPDATED_VERSION="${{ steps.latest-rv-release.outputs.tag_name }}"
+          fi
+
+          if [ "$LOCAL_VERSION" == "$UPDATED_VERSION" ]; then
             echo "Already up-to-date!"
           else
-            if ! [[ "${{ steps.latest-release.outputs.tag_name }}" =~ [0-9]+ ]]; then
+            if ! [[ "$UPDATED_VERSION" =~ [0-9]+ ]]; then
               echo "Latest release tag doesn't contain any numbers. Workflow halted!"
               exit 0
-            elif [ "${{ steps.latest-release.outputs.tag_name }}" == "null" ] || [ -z "${{ steps.latest-release.outputs.tag_name }}" ]; then
+            elif [ "$UPDATED_VERSION" == "null" ] || [ -z "$UPDATED_VERSION" ]; then
               echo "Latest release tag is null or empty. Workflow halted!"
               exit 0
             else
-              echo "Local reported version doesn't match fetched version, updating local version and running new Build action!"
-              echo "${{ steps.latest-release.outputs.tag_name }}" > latest-parsed-version.md
+              if [ "$BUILD_EXTENDED" == "True" ]; then
+                sed -i "s/^revanced_extended=.*/revanced_extended=$UPDATED_VERSION/" latest-parsed-version.md
+              else
+                sed -i "s/^revanced=.*/revanced=$UPDATED_VERSION/" latest-parsed-version.md
+              fi
               git add latest-parsed-version.md
               git commit -m "Update latest-parsed-version.md"
               git push
               echo "::set-output name=trigger_build::true"
             fi
           fi
-        id: compare-version
+        id: compare-version        
+      # - name: Compare with local version
+      #   run: |
+      #     LOCAL_VERSION=$(cat latest-parsed-version.md)
+      #     if [ "$LOCAL_VERSION" == "${{ steps.latest-release.outputs.tag_name }}" ]; then
+      #       echo "Already up-to-date!"
+      #     else
+      #       if ! [[ "${{ steps.latest-release.outputs.tag_name }}" =~ [0-9]+ ]]; then
+      #         echo "Latest release tag doesn't contain any numbers. Workflow halted!"
+      #         exit 0
+      #       elif [ "${{ steps.latest-release.outputs.tag_name }}" == "null" ] || [ -z "${{ steps.latest-release.outputs.tag_name }}" ]; then
+      #         echo "Latest release tag is null or empty. Workflow halted!"
+      #         exit 0
+      #       else
+      #         echo "Local reported version doesn't match fetched version, updating local version and running new Build action!"
+      #         echo "${{ steps.latest-release.outputs.tag_name }}" > latest-parsed-version.md
+      #         git add latest-parsed-version.md
+      #         git commit -m "Update latest-parsed-version.md"
+      #         git push
+      #         echo "::set-output name=trigger_build::true"
+      #       fi
+      #     fi
+      #   id: compare-version
+      # - name: Verify local version update
+      #   if: ${{ steps.compare-version.outputs.trigger_build == 'true' }}
+      #   run: |
+      #     UPDATED_VERSION=$(cat latest-parsed-version.md)
+      #     if [ "$UPDATED_VERSION" == "${{ steps.latest-release.outputs.tag_name }}" ]; then
+      #       echo "Local version updated successfully!"
+      #     else
+      #       echo "Error updating local version control file, halting workflow!"
+      #       exit 1
+      #     fi
       - name: Verify local version update
         if: ${{ steps.compare-version.outputs.trigger_build == 'true' }}
         run: |
-          UPDATED_VERSION=$(cat latest-parsed-version.md)
-          if [ "$UPDATED_VERSION" == "${{ steps.latest-release.outputs.tag_name }}" ]; then
+          BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' ./.env | cut -d '=' -f2)
+          if [ "$BUILD_EXTENDED" == "True" ]; then
+            REVANCED_VERSION=$(grep '^revanced_extended=' latest-parsed-version.md | cut -d '=' -f2)
+            UPDATED_VERSION="${{ steps.latest-rvx-release.outputs.tag_name }}"
+          else
+            REVANCED_VERSION=$(grep '^revanced=' latest-parsed-version.md | cut -d '=' -f2)
+            UPDATED_VERSION="${{ steps.latest-rv-release.outputs.tag_name }}"
+          fi
+          if [ "$REVANCED_VERSION" == "$UPDATED_VERSION" ]; then
             echo "Local version updated successfully!"
           else
             echo "Error updating local version control file, halting workflow!"
             exit 1
           fi
+
       - name: Trigger build workflow
         if: ${{ steps.compare-version.outputs.trigger_build == 'true' }}
         uses: benc-uk/workflow-dispatch@v1.1
