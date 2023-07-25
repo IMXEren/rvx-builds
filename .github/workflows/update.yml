@@ -45,6 +45,7 @@ jobs:
       - name: Compare with local version
         run: |
           BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' .env | cut -d '=' -f2)
+          BUILD_EXTENDED=$(awk -F '=' '/^BUILD_EXTENDED/ {gsub(/#.*/, "", $2); print $2}' ./.env | tr -d '[:space:]')
           # Print the value and its length for debugging
           echo "BUILD_EXTENDED value: \"$BUILD_EXTENDED\""
           echo "Length of BUILD_EXTENDED value: ${#BUILD_EXTENDED}"
