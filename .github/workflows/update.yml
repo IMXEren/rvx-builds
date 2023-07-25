@@ -18,6 +18,7 @@ jobs:
           if [[ ! -f latest-parsed-version.md ]]; then
             echo "revanced=0.0" > latest-parsed-version.md
             echo "revanced_extended=0.0" >> latest-parsed-version.md
+            git pull
             git add latest-parsed-version.md
             git commit -m "Create latest-parsed-version.md"
             git push
@@ -68,6 +69,7 @@ jobs:
               else
                 sed -i "s/^revanced=.*/revanced=$UPDATED_VERSION/" latest-parsed-version.md
               fi
+              git pull
               git add latest-parsed-version.md
               git commit -m "Update latest-parsed-version.md"
               git push
