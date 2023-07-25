@@ -17,6 +17,7 @@ jobs:
         run: |
           if [[ ! -f latest-parsed-version.md ]]; then
             echo "revanced=0.0" > latest-parsed-version.md
+            echo >> latest-parsed-version.md
             echo "revanced_extended=0.0" >> latest-parsed-version.md
             git add latest-parsed-version.md
             git commit -m "Create latest-parsed-version.md"
@@ -42,7 +43,7 @@ jobs:
           echo "::set-output name=tag_name::$LATEST_RELEASE"
       - name: Compare with local version
         run: |
-          BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' ./.env | cut -d '=' -f2)
+          BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' .env | cut -d '=' -f2)
           if [ "$BUILD_EXTENDED" == "True" ]; then
             LOCAL_VERSION=$(grep '^revanced_extended=' latest-parsed-version.md | cut -d '=' -f2)
             echo "Local revanced_extended version: $LOCAL_VERSION"
@@ -110,7 +111,7 @@ jobs:
       - name: Verify local version update
         if: ${{ steps.compare-version.outputs.trigger_build == 'true' }}
         run: |
-          BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' ./.env | cut -d '=' -f2)
+          BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' .env | cut -d '=' -f2)
           if [ "$BUILD_EXTENDED" == "True" ]; then
             REVANCED_VERSION=$(grep '^revanced_extended=' latest-parsed-version.md | cut -d '=' -f2)
             UPDATED_VERSION="${{ steps.latest-rvx-release.outputs.tag_name }}"
