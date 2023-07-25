@@ -44,18 +44,8 @@ jobs:
           echo "::set-output name=tag_name::$LATEST_RELEASE"
       - name: Compare with local version
         run: |
-          BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' .env | cut -d '=' -f2)
           BUILD_EXTENDED=$(awk -F '=' '/^BUILD_EXTENDED/ {gsub(/#.*/, "", $2); print $2}' ./.env | tr -d '[:space:]')
-          # Print the value and its length for debugging
           echo "BUILD_EXTENDED value: \"$BUILD_EXTENDED\""
-          echo "Length of BUILD_EXTENDED value: ${#BUILD_EXTENDED}"
-
-          # Convert BUILD_EXTENDED to lowercase for case-insensitive comparison
-          BUILD_EXTENDED=$(echo "$BUILD_EXTENDED" | tr '[:upper:]' '[:lower:]')
-          echo "BUILD_EXTENDED value: \"$BUILD_EXTENDED\""
-          echo "Length of BUILD_EXTENDED value: ${#BUILD_EXTENDED}"
-          LOCAL_VERSION=$(grep '^revanced_extended=' latest-parsed-version.md | cut -d '=' -f2)
-          echo "Local revanced_extended version: $LOCAL_VERSION"
           if [ "$BUILD_EXTENDED" == "True" ]; then
             LOCAL_VERSION=$(grep '^revanced_extended=' latest-parsed-version.md | cut -d '=' -f2)
             echo "Local revanced_extended version: $LOCAL_VERSION"
@@ -124,7 +114,8 @@ jobs:
       - name: Verify local version update
         if: ${{ steps.compare-version.outputs.trigger_build == 'true' }}
         run: |
-          BUILD_EXTENDED=$(grep '^BUILD_EXTENDED=' .env | cut -d '=' -f2)
+          BUILD_EXTENDED=$(awk -F '=' '/^BUILD_EXTENDED/ {gsub(/#.*/, "", $2); print $2}' ./.env | tr -d '[:space:]')
+          echo "BUILD_EXTENDED value: \"$BUILD_EXTENDED\""
           if [ "$BUILD_EXTENDED" == "True" ]; then
             REVANCED_VERSION=$(grep '^revanced_extended=' latest-parsed-version.md | cut -d '=' -f2)
             UPDATED_VERSION="${{ steps.latest-rvx-release.outputs.tag_name }}"
