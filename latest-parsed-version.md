@@ -1,1 +1,2 @@
-v2.186.4
+revanced=v2.186.0
+revanced_extended=0.0
