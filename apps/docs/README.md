@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-25 16:38:51 UTC`***
+***Generated at `2023-07-25 16:50:01 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -44,7 +44,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 | 20. | ![nyx\_music\_icon](https://play-lh.googleusercontent.com/qg5vyfgAD_p05a9c82y0X7BvMVYq74YBK3-75y2SViOfX6zJJWHvnyc57BzKMnJJX-g=w64-h64) | [**Nyx Music Player**](https://play.google.com/store/apps/details?id=com.awedea.nyx) | `nyx-music-player` | `com.awedea.nyx` |
 | 21. | ![recorder\_icon](https://play-lh.googleusercontent.com/OfRwK6rMr4i7gu1AKeNbK-qnYPuL6EVQ5j6AYYQc0ge-I-NPYoBUsweVPuJLSOtHYag=w64-h64) | [**Recorder**](https://play.google.com/store/apps/details?id=com.google.android.apps.recorder) | `google_recorder` | `com.google.android.apps.recorder` |
 | 22. | ![reddit\_icon](https://play-lh.googleusercontent.com/Xm6RBzAhQL05D1MaAeUNidcm8SkGJmVXO0L8ZwQjm4yZ5LQzSJQw68Rn4bfinJU2eGQw=w64-h64) | [**Reddit**](https://play.google.com/store/apps/details?id=com.reddit.frontpage) | `reddit` | `com.reddit.frontpage` |
-| 23. | ![relay\_for\_icon](https://apksos.com/storage/images/free/reddit/news/free.reddit.news_2.png) | [**Relay for reddit**](https://apksos.com/app/free.reddit.news) | `reddit_relay` | `free.reddit.news` |
+| 23. | ![relay\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F07%2F73%2F64b361ecbc77c_free.reddit.news.png&w=64&h=64&q=100) | [**Relay for reddit**](https://www.apkmirror.com/apk/dbrady/relay-for-reddit-2/) | `reddit_relay` | `free.reddit.news` |
 | 24. | ![rif\_is\_f\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F08%2F6486686b1d551_com.andrewshu.android.reddit.png&w=64&h=64&q=100) | [**rif is fun for Reddit**](https://www.apkmirror.com/apk/talklittle/reddit-is-fun/) | `reddit_isfun` | `com.andrewshu.android.reddit` |
 | 25. | ![slide\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2021%2F06%2F27%2F60cbdda6baa4a.png&w=64&h=64&q=100) | [**Slide for Reddit**](https://www.apkmirror.com/apk/haptic-apps/slide-for-reddit/) | `reddit_slide` | `me.ccrama.redditslide` |
 | 26. | ![sony\_\|\_\_icon](https://play-lh.googleusercontent.com/BpJMwIjqHja-cZL_p2JREBTuG8d-Nyp9gUiQzciP9HvHAsF69mt9HFzouFTdimiuiWIH=w64-h64) | [**Sony \| Headphones Connect**](https://play.google.com/store/apps/details?id=com.sony.songpal.mdr) | `sony_headphones` | `com.sony.songpal.mdr` |
