@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-26 22:44:24 UTC`***
+***Generated at `2023-07-26 22:49:48 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -24,7 +24,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 |:-----:|------|------|------|---------|
 | 1. | ![youtube\_icon](https://play-lh.googleusercontent.com/lMoItBgdPPVDJsNOVtP26EKHePkwBg-PkuY9NOrc-fumRtTFP4XhpUNk_22syN4Datc=w64-h64) | [**YouTube**](https://play.google.com/store/apps/details?id=com.google.android.youtube) | `youtube` | `com.google.android.youtube` |
 | 2. | ![youtube\_m\_icon](https://play-lh.googleusercontent.com/GnYnNfKBr2nysHBYgYRCQtcv_RRNN0Sosn47F5ArKJu89DMR3_jHRAazoIVsPUoaMg=w64-h64) | [**YouTube Music**](https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.music) | `youtube_music` | `com.google.android.apps.youtube.music` |
-| 3. | ![android\_w\_icon](https://play-lh.googleusercontent.com/r-HYXeSDiTHhgXNd8rU2s7zV9QclSjIM0FF-oWdhYWCefa5dxUHLvyf5ujaIm8hqp9w=w64-h64) | [**Android Widgets (Material U)**](https://play.google.com/store/apps/details?id=com.dci.dev.androidtwelvewidgets) | `androidtwelvewidgets` | `com.dci.dev.androidtwelvewidgets` |
+| 3. | ![android\_w\_icon](https://apksos.com/storage/images/com/dci/dev/androidtwelvewidgets/com.dci.dev.androidtwelvewidgets_2.png) | [**Android Widgets (Material U)**](https://apksos.com/app/com.dci.dev.androidtwelvewidgets) | `androidtwelvewidgets` | `com.dci.dev.androidtwelvewidgets` |
 | 4. | ![backdrops\_icon](https://play-lh.googleusercontent.com/ybkU2kHmt5RBz4mXpxyYuO1ZqM3I8uJPhAKA7v51Pj03fwmT7PMMgPP6X2_CymH1cyg=w64-h64) | [**Backdrops - Wallpapers**](https://play.google.com/store/apps/details?id=com.backdrops.wallpapers) | `backdrops` | `com.backdrops.wallpapers` |
 | 5. | ![baconreade\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F92%2F649ae295d56d0_com.onelouder.baconreader.png&w=64&h=64&q=100) | [**BaconReader for Reddit**](https://www.apkmirror.com/apk/onelouder-apps/baconreader-for-reddit/) | `reddit_baconreader` | `com.onelouder.baconreader` |
 | 6. | ![boost\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F81%2F649e02dc83ea6_com.rubenmayayo.reddit.png&w=64&h=64&q=100) | [**Boost for reddit**](https://www.apkmirror.com/apk/ruben-mayayo/boost-for-reddit/) | `reddit_boost` | `com.rubenmayayo.reddit` |
