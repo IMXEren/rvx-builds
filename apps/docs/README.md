@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-27 05:10:52 UTC`***
+***Generated at `2023-07-27 05:25:16 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -55,10 +55,10 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 | 31. | ![tiktok\_icon](https://play-lh.googleusercontent.com/Ui_-OW6UJI147ySDX9guWWDiCPSq1vtxoC-xG17BU2FpU0Fi6qkWwuLdpddmT9fqrA=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.ss.android.ugc.trill) | `tiktok` | `com.ss.android.ugc.trill` |
 | 32. | ![trakt\_icon](https://play-lh.googleusercontent.com/n0SqzImml-_GwGHQJRIRQs2IgHELIZPH_GZIwSl7c71qhok8dgZh7rQvOH1jihkVhw=w64-h64) | [**Trakt**](https://play.google.com/store/apps/details?id=tv.trakt.trakt) | `trakt` | `tv.trakt.trakt` |
 | 33. | ![twitch:\_l\_icon](https://play-lh.googleusercontent.com/QLQzL-MXtxKEDlbhrQCDw-REiDsA9glUH4m16syfar_KVLRXlzOhN7tmAceiPerv4Jg=w64-h64) | [**Twitch: Live Game Streaming**](https://play.google.com/store/apps/details?id=tv.twitch.android.app) | `twitch` | `tv.twitch.android.app` |
-| 34. | ![twitter\_icon](https://play-lh.googleusercontent.com/wIf3HtczQDjHzHuu7vezhqNs0zXAG85F7VmP7nhsTxO3OHegrVXlqIh_DWBYi86FTIGk=w64-h64) | [**Twitter**](https://play.google.com/store/apps/details?id=com.twitter.android) | `twitter` | `com.twitter.android` |
-| 35. | ![vsco:\_pho\_icon](https://play-lh.googleusercontent.com/RdCklOFg3SLN5QF8OR7cU-5bs1ESYo_pqGYrK2ena3XZDcrLOpjf7vLtNQELOR7Uo4MH=w64-h64) | [**VSCO: Photo & Video Editor**](https://play.google.com/store/apps/details?id=com.vsco.cam) | `vsco` | `com.vsco.cam` |
-| 36. | ![warnwetter\_icon](https://play-lh.googleusercontent.com/vzWpHOJbMbaWc2FgHWNcp_xIQyn0qHxZVaG1ly0kYTxrhNfWD3DAnwmnQRPx36yauxs=w64-h64) | [**WarnWetter**](https://play.google.com/store/apps/details?id=de.dwd.warnapp) | `warnwetter` | `de.dwd.warnapp` |
-| 37. | ![windy.app:\_icon](https://play-lh.googleusercontent.com/6dXNbnL3ge2DfM4cQ1XXIHZsOzg9LZtgMTmNWqY-7oI9dDDbL9dd8ct2DzaTVa0hNAq1=w64-h64) | [**Windy.app: Windy Weather Map**](https://play.google.com/store/apps/details?id=co.windyapp.android) | `windy` | `co.windyapp.android` |
+| 34. | ![vsco:\_pho\_icon](https://play-lh.googleusercontent.com/RdCklOFg3SLN5QF8OR7cU-5bs1ESYo_pqGYrK2ena3XZDcrLOpjf7vLtNQELOR7Uo4MH=w64-h64) | [**VSCO: Photo & Video Editor**](https://play.google.com/store/apps/details?id=com.vsco.cam) | `vsco` | `com.vsco.cam` |
+| 35. | ![warnwetter\_icon](https://play-lh.googleusercontent.com/vzWpHOJbMbaWc2FgHWNcp_xIQyn0qHxZVaG1ly0kYTxrhNfWD3DAnwmnQRPx36yauxs=w64-h64) | [**WarnWetter**](https://play.google.com/store/apps/details?id=de.dwd.warnapp) | `warnwetter` | `de.dwd.warnapp` |
+| 36. | ![windy.app:\_icon](https://play-lh.googleusercontent.com/6dXNbnL3ge2DfM4cQ1XXIHZsOzg9LZtgMTmNWqY-7oI9dDDbL9dd8ct2DzaTVa0hNAq1=w64-h64) | [**Windy.app: Windy Weather Map**](https://play.google.com/store/apps/details?id=co.windyapp.android) | `windy` | `co.windyapp.android` |
+| 37. | ![x\_icon](https://play-lh.googleusercontent.com/A-Rnrh0J7iKmABskTonqFAANRLGTGUg_nuE4PEMYwJavL3nPt5uWsU2WO_DSgV_mOOM=w64-h64) | [**X**](https://play.google.com/store/apps/details?id=com.twitter.android) | `twitter` | `com.twitter.android` |
 | 38. | ![yuka\_-\_f\_icon](https://play-lh.googleusercontent.com/fmGc9NGmf0ZTV2PQIhZ7lprvqNaUOaZEFXZg6MIG5fDaUiTua4Y2D7IxA3jaHDj2xQ=w64-h64) | [**Yuka - Food & cosmetic scan**](https://play.google.com/store/apps/details?id=io.yuka.android) | `yuka` | `io.yuka.android` |
 
 

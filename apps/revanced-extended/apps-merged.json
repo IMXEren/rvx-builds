@@ -264,14 +264,6 @@
         "target_version": "15.4.1"
     },
     {
-        "app_package": "com.twitter.android",
-        "app_code": "twitter",
-        "app_name": "Twitter",
-        "app_url": "https://play.google.com/store/apps/details?id=com.twitter.android",
-        "app_icon": "https://play-lh.googleusercontent.com/wIf3HtczQDjHzHuu7vezhqNs0zXAG85F7VmP7nhsTxO3OHegrVXlqIh_DWBYi86FTIGk=w64-h64",
-        "target_version": "Any"
-    },
-    {
         "app_package": "com.vsco.cam",
         "app_code": "vsco",
         "app_name": "VSCO: Photo & Video Editor",
@@ -293,6 +285,14 @@
         "app_name": "Windy.app: Windy Weather Map",
         "app_url": "https://play.google.com/store/apps/details?id=co.windyapp.android",
         "app_icon": "https://play-lh.googleusercontent.com/6dXNbnL3ge2DfM4cQ1XXIHZsOzg9LZtgMTmNWqY-7oI9dDDbL9dd8ct2DzaTVa0hNAq1=w64-h64",
+        "target_version": "Any"
+    },
+    {
+        "app_package": "com.twitter.android",
+        "app_code": "twitter",
+        "app_name": "X",
+        "app_url": "https://play.google.com/store/apps/details?id=com.twitter.android",
+        "app_icon": "https://play-lh.googleusercontent.com/A-Rnrh0J7iKmABskTonqFAANRLGTGUg_nuE4PEMYwJavL3nPt5uWsU2WO_DSgV_mOOM=w64-h64",
         "target_version": "Any"
     },
     {
