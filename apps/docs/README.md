@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-07-27 22:48:09 UTC`***
+***Generated at `2023-07-27 22:49:44 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -35,7 +35,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 | 11. | ![inshorts\_\_icon](https://play-lh.googleusercontent.com/lvAGNNFIBMC3ZgS-JJcSwDzpSjOGMg7FGY14FrffJobLOed9-H2DiuZwknsIwVwKwTjo=w64-h64) | [**Inshorts - News in 60 words**](https://play.google.com/store/apps/details?id=com.nis.app) | `inshorts` | `com.nis.app` |
 | 12. | ![instagram\_icon](https://play-lh.googleusercontent.com/VRMWkE5p3CkWhJs6nv-9ZsLAs1QOg5ob1_3qg-rckwYW7yp1fMrYZqnEFpk0IoVP4LM=w64-h64) | [**Instagram**](https://play.google.com/store/apps/details?id=com.instagram.android) | `instagram` | `com.instagram.android` |
 | 13. | ![irplus\_-\_icon](https://play-lh.googleusercontent.com/xNQNgiKHPtYE0Zk_bRd0ZOp9rOOJTy2puzOx8CUBq2Ja4yhOQwdrBdeOrDTGQA9aSg=w64-h64) | [**irplus - Infrared Remote**](https://play.google.com/store/apps/details?id=net.binarymode.android.irplus) | `irplus` | `net.binarymode.android.irplus` |
-| 14. | ![meme\_gene\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F07%2F45%2F64beb4ccacf97_com.zombodroid.MemeGenerator.png&w=64&h=64&q=100) | [**Meme Generator**](https://www.apkmirror.com/apk/zombodroid/meme-generator-free/) | `meme_generator` | `com.zombodroid.MemeGenerator` |
+| 14. | ![meme\_gene\_icon](https://play-lh.googleusercontent.com/YNBUh-8PzcAXryawZ559rEUDowEOgXsPDfTDBOi4AQQR6NTsWGvYTU1tMRctN3uoRqw8=w64-h64) | [**Meme Generator**](https://play.google.com/store/apps/details?id=com.zombodroid.MemeGenerator) | `meme_generator` | `com.zombodroid.MemeGenerator` |
 | 15. | ![messenger\_icon](https://play-lh.googleusercontent.com/ldcQMpP7OaVmglCF6kGas9cY_K0PsJzSSosx2saw9KF1m3RHaEXpH_9mwBWaYnkmctk=w64-h64) | [**Messenger**](https://play.google.com/store/apps/details?id=com.facebook.orca) | `fbmessenger` | `com.facebook.orca` |
 | 16. | ![money\_man\_icon](https://play-lh.googleusercontent.com/N_KBHHLEjLXKXF2kWQPbcPmoFMNZkAvlT2PNpNOwmbm1s-vb9ZmYiRl8E0KOanwJWObV=w64-h64) | [**Money Manager- Expense, Budget**](https://play.google.com/store/apps/details?id=com.ithebk.expensemanager) | `expensemanager` | `com.ithebk.expensemanager` |
 | 17. | ![my\_expens\_icon](https://play-lh.googleusercontent.com/UjuME9DmxhIYnYNWxxeX2GnhZKa2bSRzPa2udUm50z25pUIs06NG_MLTi7MQGp2zWMU=w64-h64) | [**My Expenses**](https://play.google.com/store/apps/details?id=org.totschnig.myexpenses) | `my-expenses` | `org.totschnig.myexpenses` |
