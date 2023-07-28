@@ -16,6 +16,11 @@ rvx_json_url = urls.get_rvx_json()
 py_file_url = urls.get_patches_py()
 env_file_url = urls.get_env()
 
+def deduplicate(list):
+    seen = {}
+    new_list = [seen.setdefault(x, x) for x in list if x not in seen]
+    return new_list
+
 # Get info
 def get_pkg():
     # Get env file contents
@@ -32,6 +37,8 @@ def get_pkg():
     for package_name, code in matches:
         get_pkg.packages.append(package_name.strip())
         get_pkg.codes.append(code.strip())
+    get_pkg.packages = deduplicate(get_pkg.packages)
+    get_pkg.codes = deduplicate(get_pkg.codes)
     return env_content
 
 def set_patch_type():
