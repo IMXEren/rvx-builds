@@ -51,6 +51,11 @@ on:
         required: false
         type: boolean
         default: false
+      CACHE_RELEASES:
+        description: "Persist older releases to not delete them on the run."
+        required: false
+        type: boolean
+        default: true
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -83,11 +88,12 @@ jobs:
           echo "date=$(TZ='Asia/Kolkata' date +"%Y.%m.%d-%H.%M.%S")" >> $GITHUB_OUTPUT
           curl https://github.com/nikhilbadyal/docker-py-revanced/blob/changelogs/changelog.md > changelog.md
 
-#      - name: Delete Older Releases
-#        uses: nikhilbadyal/ghaction-rm-releases@v0.0.2
-#        with:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          RELEASE_PATTERN: "Build*"
+      - name: Delete Older Releases
+        uses: nikhilbadyal/ghaction-rm-releases@v0.0.2
+        if: ${{ inputs.CACHE_RELEASES == false }}
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_PATTERN: "*"
 
       - name: Upload Build Artifact
         uses: ncipollo/release-action@v1.12.0
