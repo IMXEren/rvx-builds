@@ -46,6 +46,11 @@ on:
         description: 'Notify with JOIN API when the build is complete.'
         required: false
         default: true
+      PRE_RELEASE:
+        description: "Release as a pre-release"
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -91,6 +96,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: Build-${{ steps.get-date.outputs.date }}
           artifactErrorsFailBuild: true
+          prerelease: ${{ inputs.PRE_RELEASE }}
 
       - name: Sleep for 10 seconds
         run: |
