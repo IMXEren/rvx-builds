@@ -93,7 +93,7 @@ jobs:
         if: ${{ inputs.CACHE_RELEASES == false }}
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_PATTERN: "*"
+          RELEASE_PATTERN: ".*"
 
       - name: Upload Build Artifact
         uses: ncipollo/release-action@v1.12.0
