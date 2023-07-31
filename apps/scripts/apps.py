@@ -1,5 +1,6 @@
 import re
 import requests
+from loguru import logger
 
 import utils.writer as wr
 from utils.scraper import scraper
@@ -19,6 +20,7 @@ rvx_json_file = "apps/revanced-extended/apps.json"
 rvxm_json_file = "apps/revanced-extended/apps-merged.json"
 md_file = "apps/docs/README.md"
 
+@logger.catch
 def get_available_patch_apps(url):
     response = requests.get(url)
     python_code = response.text
@@ -92,8 +94,8 @@ supported_packages = list(set(all_packages) & set(available_packages))
 rv_appcodes = get_app_code(rv_packages)
 rvx_appcodes = get_app_code(rvx_packages)
 supported_appcodes = get_app_code(supported_packages)
-print("Package Names:", supported_packages, flush=True)
-print("App Codes:", supported_appcodes, flush=True)
+logger.info("Package Names: {}", supported_packages)
+logger.info("App Codes: {}", supported_appcodes)
 
 # Step 3: Match package names and scraping
 def make_json_data(packages, patches=[]):
@@ -103,10 +105,9 @@ def make_json_data(packages, patches=[]):
         patch_apps += 1
         latest_versions = get_last_version(patches, package_name)
         target_version = max(latest_versions, key=version_key)
-        print(package_name, flush=True)
+        logger.debug("{}. {}", patch_apps, package_name)
         app_codename = get_app_code(package_name)
         app_name, app_icon, app_url = scraper(package_name, app_codename)
-        print(app_name, flush=True)
         json_data.append({
                 "app_package": package_name,
                 "app_code": app_codename,

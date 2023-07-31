@@ -1,16 +1,12 @@
-import os
 import json
 import requests
+from loguru import logger
 
 import utils.writer as wr
 from utils.repo import GitHubRepo
 from utils.urls import GitHubURLs
 
-gh = GitHubRepo()
-repo = gh.get_repo()
-branch = gh.get_branch()
-urls = GitHubURLs(repo, branch)
-
+@logger.catch
 def parse_env_json_to_env(json_data, output_file, key_order, key_order_placeholder):
     # Load the JSON data
     data = json.loads(json_data)
@@ -69,32 +65,38 @@ def parse_env_json_to_env(json_data, output_file, key_order, key_order_placehold
     # Write the env_content to a file
     with open(output_file, "w") as file:
         file.write(env_content)
-    print(env_content, flush=True)
+    logger.debug(env_content)
 
 # Get the JSON data
 # json_file = open('apps/env.json', 'r')
 # json_data = json_file.read()
 # json_file.close()
 
-json_file = urls.get_env_json()
-json_data = requests.get(json_file).text
-output_file = "apps/.env"
 
-# Define the desired sorting key order
-key_order = [
-    "DRY_RUN",
-    "KEYSTORE_FILE_NAME",
-    "ARCHS_TO_BUILD",
-    "BUILD_EXTENDED",
-    "PATCH_APPS",
-    "EXISTING_DOWNLOADED_APKS",
-]
-key_order_placeholder = [
-    "APP_NAME_VERSION",
-    "INCLUDE_PATCH_APP_NAME,"
-    "EXCLUDE_PATCH_APP_NAME",
-    "EXCLUDE_PATCH_APP_NAME_EXTENDED",
-    "ALTERNATIVE_APP_NAME_PATCHES",
-]
+if __name__ == "__main__":
+    gh = GitHubRepo()
+    repo = gh.get_repo()
+    branch = gh.get_branch()
+    urls = GitHubURLs(repo, branch)
+    json_file = urls.get_env_json()
+    json_data = requests.get(json_file).text
+    output_file = "apps/.env"
 
-parse_env_json_to_env(json_data, output_file, key_order, key_order_placeholder)
+    # Define the desired sorting key order
+    key_order = [
+        "DRY_RUN",
+        "KEYSTORE_FILE_NAME",
+        "ARCHS_TO_BUILD",
+        "BUILD_EXTENDED",
+        "PATCH_APPS",
+        "EXISTING_DOWNLOADED_APKS",
+    ]
+    key_order_placeholder = [
+        "APP_NAME_VERSION",
+        "INCLUDE_PATCH_APP_NAME,"
+        "EXCLUDE_PATCH_APP_NAME",
+        "EXCLUDE_PATCH_APP_NAME_EXTENDED",
+        "ALTERNATIVE_APP_NAME_PATCHES",
+    ]
+
+    parse_env_json_to_env(json_data, output_file, key_order, key_order_placeholder)

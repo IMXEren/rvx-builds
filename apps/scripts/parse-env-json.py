@@ -1,27 +1,20 @@
-import os
 import re
 import json
 import requests
+from loguru import logger
 
 import utils.writer as wr
 from utils.repo import GitHubRepo
 from utils.urls import GitHubURLs
 
-gh = GitHubRepo()
-repo = gh.get_repo()
-branch = gh.get_branch()
-urls = GitHubURLs(repo, branch)
-rv_json_url = urls.get_rv_json()
-rvx_json_url = urls.get_rvx_json()
-py_file_url = urls.get_patches_py()
-env_file_url = urls.get_env()
-
+@logger.catch
 def deduplicate(list):
     seen = {}
     new_list = [seen.setdefault(x, x) for x in list if x not in seen]
     return new_list
 
 # Get info
+@logger.catch
 def get_pkg():
     # Get env file contents
     response = requests.get(env_file_url)
@@ -41,6 +34,7 @@ def get_pkg():
     get_pkg.codes = deduplicate(get_pkg.codes)
     return env_content
 
+@logger.catch
 def set_patch_type():
     def get_packages_from_patches(patches):
         packages = set()
@@ -72,6 +66,7 @@ def set_patch_type():
 
 # Parse json_data from env_content
 # Parsed without extra keys (EXTENDED) for every app
+@logger.catch
 def parse_json_data(env_content):
     env_dict = {}
     lines = env_content.strip().split('\n')
@@ -129,6 +124,7 @@ def parse_json_data(env_content):
     return json_data
 
 # Replace empty lists with []
+@logger.catch
 def replace_empty_lists(data):
     if isinstance(data, dict):
         return {k: replace_empty_lists(v) if v != [""] else [] for k, v in data.items()}
@@ -137,11 +133,20 @@ def replace_empty_lists(data):
     else:
         return data
 
-env_content = get_pkg()
-set_patch_type()
-json_data = parse_json_data(env_content)
-json_data = replace_empty_lists(json_data)
-json_string = json.dumps(json_data, indent=4)
-output_file = "apps/json/env.json"
-wr.write_json(output_file, json_data)
-print(json_string, flush=True)
+if __name__ == "__main__":
+    gh = GitHubRepo()
+    repo = gh.get_repo()
+    branch = gh.get_branch()
+    urls = GitHubURLs(repo, branch)
+    rv_json_url = urls.get_rv_json()
+    rvx_json_url = urls.get_rvx_json()
+    py_file_url = urls.get_patches_py()
+    env_file_url = urls.get_env()
+    env_content = get_pkg()
+    set_patch_type()
+    json_data = parse_json_data(env_content)
+    json_data = replace_empty_lists(json_data)
+    json_string = json.dumps(json_data, indent=4)
+    output_file = "apps/json/env.json"
+    wr.write_json(output_file, json_data)
+    logger.debug(json_string)

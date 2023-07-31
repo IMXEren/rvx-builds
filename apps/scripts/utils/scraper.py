@@ -2,6 +2,7 @@ import re
 import json
 import requests
 from bs4 import BeautifulSoup
+from loguru import logger
 
 from utils.repo import GitHubRepo
 from utils.urls import GitHubURLs
@@ -27,6 +28,7 @@ def gplay_scrape(package_name):
         app_icon = app_icon.replace("=w240-h480", "=w64-h64")
     if app_name_element:
         app_name = app_name_element.text
+    logger.success(app_name)
     return app_name, app_icon, app_url
 
 def apkm_scrape(package_name, app_code):
@@ -46,7 +48,7 @@ def apkm_scrape(package_name, app_code):
             # print("APKMScrape:", str(e))
             pass
     if app_url:
-        print(app_url)
+        # print(app_url)
         s = requests
         hdr = {'User-Agent': 'anything'}
         r = s.get(app_url, headers=hdr)
@@ -58,8 +60,9 @@ def apkm_scrape(package_name, app_code):
             app_icon = f'{apk_mirror}{app_icon.replace("&w=96&h=96", "&w=64&h=64")}'
         if app_name_element:
             app_name = app_name_element.text
-        print("App Name:", app_name, flush=True)
-        print("Icon URL:", app_icon, flush=True)
+        logger.success(app_name)
+        # print("App Name:", app_name, flush=True)
+        # print("Icon URL:", app_icon, flush=True)
         return app_name, app_icon, app_url
     else:
         print("APKMirror URL not found for the specified app code")
@@ -76,6 +79,7 @@ def apksos_scrape(package_name):
     if app_name_element:
         app_name = app_name_element.text
         app_name = re.sub(r'.*?\n\s+', '', app_name).strip()
+    logger.success(app_name)
     return app_name, app_icon, app_url
 
 def get_json_data(key, value, url):
@@ -113,6 +117,7 @@ def scraper(package_name, code_name):
             if scraper == get_json_data:
                 result = scraper(*param)
                 app_name, app_icon, app_url = result[0]['app_name'], result[0]['app_icon'], result[0]['app_url']
+                logger.success(app_name)
             else:
                 app_name, app_icon, app_url = scraper(*param)
             break

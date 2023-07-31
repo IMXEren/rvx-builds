@@ -1,9 +1,9 @@
-import os
 import re
 import json
 import requests
 from loguru import logger
 
+import utils.writer as wr
 from utils.repo import GitHubRepo
 from utils.urls import GitHubURLs
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         # options_json_str = json.dumps(options_json, indent=2)
         options_json_str = format_options_json(options_json)
         logger.debug(options_json_str)
-        os.makedirs(os.path.dirname(output_file), exist_ok=True) # Create the directories if they don't exist
+        wr.check_path(output_file)
         with open(output_file, "w") as file:
             file.write(options_json_str)
         logger.info('Fetched options.json for revanced and revanced-extended')
