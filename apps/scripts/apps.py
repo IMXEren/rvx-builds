@@ -142,9 +142,10 @@ unadded_apps = 0
 removed_scrape = []
 removed_apps = 0
 for package_name in unadded_packages:
+    logger.info("Scraping for unadded package - {}", package_name)
     app_name, app_icon, app_url = scraper(package_name, None)
     if app_name == "NA":
-        print("Unadded package:", package_name)
+        logger.error("Unadded package: {}", package_name)
     else:
         unadded_apps += 1
         unadded_scrape.append({
@@ -154,9 +155,10 @@ for package_name in unadded_packages:
                 "app_icon": app_icon,
             })
 for package_name in removed_packages:
+    logger.info("Scraping for removed package - {}", package_name)
     app_name, app_icon, app_url = scraper(package_name, None)
     if app_name == "NA":
-        print("Removed package:", package_name)
+        logger.error("Removed package: {}", package_name)
     else:
         removed_apps += 1
         removed_scrape.append({
@@ -165,8 +167,8 @@ for package_name in removed_packages:
                 "app_url": app_url,
                 "app_icon": app_icon,
             })
-print("\nUnadded Scrape:", unadded_scrape)
-print("\nRemoved Scrape:", removed_scrape)
+logger.info("\nUnadded Scrape: {}", unadded_scrape)
+logger.info("\nRemoved Scrape: {}", removed_scrape)
 
 supported_apps = [rv_patch_apps, rvx_patch_apps]
 supported_data = [rv_json_data, rvx_json_data]

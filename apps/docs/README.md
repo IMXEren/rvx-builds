@@ -1,6 +1,10 @@
 # Apps
 
+<<<<<<< Updated upstream
 ***Generated at `2023-07-31 16:49:51 UTC`***
+=======
+***Generated at `2023-07-31 16:54:26 UTC`***
+>>>>>>> Stashed changes
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
