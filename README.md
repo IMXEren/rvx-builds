@@ -1,4 +1,4 @@
-**![](rvx-builds/logo.svg)**
+**![](rvx-builds/drawing-e.svg)**
 
 ###### 15/JULY/2023:
 ### Merged upstream changes.
