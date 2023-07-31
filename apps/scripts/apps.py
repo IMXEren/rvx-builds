@@ -34,6 +34,7 @@ def get_available_patch_apps(url):
         app_code.append(code.strip())
     return package_name, app_code
 
+@logger.catch
 def get_app_code(package):
     if isinstance(package, list):
         code = []
@@ -45,6 +46,7 @@ def get_app_code(package):
         code = app_code[i]
     return code
 
+@logger.catch
 def get_patches_json(i):
     i = 0 if i == "rv" else (1 if i == "rvx" else i)
     urls = [
@@ -56,6 +58,7 @@ def get_patches_json(i):
     patches = r.json()
     return patches
 
+@logger.catch
 def get_packages_from_patches(patches):
     packages = set()
     for item in patches:
@@ -63,6 +66,7 @@ def get_packages_from_patches(patches):
             packages.add(package["name"])
     return packages
 
+@logger.catch
 def get_last_version(json_data, package_name):
     last_versions = []
     for obj in json_data:
@@ -76,6 +80,7 @@ def get_last_version(json_data, package_name):
                     last_versions.append("Any")
     return last_versions
 
+@logger.catch
 def version_key(version):
     # Converts the version string to a tuple of integers
     return tuple(map(int, re.findall(r'\d+', version)))
@@ -98,6 +103,7 @@ logger.info("Package Names: {}", supported_packages)
 logger.info("App Codes: {}", supported_appcodes)
 
 # Step 3: Match package names and scraping
+@logger.catch
 def make_json_data(packages, patches=[]):
     json_data = []
     patch_apps = 0
@@ -121,6 +127,7 @@ def make_json_data(packages, patches=[]):
 rv_patch_apps, rv_json_data = make_json_data(rv_packages, rv_patches)
 rvx_patch_apps, rvx_json_data = make_json_data(rvx_packages, rvx_patches)
 
+@logger.catch
 def rvx_merge_json():
     json1_list = rvx_json_data
     json2_list = rv_json_data
