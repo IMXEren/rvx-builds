@@ -1,0 +1,16 @@
+<svg width="982" height="292" xmlns="http://www.w3.org/2000/svg">
+  <!-- Applying the imported font family to the text element -->
+  <style>
+    <![CDATA[
+      text {
+        font-family: 'Manrope', sans-serif;
+        font-weight: 600;
+        font-size: 72px;
+        fill: #ffffff;
+        text-anchor: middle; /* Center the text horizontally */
+        dominant-baseline: middle; /* Center the text vertically */
+      }
+    ]]>
+  </style>
+  <text x="491" y="146">RVX-Builds</text>
+</svg>
