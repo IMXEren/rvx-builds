@@ -2,6 +2,7 @@ requests
 beautifulsoup4
 pytz
 Unidecode
+loguru
 # selenium
 # pyvirtualdisplay
 # webdriver-manager
