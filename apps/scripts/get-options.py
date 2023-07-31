@@ -3,6 +3,9 @@ import re
 import json
 import requests
 
+from utils.repo import GitHubRepo
+from utils.urls import GitHubURLs
+
 # Get patches JSON
 def get_options_json(url):
     response = requests.get(url)
@@ -38,10 +41,16 @@ def format_options_json(opjson):
     print(opjson_str)
     return opjson_str
 
+gh = GitHubRepo()
+repo = gh.get_repo()
+branch = gh.get_branch()
+urls = GitHubURLs(repo, branch)
+rv_json_url = urls.get_rv_json()
+rvx_json_url = urls.get_rvx_json()
 
 urls = [
-    "https://raw.githubusercontent.com/revanced/revanced-patches/main/patches.json",
-    "https://raw.githubusercontent.com/inotia00/revanced-patches/revanced-extended/patches.json",
+    rv_json_url,
+    rvx_json_url,
 ]
 
 outs = [
