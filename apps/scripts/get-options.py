@@ -65,7 +65,7 @@ if __name__ == "__main__":
         logger.debug(options_json)
         # options_json_str = json.dumps(options_json, indent=2)
         options_json_str = format_options_json(options_json)
-        logger.debug(options_json_str)
+        logger.debug("""{}""", options_json_str)
         wr.check_path(output_file)
         with open(output_file, "w") as file:
             file.write(options_json_str)
