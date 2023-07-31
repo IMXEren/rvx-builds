@@ -94,8 +94,8 @@ supported_packages = list(set(all_packages) & set(available_packages))
 rv_appcodes = get_app_code(rv_packages)
 rvx_appcodes = get_app_code(rvx_packages)
 supported_appcodes = get_app_code(supported_packages)
-logger.info("Package Names: {}", supported_packages)
-logger.info("App Codes: {}", supported_appcodes)
+logger.info('''Package Names: {}''', supported_packages)
+logger.info('''App Codes: {}''', supported_appcodes)
 
 # Step 3: Match package names and scraping
 def make_json_data(packages, patches=[]):
