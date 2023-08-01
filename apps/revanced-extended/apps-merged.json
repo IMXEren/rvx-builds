@@ -211,8 +211,8 @@
         "app_package": "com.spotify.music",
         "app_code": "spotify",
         "app_name": "Spotify: Music and Podcasts",
-        "app_url": "https://play.google.com/store/apps/details?id=com.spotify.music",
-        "app_icon": "https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs=w64-h64",
+        "app_url": "https://apksos.com/app/com.spotify.music",
+        "app_icon": "https://apksos.com/storage/images/com/spotify/music/com.spotify.music_2.png",
         "target_version": "Any"
     },
     {
@@ -235,8 +235,8 @@
         "app_package": "com.ticktick.task",
         "app_code": "ticktick",
         "app_name": "TickTick:To Do List & Calendar",
-        "app_url": "https://play.google.com/store/apps/details?id=com.ticktick.task",
-        "app_icon": "https://play-lh.googleusercontent.com/JkYolPNuRAlrXEI9vlk-XOid3VFJ0IPjDj2eM_xrriuE3Zu8IX9cuMkI7JOTw1upNxbW=w64-h64",
+        "app_url": "https://www.apkmirror.com/apk/appest-inc/ticktick-to-do-list-with-reminder-day-planner/",
+        "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F07%2F85%2F64b9e5544d44b_com.ticktick.task.png&w=64&h=64&q=100",
         "target_version": "Any"
     },
     {
