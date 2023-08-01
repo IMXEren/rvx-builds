@@ -1,11 +1,8 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="rvx-builds/logo_big_dark-bg.svg">
   <source media="(prefers-color-scheme: light)" srcset="rvx-builds/logo_big_light-bg.svg">
-  <img alt="rvx-builds_logo">
+  <img alt="rvx-builds_logo" src="rvx-builds/logo_big_dark-bg.svg">
 </picture>
-
-
-![](rvx-builds/logo_big_dark-bg.svg)
 
 ###### 15/JULY/2023:
 ### Merged upstream changes.
