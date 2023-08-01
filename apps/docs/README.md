@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-08-01 20:35:15 UTC`***
+***Generated at `2023-08-01 20:49:57 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
@@ -52,7 +52,7 @@ Here is a list of 38 apps that can be patched using [**ReVanced**](https://www.g
 | 28. | ![sync\_for\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F28%2F649f9d78c7ab5_com.laurencedawson.reddit_sync.png&w=64&h=64&q=100) | [**Sync for reddit**](https://www.apkmirror.com/apk/red-apps-ltd/sync-for-reddit/) | `reddit_sync` | `com.laurencedawson.reddit_sync` |
 | 29. | ![tasker\_icon](https://play-lh.googleusercontent.com/8IkkhPNnxNVYhnUxcidu0-Yp72aSb3H0gQJ1U-_ImQ7SCGLz1zgXtV7wi2Hpd6Odghg=w64-h64) | [**Tasker**](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) | `tasker` | `net.dinglisch.android.taskerm` |
 | 30. | ![ticktick:t\_icon](https://play-lh.googleusercontent.com/JkYolPNuRAlrXEI9vlk-XOid3VFJ0IPjDj2eM_xrriuE3Zu8IX9cuMkI7JOTw1upNxbW=w64-h64) | [**TickTick:To Do List & Calendar**](https://play.google.com/store/apps/details?id=com.ticktick.task) | `ticktick` | `com.ticktick.task` |
-| 31. | ![tiktok\_icon](https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F07%2F93%2F64c4b613b3d52_com.zhiliaoapp.musically.png&w=64&h=64&q=100) | [**TikTok**](https://www.apkmirror.com/apk/tiktok-pte-ltd/tik-tok-including-musical-ly/) | `tiktok` | `com.ss.android.ugc.trill` |
+| 31. | ![tiktok\_icon](https://play-lh.googleusercontent.com/Ui_-OW6UJI147ySDX9guWWDiCPSq1vtxoC-xG17BU2FpU0Fi6qkWwuLdpddmT9fqrA=w64-h64) | [**TikTok**](https://play.google.com/store/apps/details?id=com.ss.android.ugc.trill) | `tiktok` | `com.ss.android.ugc.trill` |
 | 32. | ![trakt\_icon](https://play-lh.googleusercontent.com/n0SqzImml-_GwGHQJRIRQs2IgHELIZPH_GZIwSl7c71qhok8dgZh7rQvOH1jihkVhw=w64-h64) | [**Trakt**](https://play.google.com/store/apps/details?id=tv.trakt.trakt) | `trakt` | `tv.trakt.trakt` |
 | 33. | ![twitch:\_l\_icon](https://play-lh.googleusercontent.com/QLQzL-MXtxKEDlbhrQCDw-REiDsA9glUH4m16syfar_KVLRXlzOhN7tmAceiPerv4Jg=w64-h64) | [**Twitch: Live Game Streaming**](https://play.google.com/store/apps/details?id=tv.twitch.android.app) | `twitch` | `tv.twitch.android.app` |
 | 34. | ![vsco:\_pho\_icon](https://play-lh.googleusercontent.com/RdCklOFg3SLN5QF8OR7cU-5bs1ESYo_pqGYrK2ena3XZDcrLOpjf7vLtNQELOR7Uo4MH=w64-h64) | [**VSCO: Photo & Video Editor**](https://play.google.com/store/apps/details?id=com.vsco.cam) | `vsco` | `com.vsco.cam` |
