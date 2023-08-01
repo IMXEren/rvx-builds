@@ -4,6 +4,17 @@
   <img alt="rvx-builds_logo" src="rvx-builds/logo_big_dark-bg.svg" width="982" height="292">
 </picture>
 
-![](rvx-builds/logo_big_dark-bg.svg)
+<picture>
+    <source
+      width="256px"
+      media="(prefers-color-scheme: dark)"
+      srcset="https://raw.githubusercontent.com/IMXEren/rvx-builds/main/rvx-builds/logo_big_dark-bg.svg"
+    >
+    <img 
+      src="https://raw.githubusercontent.com/IMXEren/rvx-builds/main/rvx-builds/logo_big_light-bg.svg"
+    >
+</picture>
+
+
 
 # Hey
