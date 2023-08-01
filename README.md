@@ -1,5 +1,3 @@
-# Hey
-
 <picture>
   <source
     width="982px"
