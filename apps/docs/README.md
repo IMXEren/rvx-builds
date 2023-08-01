@@ -1,6 +1,6 @@
 # Apps
 
-***Generated at `2023-08-01 03:24:29 UTC`***
+***Generated at `2023-08-01 03:35:18 UTC`***
 
 ## Table of Contents
   - [Supported Apps](#supported-apps)
