@@ -10,9 +10,9 @@
     width="982px"
     height="292px"
     media="(prefers-color-scheme: dark)"
-    srcset="rvx-builds/logo_big_dark-bg.svg.svg"
+    srcset="rvx-builds/logo_big_dark-bg.svg"
   >
   <img 
-    src="rvx-builds/logo_big_light-bg.svg.svg"
+    src="rvx-builds/logo_big_light-bg.svg"
   >
 </picture>
