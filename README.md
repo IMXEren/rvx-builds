@@ -4,4 +4,6 @@
   <img alt="rvx-builds_logo" src="rvx-builds/logo_big_dark-bg.svg" width="982" height="292">
 </picture>
 
+![](rvx-builds/logo_big_dark-bg.svg)
+
 # Hey
