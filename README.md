@@ -5,7 +5,7 @@
   >
   <source 
     media="(prefers-color-scheme: light)"
-    srcset="https://raw.githubusercontent.com/IMXEren/rvx-builds/main/rvx-builds/logo_big_light-bg.svg"
+    srcset="/rvx-builds/logo_big_light-bg.svg"
   >
   <img 
     alt="rvx-builds_logo"
