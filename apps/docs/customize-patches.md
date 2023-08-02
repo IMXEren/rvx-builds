@@ -9,7 +9,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 - With versions recommended by ReVanced
 - Using resources provided by ReVanced
 - With all patches included except for universal patches
-- Latest mMicroG will be released along with the patched apks
+- Latest [mMicroG](https://github.com/inotia00/mMicroG) will be released along with the patched apks
 
 ## Custom
 
@@ -51,9 +51,8 @@ By default, script build the version as recommended by Revanced team.
    **_All the patches for an app are included by default._**.<br><br>If you want to apply a universal patch. You can
    include it
    manually. See below for more information. Note that universal patches are only provided by ReVanced and not by ReVanced Extended (RVX).<br>
-   If you want to include any universal patch. Set comma separated patch in `.env` file or in `ENVS` in `GitHub
-   secrets`
-   (Recommended) in the format
+   If you want to include any universal patch. Set comma separated patch in `.env` file (Recommended) or in `ENVS` in `GitHub
+   secrets` in the format
    ```ini
    INCLUDE_PATCH_<REVANCED_APPS_NAME>=<PATCH_TO_EXCLUDE-1,PATCH_TO_EXCLUDE-2>
    ```
@@ -90,8 +89,7 @@ By default, script build the version as recommended by Revanced team.
    ```
 
 7. If you don't want to use default keystore. You can provide your own by placing it
-   inside `apks` folder. And adding the name of `keystore-file` in `.env` file or in `ENVS` in `GitHub secrets`
-   (Recommended) in the format
+   inside `apks` folder. And adding the name of `keystore-file` in `.env` file (Recommended) or in `ENVS` in `GitHub secrets` in the format
    ```ini
     KEYSTORE_FILE_NAME=revanced.keystore
    ```
@@ -119,7 +117,7 @@ By default, script build the version as recommended by Revanced team.
     6. After Everything done successfully the actions secrets of the repository will look something like<br>
        <img src="https://i.imgur.com/dzC1KFa.png" width="400">
 10. You can build only for a particular arch in order to get smaller apk files. This can be done with by adding comma
-    separated `ARCHS_TO_BUILD` in `.env` file (Recommended) or in `ENVS` in `GitHub secrets` (Recommended) in the format.
+    separated `ARCHS_TO_BUILD` in `.env` file (Recommended) or in `ENVS` in `GitHub secrets` in the format.
     ```ini
      ARCHS_TO_BUILD=arm64-v8a,armeabi-v7a
     ```
@@ -133,7 +131,7 @@ By default, script build the version as recommended by Revanced team.
     **Note - If you want to use or will be using `Automated` method to patch, please do not define anything inside `ENVS`.**
 13. If APKMirror or other apk source is blocked in your region or script somehow is unable to download from apkmirror.
     You can download apk manually from any source. Place them in `/apks` directory and provide environment variable
-    in `.env` file or in `ENVS` in `GitHub secrets`(Recommended) in the format.
+    in `.env` file (Recommended) or in `ENVS` in `GitHub secrets` in the format.
     ```ini
      EXISTING_DOWNLOADED_APKS=<Comma,Seperate,App,Name>
     ```
