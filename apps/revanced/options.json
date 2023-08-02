@@ -1,10 +1,4 @@
 [ {
-  "patchName" : "Change OAuth client id",
-  "options" : [ {
-    "key" : "client-id",
-    "value" : null
-  } ]
-}, {
   "patchName" : "Change package name",
   "options" : [ {
     "key" : "packageName",
@@ -17,6 +11,12 @@
     "value" : null
   }, {
     "key" : "iconPath",
+    "value" : null
+  } ]
+}, {
+  "patchName" : "Spoof client",
+  "options" : [ {
+    "key" : "client-id",
     "value" : null
   } ]
 }, {

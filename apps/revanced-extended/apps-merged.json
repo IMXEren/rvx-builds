@@ -221,7 +221,7 @@
         "app_name": "Sync for reddit",
         "app_url": "https://www.apkmirror.com/apk/red-apps-ltd/sync-for-reddit/",
         "app_icon": "https://www.apkmirror.com/wp-content/themes/APKMirror/ap_resize/ap_resize.php?src=https%3A%2F%2Fdownloadr2.apkmirror.com%2Fwp-content%2Fuploads%2F2023%2F06%2F28%2F649f9d78c7ab5_com.laurencedawson.reddit_sync.png&w=64&h=64&q=100",
-        "target_version": "Any"
+        "target_version": "v23.06.30-13:39"
     },
     {
         "app_package": "net.dinglisch.android.taskerm",
