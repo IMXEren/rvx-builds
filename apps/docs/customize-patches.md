@@ -163,7 +163,9 @@ By default, script build the version as recommended by Revanced team.
     ```
     `#` are used to comment out lines. Here `# APP_NAME_VERSION=latest_supported` is simply used to depict or to edit the patch version.
 16. Make your Action has write access. If not click here: https://github.com/OWNER/REPO/settings/actions. In the bottom give read and write access to Actions.
+    
     <img src="https://i.imgur.com/STSv2D3.png" width="400">
+    
     You may also require to [enable scheduled workflows](extras.md#scheduled-workflows) for the first time.
 17. If you want to patch reddit apps using your own Client ID. You can provide your Client ID
     as secret `REDDIT_CLIENT_ID` in `GitHub secrets`.
