@@ -1,5 +1,7 @@
 # Customizing Patches
 
+**Note - If you want to use or will be using `Automated` method to patch, please do not define anything inside `ENVS`.**
+
 (Pay attention to 3,4)<br>
 By default, script build the version as recommended by Revanced team.
 
@@ -8,7 +10,7 @@ By default, script build the version as recommended by Revanced team.
     If you know any better/safe source to download clean. Please raise a PR.
 
 2. Remember to download the **_Microg_**. Otherwise, you will not be able to open YouTube or YouTube Music.
-3. By default, it will build only `youtube` & `youtube_music`. To build other apps supported by revanced team.
+3. By default, it will build only `youtube` & `youtube_music`. To build other apps supported by revanced or revanced-extended.
    Add the apps you want to build in `.env` file or in `ENVS` in
    `GitHub secrets` in the format.
    ```ini
