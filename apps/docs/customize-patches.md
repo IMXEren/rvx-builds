@@ -16,7 +16,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 (Pay attention to 3,4)<br>
 By default, script build the version as recommended by Revanced team.
 
-1. Supported values for **REVANCED_APPS_NAME** are listed under `Code` column [here](README.md#supported-apps)
+1. Supported values for **REVANCED_APPS_NAME** are listed under `Code` column [here](README.md#supported-apps).
     <br>The sources of original APKs are from one of these apkmirror, apkpure, uptodown & apksos sites. I'm not responsible for any damaged caused.
     If you know any better/safe source to download clean. Please raise a PR.
 
@@ -161,10 +161,8 @@ By default, script build the version as recommended by Revanced team.
     # YOUTUBE_MUSIC_VERSION=latest_supported
     EXCLUDE_PATCH_YOUTUBE_MUSIC_EXTENDED=custom-branding-music-name,custom-branding-icon-mmt,custom-branding-icon-revancify-red,custom-package-name,enable-debug-logging
     ```
-    `#` are used to comment out lines.
-16. Make your Action has write access. If not click
-    here: https://github.com/OWNER/REPO/settings/actions.
-    In the bottom give read and write access to Actions.
+    `#` are used to comment out lines. Here `# APP_NAME_VERSION=latest_supported` is simply used to depict or to edit the patch version.
+16. Make your Action has write access. If not click here: https://github.com/OWNER/REPO/settings/actions. In the bottom give read and write access to Actions.
     <img src="https://i.imgur.com/STSv2D3.png" width="400">
 17. If you want to patch reddit apps using your own Client ID. You can provide your Client ID
     as secret `REDDIT_CLIENT_ID` in `GitHub secrets`.
