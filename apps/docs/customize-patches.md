@@ -1,6 +1,17 @@
 # Customizing Patches
 
-**Note - If you want to use or will be using `Automated` method to patch, please do not define anything inside `ENVS`.**
+**Note - If you want to use or will be using `Automated` method to patch, please do not define anything inside `ENVS`. You are free to use `.env` file to do so.**
+
+## Default
+
+If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these configurations will be used:
+- YouTube & YouTube Music apps will be patched
+- With versions recommended by ReVanced
+- Using resources provided by ReVanced
+- With all patches included except for universal patches
+- Latest mMicroG will be released along with the patched apks
+
+## Custom
 
 (Pay attention to 3,4)<br>
 By default, script build the version as recommended by Revanced team.
@@ -143,24 +154,20 @@ By default, script build the version as recommended by Revanced team.
     ARCHS_TO_BUILD=arm64-v8a
     BUILD_EXTENDED=True
     PATCH_APPS=reddit,twitter,trakt,youtube,youtube_music
-
     # REDDIT_VERSION=latest_supported
-
     # TWITTER_VERSION=latest_supported
     EXCLUDE_PATCH_TWITTER=hide-recommended-users,dynamic-color
-
     # TRAKT_VERSION=latest_supported
-
     # YOUTUBE_VERSION=latest_supported
     EXCLUDE_PATCH_YOUTUBE_EXTENDED=custom-branding-youtube-name,custom-branding-icon-mmt,custom-branding-icon-revancify-red,custom-package-name,enable-debug-logging,force-premium-heading,materialyou
-
     # YOUTUBE_MUSIC_VERSION=latest_supported
     EXCLUDE_PATCH_YOUTUBE_MUSIC_EXTENDED=custom-branding-music-name,custom-branding-icon-mmt,custom-branding-icon-revancify-red,custom-package-name,enable-debug-logging
     ```
     `#` are used to comment out lines.
 16. Make your Action has write access. If not click
-    [here](https://github.com/IMXEren/rvx-builds/settings/actions).
+    here: https://github.com/OWNER/REPO/settings/actions.
     In the bottom give read and write access to Actions.
     <img src="https://i.imgur.com/STSv2D3.png" width="400">
 17. If you want to patch reddit apps using your own Client ID. You can provide your Client ID
     as secret `REDDIT_CLIENT_ID` in `GitHub secrets`.
+18. `DRY_RUN` is self-explanatory and for troubleshooting purposes.
