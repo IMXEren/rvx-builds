@@ -51,25 +51,13 @@ jobs:
           create_branch: true
           skip_checkout: true
           file_pattern: 'apps/json/env.json'
-          # repository: 'apps/json/env.json'
           commit_options: '--allow-empty'
           commit_message: Parsed .env into env.json
           push_options: '--force'
           
       - name: Parse env.json to .env
         run: |
-          # git pull
-          # git add apps/json/env.json
-          # git commit --allow-empty -m "Parsed .env file to env.json"
-          # git push
-          python apps/scripts/parse-json-env.py    
-      
-      # - name: Commit and push all changes
-      #   run: |
-      #     # git pull
-      #     # git add .
-      #     # git commit --allow-empty -m "Add generated files"
-      #     # git push
+          python apps/scripts/parse-json-env.py
 
       - name: Commit Update file
         uses: stefanzweifel/git-auto-commit-action@v4
