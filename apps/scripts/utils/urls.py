@@ -1,6 +1,6 @@
 class GitHubURLs:
     default_repo = "IMXEren/rvx-builds"
-    default_branch = "main"
+    default_branch = "changelogs"
 
     def __init__(self, repo_full=default_repo, repo_branch=default_branch):
         self.repo = repo_full

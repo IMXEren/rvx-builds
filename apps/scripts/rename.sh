@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 github_repo="IMXEren/rvx-builds"
-github_branch="main"
+github_branch="changelogs"
 rename_script_1="apps/scripts/utils/repo.py"
 rename_script_2="apps/scripts/apps.py"
 
