@@ -7,3 +7,8 @@ venv
 /revanced-cache/
 changelog.md
 .idea
+/apps/docs/README.md
+/apps/revanced/
+/apps/revanced-extended/
+/apps/json/apps.json
+/apps/json/env.json
