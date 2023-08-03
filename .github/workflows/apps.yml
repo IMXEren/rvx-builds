@@ -39,12 +39,12 @@ jobs:
           "$sed_script"
           git status
 
-      # - name: Commit Update file
-      #   uses: stefanzweifel/git-auto-commit-action@v4
-      #   with:
-      #     skip_checkout: true
-      #     file_pattern: .
-      #     commit_message: Updated files
+      - name: Commit Update file
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          skip_checkout: true
+          file_pattern: .
+          commit_message: Updated files
         
       - name: Run Python script
         run: |
