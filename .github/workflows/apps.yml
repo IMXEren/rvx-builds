@@ -14,10 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         
-      - name: Configure git
-        run: |
-          git config --global user.name "actions-user"
-          git config --global user.email "actions@github.com"
+      # - name: Configure git
+      #   run: |
+      #     git config --global user.name "actions-user"
+      #     git config --global user.email "actions@github.com"
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -37,9 +37,8 @@ jobs:
           sed -i 's@github_repo=.*@github_repo="${{ github.repository }}"@' "$sed_script"
           chmod +x "$sed_script"
           "$sed_script"
-          git status
 
-      - name: Commit Update file
+      - name: Commit Updated .py file contents
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           skip_checkout: true
