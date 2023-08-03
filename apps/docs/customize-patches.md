@@ -16,7 +16,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 (Pay attention to 3,4)<br>
 By default, script build the version as recommended by Revanced team.
 
-1. Supported values for **REVANCED_APPS_NAME** are listed under `Code` column [here](README.md#supported-apps).
+1. Supported values for **REVANCED_APPS_NAME** are listed under `Code` column [here](../../../changelogs/apps/docs/README.md#supported-apps).
     <br>The sources of original APKs are from one of these apkmirror, apkpure, uptodown & apksos sites. I'm not responsible for any damaged caused.
     If you know any better/safe source to download clean. Please raise a PR.
 
