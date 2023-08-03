@@ -44,17 +44,17 @@ jobs:
           python apps/scripts/get-options.py
           python apps/scripts/parse-env-json.py
           
-      - name: Parse .env to env.json
+      - name: Parse env.json to .env
         run: |
-          git pull
-          git add apps/json/env.json
-          git commit --allow-empty -m "Parsed .env file to env.json"
-          git push
+          # git pull
+          # git add apps/json/env.json
+          # git commit --allow-empty -m "Parsed .env file to env.json"
+          # git push
           python apps/scripts/parse-json-env.py    
       
       - name: Commit and push all changes
         run: |
-          git pull
-          git add .
-          git commit --allow-empty -m "Add generated files"
-          git push
+          # git pull
+          # git add .
+          # git commit --allow-empty -m "Add generated files"
+          # git push
