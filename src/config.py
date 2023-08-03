@@ -26,6 +26,7 @@ class RevancedConfig(object):
             "backdrops",
             "twitch",
             "irplus",
+            "joey-for-reddit",
         ]
         self.apk_pure = ["hex-editor", "androidtwelvewidgets"]
         self.apk_sos = ["expensemanager", "candyvpn"]
