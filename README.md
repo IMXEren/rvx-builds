@@ -5,26 +5,26 @@
 
 # Table of Contents
 
-1. [**Overview**](#1-overview)
-2. [**Requirements**](#2-requirements)
-3. [**Usage**](#3-usage)
-4. [**Updates & Changelogs**](#4-updates--changelogs)
-5. [**Credits**](#5-credits)
-6. [**Support**](#6-support)
+1. [**Overview**](#overview)
+2. [**Requirements**](#requirements)
+3. [**Usage**](#usage)
+4. [**Updates & Changelogs**](#updates--changelogs)
+5. [**Credits**](#credits)
+6. [**Support**](#support)
 
-## 1. Overview
+## Overview
 
 **Are you tired of patching ReVanced apps on your mobile devices? Which version to patch and which apk to provide for patching? Is the waiting period long enough and still the patch doesn't work as it should? Device compatibility issues? Auto-updates?...** All that can be done with the help of this [github repository](https://github.com/IMXEren/rvx-builds) (for patching & building) and this [**RVX-Builds**](https://taskernet.com/shares/?user=AS35m8k0QSchKA1x02SixFIhiL41a828J1qapOYfcEuyL2zSn%2FfJTN5WVSi01o18x6EAFb4%3D&id=Project%3ARVX-Builds) project in Tasker (for interactive selection & automation).
 
 ***Note: Neither the mentioned github repo nor the Tasker project are in anyway officially related to ReVanced Team. All this work comes under 3rd party so please don't ask for support from ReVanced Team regarding it.***
 
-## 2. Requirements
+## Requirements
 
 - [GitHub Account](https://github.com/join) (Free)
 - [Tasker](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) (Trial -> Paid)
 - [Join](https://play.google.com/store/apps/details?id=com.joaomgcd.join) (Trial -> Paid; Optional)
 
-## 3. Usage
+## Usage
 
 There are actually two ways to patch apps - **Manual** & **Automated**. The Manual way simply requires the GitHub Repository only and you've to do all the work yourself like customizing the patches, downloading & installing. The Automated way requires the GitHub Repository as well as the RVX-Builds project in Tasker. In the automated way, you can easily customize and configure many more properties using Tasker.
 
@@ -67,20 +67,20 @@ The patching is done using the CLI for both revanced & revanced-extended resourc
 
 **Note: A possible error while installing the released patched apks can be due to signature mismatch of the apk and it's installed app. In this case, either provide the same the keystore file to sign apks in `/apks` folder in GitHub repo and add `KEYSTORE_FILE_NAME=*.keystore` in `.env` file OR simply delete (make backup if possible; one-time process) those already installed non-patched (same package) or patched apps.**
 
-## 4. Updates & Changelogs
+## Updates & Changelogs
 
 The `RVX-Builds - Project Updates` profile will let you know of any updates I push so, make sure it's enabled.
 
 >> Taskernet - [**RVX-Builds**](https://taskernet.com/shares/?user=AS35m8k0QSchKA1x02SixFIhiL41a828J1qapOYfcEuyL2zSn%2FfJTN5WVSi01o18x6EAFb4%3D&id=Project%3ARVX-Builds)  
 [**Changelogs**](/apps/updates/CHANGELOG.md)
 
-## 5. Credits
+## Credits
 
 - Thanks to [@ReVanced](https://github.com/revanced) for **ReVanced**.
 - Thanks to [@inotia00](https://github.com/inotia00) for **ReVanced Extended**.
 - Thanks to [@nikhilbadyal](https://github.com/nikhilbadyal/docker-py-revanced) for his amazing work.
 - Thanks to [@Spacellary](https://github.com/Spacellary/ReVanced-Extended-Automated-Builds) for his work in making the customized parent fork.
 
-## 6. Support
+## Support
 
 I'll try my best to help you regarding this project. Make sure you've read everything here, repository synced & tasker project up-to-date and outcome is same from multiple reproductions. Still if any issues persist, you're free to open discussions, issues & PRs. Kindly have some patience after creating them.
