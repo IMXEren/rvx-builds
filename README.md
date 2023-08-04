@@ -5,12 +5,12 @@
 
 # Table of Contents
 
-1. [**Overview**](#overview)
-2. [**Requirements**](#requirements)
-3. [**Usage**](#usage)
-4. [**Updates & Changelogs**](#updates--changelogs)
-5. [**Credits**](#credits)
-6. [**Support**](#support)
+- [**Overview**](#overview)
+- [**Requirements**](#requirements)
+- [**Usage**](#usage)
+- [**Updates & Changelogs**](#updates--changelogs)
+- [**Credits**](#credits)
+- [**Support**](#support)
 
 ## Overview
 
