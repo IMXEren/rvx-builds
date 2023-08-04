@@ -1,10 +1,10 @@
 {
     "updates": [
         {
-            "version": "02.08.24",
-            "title": "🛠️ RVX-Builds • New Update",
-            "text": "Here's some new updates. Kindly sync the repo.",
-            "url": "https://www.github.com/IMXEren/rvx-builds/blob/main/apps/updates/README.md",
+            "version": "23.08.04",
+            "title": "🛠️ RVX-Builds • Initial Release",
+            "text": "The project has been publicly released. Kindly fork or sync the repository.",
+            "url": "https://www.github.com/IMXEren/rvx-builds/blob/main/apps/updates/CHANGELOG.md",
             "icon": "https://i.imgur.com/pVyZw7d.png"
         }
     ]
