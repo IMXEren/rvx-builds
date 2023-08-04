@@ -24,7 +24,6 @@ class RevancedConfig(object):
             "nyx-music-player",
             "my-expenses",
             "backdrops",
-            "twitch",
             "irplus",
         ]
         self.apk_pure = ["hex-editor", "androidtwelvewidgets"]
