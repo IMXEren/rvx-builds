@@ -4,9 +4,9 @@
       "options":[
          {
             "key":"replacements",
-            "value":
+            "value":[
                "01 0a 2a 89 00 00 34|01 0a 2a 1f 20 03 d5|lib/arm64-v8a/liborbit-jni-spotify.so"
-            
+            ]
          }
       ]
    },
