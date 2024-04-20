@@ -1,222 +1,225 @@
 [
-  {
-  "patchName" : "Hex",
-  "options" : [ {
-    "key" : "replacements",
-    "value" : [
-        "01 0a 2a 89 00 00 34|01 0a 2a 1f 20 03 d5|lib/arm64-v8a/liborbit-jni-spotify.so",
-        "94 1f 31 00 71 81 00 00 54|94 1f 31 00 71 04 00 00 14|lib/arm64-v8a/liborbit-jni-spotify.so",
-        "e1 01 00 54 20|0f 00 00 14 20|lib/arm64-v8a/liborbit-jni-spotify.so"
-    ]
-  },
-  {
-    "patchName": "Change package name",
-    "options": [
-      {
-        "key": "PackageNameReddit",
-        "value": "com.reddit.frontpage.rvx"
-      },
-      {
-        "key": "packageName",
-        "value": "Default"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom branding heading",
-    "options": [
-      {
-        "key": "header",
-        "value": "yt_premium_wordmark_header"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom branding icon YouTube",
-    "options": [
-      {
-        "key": "AppIcon",
-        "value": "Revancify Blue"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom branding icon YouTube Music",
-    "options": [
-      {
-        "key": "AppIcon",
-        "value": "Revancify Blue"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom branding name Reddit",
-    "options": [
-      {
-        "key": "AppName",
-        "value": "RVX Reddit"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom branding name YouTube",
-    "options": [
-      {
-        "key": "AppName",
-        "value": "ReVanced Extended"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom branding name YouTube Music",
-    "options": [
-      {
-        "key": "AppNameNotification",
-        "value": "ReVanced Extended Music"
-      },
-      {
-        "key": "AppNameLauncher",
-        "value": "RVX Music"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom double tap length",
-    "options": [
-      {
-        "key": "DoubleTapLengthArrays",
-        "value": "3, 5, 10, 15, 20, 30, 60, 120, 180"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom package name",
-    "options": [
-      {
-        "key": "PackageNameYouTube",
-        "value": "app.rvx.android.youtube"
-      },
-      {
-        "key": "PackageNameYouTubeMusic",
-        "value": "app.rvx.android.apps.youtube.music"
-      }
-    ]
-  },
-  {
-    "patchName": "Overlay buttons",
-    "options": [
-      {
-        "key": "OutlineIcon",
-        "value": true
-      },
-      {
-        "key": "BottomMargin",
-        "value": "0.0dip"
-      }
-    ]
-  },
-  {
-    "patchName": "SponsorBlock",
-    "options": [
-      {
-        "key": "OutlineIcon",
-        "value": null
-      }
-    ]
-  },
-  {
-    "patchName": "Theme",
-    "options": [
-      {
-        "key": "DarkThemeBackgroundColor",
-        "value": "@android:color/black"
-      },
-      {
-        "key": "LightThemeBackgroundColor",
-        "value": "@android:color/white"
-      },
-      {
-        "key": "darkThemeBackgroundColor",
-        "value": "@android:color/black"
-      },
-      {
-        "key": "lightThemeBackgroundColor",
-        "value": "@android:color/white"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom theme",
-    "options": [
-      {
-        "key": "backgroundColor",
-        "value": "@android:color/black"
-      },
-      {
-        "key": "backgroundColorSecondary",
-        "value": "#ff282828"
-      },
-      {
-        "key": "accentColor",
-        "value": "#ff1ed760"
-      },
-      {
-        "key": "accentColorPressed",
-        "value": "#ff169c46"
-      }
-    ]
-  },
-  {
-    "patchName": "Custom branding",
-    "options": [
-      {
-        "key": "appName",
-        "value": "YouTube ReVanced"
-      },
-      {
-        "key": "iconPath",
-        "value": "ReVanced*Logo"
-      }
-    ]
-  },
-  {
-    "patchName": "Change header",
-    "options": [
-      {
-        "key": "header",
-        "value": "revanced*borderless"
-      }
-    ]
-  },
-  {
-    "patchName": "GmsCore support",
-    "options": [
-      {
-        "key": "gmsCoreVendorGroupId",
-        "value": "app.revanced"
-      }
-    ]
-  },
-  {
-    "patchName": "Spoof client",
-    "options": [
-      {
-        "key": "client-id",
-        "value": null
-      }
-    ]
-  },
-  {
-    "patchName": "Spoof SIM country",
-    "options": [
-      {
-        "key": "networkCountryIso",
-        "value": null
-      },
-      {
-        "key": "simCountryIso",
-        "value": null
-      }
-    ]
-  }
+   {
+      "patchName":"Hex",
+      "options":[
+         {
+            "key":"replacements",
+            "value":[
+               "01 0a 2a 89 00 00 34|01 0a 2a 1f 20 03 d5|lib/arm64-v8a/liborbit-jni-spotify.so",
+               "94 1f 31 00 71 81 00 00 54|94 1f 31 00 71 04 00 00 14|lib/arm64-v8a/liborbit-jni-spotify.so",
+               "e1 01 00 54 20|0f 00 00 14 20|lib/arm64-v8a/liborbit-jni-spotify.so"
+            ]
+         }
+      ]
+   },
+   {
+      "patchName":"Change package name",
+      "options":[
+         {
+            "key":"PackageNameReddit",
+            "value":"com.reddit.frontpage.rvx"
+         },
+         {
+            "key":"packageName",
+            "value":"Default"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom branding heading",
+      "options":[
+         {
+            "key":"header",
+            "value":"yt_premium_wordmark_header"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom branding icon YouTube",
+      "options":[
+         {
+            "key":"AppIcon",
+            "value":"Revancify Blue"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom branding icon YouTube Music",
+      "options":[
+         {
+            "key":"AppIcon",
+            "value":"Revancify Blue"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom branding name Reddit",
+      "options":[
+         {
+            "key":"AppName",
+            "value":"RVX Reddit"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom branding name YouTube",
+      "options":[
+         {
+            "key":"AppName",
+            "value":"ReVanced Extended"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom branding name YouTube Music",
+      "options":[
+         {
+            "key":"AppNameNotification",
+            "value":"ReVanced Extended Music"
+         },
+         {
+            "key":"AppNameLauncher",
+            "value":"RVX Music"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom double tap length",
+      "options":[
+         {
+            "key":"DoubleTapLengthArrays",
+            "value":"3, 5, 10, 15, 20, 30, 60, 120, 180"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom package name",
+      "options":[
+         {
+            "key":"PackageNameYouTube",
+            "value":"app.rvx.android.youtube"
+         },
+         {
+            "key":"PackageNameYouTubeMusic",
+            "value":"app.rvx.android.apps.youtube.music"
+         }
+      ]
+   },
+   {
+      "patchName":"Overlay buttons",
+      "options":[
+         {
+            "key":"OutlineIcon",
+            "value":true
+         },
+         {
+            "key":"BottomMargin",
+            "value":"0.0dip"
+         }
+      ]
+   },
+   {
+      "patchName":"SponsorBlock",
+      "options":[
+         {
+            "key":"OutlineIcon",
+            "value":null
+         }
+      ]
+   },
+   {
+      "patchName":"Theme",
+      "options":[
+         {
+            "key":"DarkThemeBackgroundColor",
+            "value":"@android:color/black"
+         },
+         {
+            "key":"LightThemeBackgroundColor",
+            "value":"@android:color/white"
+         },
+         {
+            "key":"darkThemeBackgroundColor",
+            "value":"@android:color/black"
+         },
+         {
+            "key":"lightThemeBackgroundColor",
+            "value":"@android:color/white"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom theme",
+      "options":[
+         {
+            "key":"backgroundColor",
+            "value":"@android:color/black"
+         },
+         {
+            "key":"backgroundColorSecondary",
+            "value":"#ff282828"
+         },
+         {
+            "key":"accentColor",
+            "value":"#ff1ed760"
+         },
+         {
+            "key":"accentColorPressed",
+            "value":"#ff169c46"
+         }
+      ]
+   },
+   {
+      "patchName":"Custom branding",
+      "options":[
+         {
+            "key":"appName",
+            "value":"YouTube ReVanced"
+         },
+         {
+            "key":"iconPath",
+            "value":"ReVanced*Logo"
+         }
+      ]
+   },
+   {
+      "patchName":"Change header",
+      "options":[
+         {
+            "key":"header",
+            "value":"revanced*borderless"
+         }
+      ]
+   },
+   {
+      "patchName":"GmsCore support",
+      "options":[
+         {
+            "key":"gmsCoreVendorGroupId",
+            "value":"app.revanced"
+         }
+      ]
+   },
+   {
+      "patchName":"Spoof client",
+      "options":[
+         {
+            "key":"client-id",
+            "value":null
+         }
+      ]
+   },
+   {
+      "patchName":"Spoof SIM country",
+      "options":[
+         {
+            "key":"networkCountryIso",
+            "value":null
+         },
+         {
+            "key":"simCountryIso",
+            "value":null
+         }
+      ]
+   }
 ]
