@@ -3,7 +3,7 @@
   <img alt="rvx-builds_logo" src="https://raw.githubusercontent.com/IMXEren/rvx-builds/main/auto/profile/logo_big_light-bg.svg">
 </picture>
 
-# ⭐ New!! Custom Patch Resources
+# ⭐ NEW!! Custom Patch Resources
 
 The Tool now supports resource config at app level. You can patch A app with X resources while patching B with Y resources. This can be done by providing supported download links for resources for the app. Another new major addition is to be able patch any supported app in the `patches.json`, irrespective of the official apps present in the repository configs. [**Read more...**](/auto/docs/customize-patches.md)
 
