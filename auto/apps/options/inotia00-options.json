@@ -1,0 +1,208 @@
+[ {
+  "patchName" : "Change package name",
+  "options" : [ {
+    "key" : "PackageNameReddit",
+    "value" : "com.reddit.frontpage"
+  } ]
+}, {
+  "patchName" : "Change version code",
+  "options" : [ {
+    "key" : "ChangeVersionCode",
+    "value" : false
+  }, {
+    "key" : "VersionCode",
+    "value" : "2147483647"
+  } ]
+}, {
+  "patchName" : "Custom Shorts action buttons",
+  "options" : [ {
+    "key" : "IconType",
+    "value" : "cairo"
+  } ]
+}, {
+  "patchName" : "Custom branding icon for YouTube",
+  "options" : [ {
+    "key" : "AppIcon",
+    "value" : "revancify_blue"
+  }, {
+    "key" : "ChangeSplashIcon",
+    "value" : true
+  }, {
+    "key" : "RestoreOldSplashAnimation",
+    "value" : true
+  } ]
+}, {
+  "patchName" : "Custom branding icon for YouTube Music",
+  "options" : [ {
+    "key" : "AppIcon",
+    "value" : "revancify_blue"
+  }, {
+    "key" : "ChangeSplashIcon",
+    "value" : true
+  }, {
+    "key" : "RestoreOldSplashIcon",
+    "value" : false
+  } ]
+}, {
+  "patchName" : "Custom branding name for Reddit",
+  "options" : [ {
+    "key" : "AppName",
+    "value" : "Reddit"
+  } ]
+}, {
+  "patchName" : "Custom branding name for YouTube",
+  "options" : [ {
+    "key" : "AppName",
+    "value" : "RVX"
+  } ]
+}, {
+  "patchName" : "Custom branding name for YouTube Music",
+  "options" : [ {
+    "key" : "AppNameNotification",
+    "value" : "RVX Music"
+  }, {
+    "key" : "AppNameLauncher",
+    "value" : "RVX Music"
+  } ]
+}, {
+  "patchName" : "Custom double tap length",
+  "options" : [ {
+    "key" : "DoubleTapLengthArrays",
+    "value" : "3, 5, 10, 15, 20, 30, 60, 120, 180"
+  } ]
+}, {
+  "patchName" : "Custom header for YouTube",
+  "options" : [ {
+    "key" : "CustomHeader",
+    "value" : "custom_branding_icon"
+  } ]
+}, {
+  "patchName" : "Custom header for YouTube Music",
+  "options" : [ {
+    "key" : "CustomHeader",
+    "value" : "custom_branding_icon"
+  } ]
+}, {
+  "patchName" : "GmsCore support",
+  "options" : [ {
+    "key" : "GmsCoreVendorGroupId",
+    "value" : "app.revanced"
+  }, {
+    "key" : "CheckGmsCore",
+    "value" : true
+  }, {
+    "key" : "DisableGmsServiceBroker",
+    "value" : false
+  }, {
+    "key" : "PackageNameYouTube",
+    "value" : "app.rvx.android.youtube"
+  }, {
+    "key" : "PackageNameYouTubeMusic",
+    "value" : "app.rvx.android.apps.youtube.music"
+  } ]
+}, {
+  "patchName" : "Hide shortcuts",
+  "options" : [ {
+    "key" : "Explore",
+    "value" : false
+  }, {
+    "key" : "Subscriptions",
+    "value" : false
+  }, {
+    "key" : "Search",
+    "value" : false
+  }, {
+    "key" : "Shorts",
+    "value" : true
+  } ]
+}, {
+  "patchName" : "Overlay buttons",
+  "options" : [ {
+    "key" : "IconType",
+    "value" : "bold"
+  }, {
+    "key" : "BottomMargin",
+    "value" : "2.5dip"
+  }, {
+    "key" : "WiderButtonsSpace",
+    "value" : false
+  }, {
+    "key" : "ChangeTopButtons",
+    "value" : false
+  } ]
+}, {
+  "patchName" : "Settings for Reddit",
+  "options" : [ {
+    "key" : "RVXSettingsMenuName",
+    "value" : "ReVanced Extended"
+  } ]
+}, {
+  "patchName" : "Settings for YouTube",
+  "options" : [ {
+    "key" : "InsertPosition",
+    "value" : "@string/about_key"
+  }, {
+    "key" : "RVXSettingsMenuName",
+    "value" : "ReVanced Extended"
+  } ]
+}, {
+  "patchName" : "Settings for YouTube Music",
+  "options" : [ {
+    "key" : "RVXSettingsMenuName",
+    "value" : "ReVanced Extended"
+  } ]
+}, {
+  "patchName" : "SponsorBlock",
+  "options" : [ {
+    "key" : "OutlineIcon",
+    "value" : false
+  } ]
+}, {
+  "patchName" : "Theme",
+  "options" : [ {
+    "key" : "DarkThemeBackgroundColor",
+    "value" : "@android:color/black"
+  }, {
+    "key" : "LightThemeBackgroundColor",
+    "value" : "@android:color/white"
+  } ]
+}, {
+  "patchName" : "Translations for YouTube",
+  "options" : [ {
+    "key" : "CustomTranslations",
+    "value" : ""
+  }, {
+    "key" : "SelectedTranslations",
+    "value" : "ar, bg-rBG, de-rDE, el-rGR, es-rES, fr-rFR, hu-rHU, it-rIT, ja-rJP, ko-rKR, pl-rPL, pt-rBR, ru-rRU, tr-rTR, uk-rUA, vi-rVN, zh-rCN, zh-rTW"
+  }, {
+    "key" : "SelectedStringResources",
+    "value" : "af, am, ar, ar-rXB, as, az, b+es+419, b+sr+Latn, be, bg, bn, bs, ca, cs, da, de, el, en-rAU, en-rCA, en-rGB, en-rIN, en-rXA, en-rXC, es, es-rUS, et, eu, fa, fi, fr, fr-rCA, gl, gu, hi, hr, hu, hy, id, in, is, it, iw, ja, ka, kk, km, kn, ko, ky, lo, lt, lv, mk, ml, mn, mr, ms, my, nb, ne, nl, no, or, pa, pl, pt, pt-rBR, pt-rPT, ro, ru, si, sk, sl, sq, sr, sv, sw, ta, te, th, tl, tr, uk, ur, uz, vi, zh, zh-rCN, zh-rHK, zh-rTW, zu"
+  } ]
+}, {
+  "patchName" : "Translations for YouTube Music",
+  "options" : [ {
+    "key" : "CustomTranslations",
+    "value" : ""
+  }, {
+    "key" : "SelectedTranslations",
+    "value" : "bg-rBG, bn, cs-rCZ, el-rGR, es-rES, fr-rFR, hu-rHU, id-rID, in, it-rIT, ja-rJP, ko-rKR, nl-rNL, pl-rPL, pt-rBR, ro-rRO, ru-rRU, tr-rTR, uk-rUA, vi-rVN, zh-rCN, zh-rTW"
+  }, {
+    "key" : "SelectedStringResources",
+    "value" : "af, am, ar, ar-rXB, as, az, b+es+419, b+sr+Latn, be, bg, bn, bs, ca, cs, da, de, el, en-rAU, en-rCA, en-rGB, en-rIN, en-rXA, en-rXC, es, es-rUS, et, eu, fa, fi, fr, fr-rCA, gl, gu, hi, hr, hu, hy, id, in, is, it, iw, ja, ka, kk, km, kn, ko, ky, lo, lt, lv, mk, ml, mn, mr, ms, my, nb, ne, nl, no, or, pa, pl, pt, pt-rBR, pt-rPT, ro, ru, si, sk, sl, sq, sr, sv, sw, ta, te, th, tl, tr, uk, ur, uz, vi, zh, zh-rCN, zh-rHK, zh-rTW, zu"
+  } ]
+}, {
+  "patchName" : "Visual preferences icons for YouTube",
+  "options" : [ {
+    "key" : "RVXSettingsMenuIcon",
+    "value" : "extension"
+  }, {
+    "key" : "ApplyToAll",
+    "value" : false
+  } ]
+}, {
+  "patchName" : "Visual preferences icons for YouTube Music",
+  "options" : [ {
+    "key" : "RVXSettingsMenuIcon",
+    "value" : "extension"
+  } ]
+} ]
