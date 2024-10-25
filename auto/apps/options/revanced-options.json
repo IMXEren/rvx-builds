@@ -1,0 +1,203 @@
+[ {
+  "patchName" : "Hide Shorts components",
+  "options" : [ {
+    "key" : "hideShortsAppShortcut",
+    "value" : false
+  }, {
+    "key" : "hideShortsWidget",
+    "value" : false
+  } ]
+}, {
+  "patchName" : "Custom branding",
+  "options" : [ {
+    "key" : "appName",
+    "value" : "YouTube ReVanced"
+  }, {
+    "key" : "iconPath",
+    "value" : "ReVanced*Logo"
+  } ]
+}, {
+  "patchName" : "Change header",
+  "options" : [ {
+    "key" : "header",
+    "value" : "revanced*borderless"
+  } ]
+}, {
+  "patchName" : "Theme",
+  "options" : [ {
+    "key" : "darkThemeBackgroundColor",
+    "value" : "@android:color/black"
+  }, {
+    "key" : "lightThemeBackgroundColor",
+    "value" : "@android:color/white"
+  } ]
+}, {
+  "patchName" : "GmsCore support",
+  "options" : [ {
+    "key" : "gmsCoreVendorGroupId",
+    "value" : "app.revanced"
+  } ]
+}, {
+  "patchName" : "Spoof Android device ID",
+  "options" : [ {
+    "key" : "android-device-id",
+    "value" : "0011223344556677"
+  } ]
+}, {
+  "patchName" : "Spoof client",
+  "options" : [ {
+    "key" : "client-id",
+    "value" : null
+  } ]
+}, {
+  "patchName" : "Change link sharing domain",
+  "options" : [ {
+    "key" : "domainName",
+    "value" : "fxtwitter.com"
+  } ]
+}, {
+  "patchName" : "Spoof SIM country",
+  "options" : [ {
+    "key" : "networkCountryIso",
+    "value" : null
+  }, {
+    "key" : "simCountryIso",
+    "value" : null
+  } ]
+}, {
+  "patchName" : "Hex",
+  "options" : [ {
+    "key" : "replacements",
+    "value" : null
+  } ]
+}, {
+  "patchName" : "Change version code",
+  "options" : [ {
+    "key" : "versionCode",
+    "value" : 2147483647
+  } ]
+}, {
+  "patchName" : "Spoof build info",
+  "options" : [ {
+    "key" : "board",
+    "value" : null
+  }, {
+    "key" : "bootloader",
+    "value" : null
+  }, {
+    "key" : "brand",
+    "value" : null
+  }, {
+    "key" : "cpu-abi",
+    "value" : null
+  }, {
+    "key" : "cpu-abi-2",
+    "value" : null
+  }, {
+    "key" : "device",
+    "value" : null
+  }, {
+    "key" : "display",
+    "value" : null
+  }, {
+    "key" : "fingerprint",
+    "value" : null
+  }, {
+    "key" : "hardware",
+    "value" : null
+  }, {
+    "key" : "host",
+    "value" : null
+  }, {
+    "key" : "id",
+    "value" : null
+  }, {
+    "key" : "manufacturer",
+    "value" : null
+  }, {
+    "key" : "model",
+    "value" : null
+  }, {
+    "key" : "odm-sku",
+    "value" : null
+  }, {
+    "key" : "product",
+    "value" : null
+  }, {
+    "key" : "radio",
+    "value" : null
+  }, {
+    "key" : "serial",
+    "value" : null
+  }, {
+    "key" : "sku",
+    "value" : null
+  }, {
+    "key" : "soc-manufacturer",
+    "value" : null
+  }, {
+    "key" : "soc-model",
+    "value" : null
+  }, {
+    "key" : "tags",
+    "value" : null
+  }, {
+    "key" : "time",
+    "value" : null
+  }, {
+    "key" : "type",
+    "value" : null
+  }, {
+    "key" : "user",
+    "value" : null
+  } ]
+}, {
+  "patchName" : "Change package name",
+  "options" : [ {
+    "key" : "packageName",
+    "value" : "Default"
+  } ]
+}, {
+  "patchName" : "Spoof features",
+  "options" : [ {
+    "key" : "featuresToEnable",
+    "value" : [
+     "com.google.android.apps.photos.NEXUS_PRELOAD",
+     "com.google.android.apps.photos.nexus_preload"
+    ]
+  }, {
+    "key" : "featuresToDisable",
+    "value" : [
+     "com.google.android.apps.photos.PIXEL_2017_PRELOAD",
+     "com.google.android.apps.photos.PIXEL_2018_PRELOAD",
+     "com.google.android.apps.photos.PIXEL_2019_MIDYEAR_PRELOAD",
+     "com.google.android.apps.photos.PIXEL_2019_PRELOAD",
+     "com.google.android.feature.PIXEL_2020_MIDYEAR_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2020_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2021_MIDYEAR_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2021_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2022_MIDYEAR_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2022_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2023_MIDYEAR_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2023_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2024_MIDYEAR_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2024_EXPERIENCE",
+     "com.google.android.feature.PIXEL_2025_MIDYEAR_EXPERIENCE"
+    ]
+  } ]
+}, {
+  "patchName" : "Custom theme",
+  "options" : [ {
+    "key" : "backgroundColor",
+    "value" : "@android:color/black"
+  }, {
+    "key" : "backgroundColorSecondary",
+    "value" : "#ff282828"
+  }, {
+    "key" : "accentColor",
+    "value" : "#ff1ed760"
+  }, {
+    "key" : "accentColorPressed",
+    "value" : "#ff169c46"
+  } ]
+} ]
