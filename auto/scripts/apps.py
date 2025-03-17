@@ -10,7 +10,7 @@ from utils.repo import GitHubRepo
 from utils.scraper import scraper
 from utils.urls import GitHubURLs
 
-gh = GitHubRepo()
+gh = GitHubRepo
 repo = gh.get_repo()
 branch = gh.get_backup_branch()
 backup_branch = gh.get_branch()
@@ -152,11 +152,8 @@ def unsupport_scrape():
 
 
 @logger.catch
-def array_lengths(arrays):
-    lengths = []
-    for array in arrays:
-        lengths.append(len(array))
-    return lengths
+def array_lengths(arrays) -> list[int]:
+    return [len(array) for array in arrays]
 
 
 # Get custom patch sources from .env file

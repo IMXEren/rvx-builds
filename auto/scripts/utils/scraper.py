@@ -1,4 +1,6 @@
 import re
+import sys
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
@@ -7,8 +9,11 @@ from loguru import logger
 from utils.repo import GitHubRepo
 from utils.urls import GitHubURLs
 
+sys.path.append(str(Path.cwd()))
+from src.downloader import sources
+
 # Constants for GitHub URLs
-gh = GitHubRepo()
+gh = GitHubRepo
 repo = gh.get_repo()
 branch = gh.get_backup_branch()
 urls = GitHubURLs(repo, branch)
@@ -57,16 +62,32 @@ def apkm_scrape(package_name, app_code):
         app_icon_element = soup.select_one("#masthead > header > div > div > div.p-relative.icon-container > img")
         if app_icon_element:
             app_icon = app_icon_element["src"] if app_icon_element else ""
-            app_icon = f'{apk_mirror}{app_icon.replace("&w=96&h=96", "&w=64&h=64")}'
+            app_icon = f"{apk_mirror}{app_icon.replace('&w=96&h=96', '&w=64&h=64')}"
         if app_name_element:
             app_name = app_name_element.text
         logger.debug(app_name)
         # print("App Name:", app_name, flush=True)
         # print("Icon URL:", app_icon, flush=True)
         return app_name, app_icon, app_url
-    else:
-        logger.warning(f"APKMirror URL not found for the specified app code - {app_code} and package - {package_name}")
-        return None
+    logger.warning(f"APKMirror URL not found for the specified app code - {app_code} and package - {package_name}")
+    return None
+
+
+def uptodown_scrape(app_code):
+    if (app_url := sources.apk_sources.get(app_code, None)) and app_url == (sources.UPTODOWN_BASE_URL.format(app_code)):
+        response = requests.get(app_url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        app_name_element = soup.select_one("h1#detail-app-name")
+        app_icon_element = soup.select_one("body > div > main > div.c1 > div.detail > div.icon > img")
+        if app_icon_element:
+            app_icon = app_icon_element["src"] if app_icon_element else ""
+            app_icon = f"{app_icon}:64"
+        if app_name_element:
+            app_name = app_name_element.text.strip()
+        logger.debug(app_name)
+        return app_name, app_icon, app_url
+    logger.warning(f"Uptodown URL not found for the specified app code - {app_code}")
+    return None
 
 
 def apksos_scrape(package_name):
@@ -103,6 +124,7 @@ def scraper(package_name, code_name):
         get_json_data,
         gplay_scrape,
         apkm_scrape,
+        uptodown_scrape,
         apksos_scrape,
     ]
 
@@ -118,18 +140,19 @@ def scraper(package_name, code_name):
             package_name,
             code_name,
         ),
+        (code_name,),
         (package_name,),
     ]
 
     # Calling functions with parameter variables
-    for scraper, param in zip(scrapers, params):
+    for scraper_fn, param in zip(scrapers, params, strict=False):
         try:
-            if scraper == get_json_data:
-                result = scraper(*param)
+            if scraper_fn == get_json_data:
+                result = scraper_fn(*param)
                 app_name, app_icon, app_url = result[0]["app_name"], result[0]["app_icon"], result[0]["app_url"]
                 logger.debug(app_name)
             else:
-                app_name, app_icon, app_url = scraper(*param)
+                app_name, app_icon, app_url = scraper_fn(*param)
             break
         except Exception:
             icon = "https://img.icons8.com/bubbles/64/android-os.png"
@@ -138,3 +161,7 @@ def scraper(package_name, code_name):
             app_name, app_icon, app_url = name, icon, url
             continue
     return app_name, app_icon, app_url
+
+
+if __name__ == "__main__":
+    pass
