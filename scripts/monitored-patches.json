@@ -1,0 +1,14 @@
+[
+    {
+        "patches_json_dl": "https://github.com/crimera/piko/releases/latest",
+        "tag_name": "v1.51.0"
+    },
+    {
+        "patches_json_dl": "https://github.com/inotia00/revanced-patches/releases/latest",
+        "tag_name": "v5.5.1"
+    },
+    {
+        "patches_json_dl": "https://github.com/revanced/revanced-patches/releases/latest",
+        "tag_name": "v5.14.0"
+    }
+]
