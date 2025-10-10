@@ -9,3 +9,5 @@
 /apks/*.json
 status.md
 *.zip
+*.rvp
+*.backup

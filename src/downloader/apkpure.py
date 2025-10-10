@@ -1,6 +1,8 @@
 """APK Pure Downloader Class."""
 
+from functools import cmp_to_key
 from typing import Any, Self
+from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -34,8 +36,6 @@ class ApkPure(Downloader):
 
     def _compare_dls(self: Self, dl1: str, dl2: str) -> int:
         """Compare two dls of same type (apk or xapk) to prioritise the archs on lower indices."""
-        from urllib.parse import parse_qs, urlparse
-
         apk_type1 = parse_qs(urlparse(dl1).query).get("nc")
         apk_type2 = parse_qs(urlparse(dl2).query).get("nc")
         if apk_type1 and apk_type2:
@@ -66,8 +66,6 @@ class ApkPure(Downloader):
         :param app: Name of the app
         :return: Tuple of filename and app direct download link
         """
-        from functools import cmp_to_key
-
         logger.debug(f"Extracting download link from\n{page}")
         r = make_request(page, headers=request_header)
         handle_request_response(r, page)
@@ -90,31 +88,58 @@ class ApkPure(Downloader):
         if app_version := soup.select_one("span.info-sdk > span"):
             self.app_version = slugify(app_version.get_text(strip=True))
             logger.info(f"Will be downloading {app}'s version {self.app_version}...")
+        else:
+            self.app_version = "latest"
+            logger.info(f"Unable to guess latest version of {app}")
         return file_name, app_dl
 
     def specific_version(self: Self, app: APP, version: str) -> tuple[str, str]:
-        """Function to download the specified version of app from apkpure.
+        """
+        Downloads the specified version of an app from APKPure.
 
-        :param app: Name of the application
-        :param version: Version of the application to download
-        :return: Tuple of filename and app direct download link
+        Parameters
+        ----------
+        app : APP
+            The application object containing metadata.
+        version : str
+            The specific version of the application to download.
+
+        Returns
+        -------
+        tuple[str, str]
+            A tuple containing:
+            - The filename of the downloaded APK.
+            - The direct download link of the APK.
+
+        Raises
+        ------
+        APKPureAPKDownloadError
+            If the specified version is not found.
         """
         self.global_archs_priority = tuple(self._sort_by_priority(app.archs_to_build))
-        version_page = app.download_source + "/versions"
-        r = make_request(version_page, headers=request_header)
-        handle_request_response(r, version_page)
-        soup = BeautifulSoup(r.text, bs4_parser)
-        version_box_list = soup.select("ul.ver-wrap > *")
-        for box in version_box_list:
-            if (
-                (_data := box.select_one("a.ver_download_link"))
-                and (found_version := _data.get("data-dt-version"))
-                and found_version == version
-            ):
-                download_page = _data.get("href")
-                file_name, download_source = self.extract_download_link(download_page, app.app_name)  # type: ignore  # noqa: PGH003
+        version_page = f"{app.download_source}/versions"
+
+        response = make_request(version_page, headers=request_header)
+        handle_request_response(response, version_page)
+
+        soup = BeautifulSoup(response.text, bs4_parser)
+
+        for box in soup.select("ul.ver-wrap > *"):
+            download_link = box.select_one("a.ver_download_link")
+            if not download_link:
+                continue
+
+            found_version = download_link.get("data-dt-version")
+            if found_version == version:
+                download_page = download_link.get("href")
+                file_name, download_source = self.extract_download_link(
+                    str(download_page),
+                    app.app_name,
+                )
+
                 app.app_version = self.app_version
                 logger.info(f"Guessed {app.app_version} for {app.app_name}")
+
                 self._download(download_source, file_name)
                 return file_name, download_source
         msg = f"Unable to find specific version '{version}' for {app} from version list"
@@ -130,6 +155,7 @@ class ApkPure(Downloader):
         download_page = app.download_source + "/download"
         file_name, download_source = self.extract_download_link(download_page, app.app_name)
         app.app_version = self.app_version
-        logger.info(f"Guessed {app.app_version} for {app.app_name}")
+        if self.app_version != "latest":
+            logger.info(f"Guessed {app.app_version} for {app.app_name}")
         self._download(download_source, file_name)
         return file_name, download_source

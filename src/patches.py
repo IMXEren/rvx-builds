@@ -1,15 +1,14 @@
 """Revanced Patches."""
 
 import contextlib
-import json
-from pathlib import Path
 from typing import Any, ClassVar, Self
 
 from loguru import logger
 
 from src.app import APP
 from src.config import RevancedConfig
-from src.exceptions import AppNotFoundError, PatchesJsonLoadError
+from src.exceptions import AppNotFoundError
+from src.patches_gen import convert_command_output_to_json
 
 
 class Patches(object):
@@ -74,6 +73,24 @@ class Patches(object):
         "com.facebook.katana": "facebook",
         "io.syncapps.lemmy_sync": "lemmy-sync",
         "com.xiaomi.wearable": "xiaomi-wearable",
+        "com.google.android.apps.photos": "photos",
+        "com.amazon.mShop.android.shopping": "amazon",
+        "com.bandcamp.android": "bandcamp",
+        "com.google.android.apps.magazines": "magazines",
+        "com.rarlab.rar": "winrar",
+        "com.soundcloud.android": "soundcloud",
+        "de.stocard.stocard": "stocard",
+        "at.willhaben": "willhaben",
+        "ch.protonmail.android": "proton-mail",
+        "com.amazon.avod.thirdpartyclient": "prime-video",
+        "com.cricbuzz.android": "cricbuzz",
+        "com.crunchyroll.crunchyroid": "crunchyroll",
+        "com.instagram.barcelona": "threads",
+        "com.nousguide.android.orftvthek": "orf-on",
+        "com.pandora.android": "pandora",
+        "it.ipzs.cieid": "cieid",
+        "ml.docilealligator.infinityforreddit.patreon": "infinity-for-reddit-patreon",
+        "ml.docilealligator.infinityforreddit.plus": "infinity-for-reddit-plus",
     }
 
     @staticmethod
@@ -90,7 +107,7 @@ class Patches(object):
             a string, which is the package name corresponding to the given app name.
         """
         for package, app_name in Patches.revanced_package_names.items():
-            if app_name == app:
+            if app_name.upper() == app.upper():
                 return package
         msg = f"App {app} not supported officially yet. Please provide package name in env to proceed."
         raise AppNotFoundError(msg)
@@ -117,10 +134,35 @@ class Patches(object):
             The `app` parameter is of type `APP`. It represents an instance of the `APP` class.
         """
         self.patches_dict[app.app_name] = []
-        patch_loader = PatchLoader()
-        patches_file = app.resource["patches_json"]["file_name"]
-        patches = patch_loader.load_patches(f"{config.temp_folder}/{patches_file}")
 
+        # Handle multiple patch bundles
+        if hasattr(app, "patch_bundles") and app.patch_bundles:
+            for bundle in app.patch_bundles:
+                patches = convert_command_output_to_json(
+                    f"{config.temp_folder}/{app.resource["cli"]["file_name"]}",
+                    f"{config.temp_folder}/{bundle["file_name"]}",
+                )
+                self._process_patches(patches, app)
+        elif "patches" in app.resource:
+            # Fallback to single bundle for backward compatibility
+            patches = convert_command_output_to_json(
+                f"{config.temp_folder}/{app.resource["cli"]["file_name"]}",
+                f"{config.temp_folder}/{app.resource["patches"]["file_name"]}",
+            )
+            self._process_patches(patches, app)
+
+        app.no_of_patches = len(self.patches_dict[app.app_name])
+
+    def _process_patches(self: Self, patches: list[dict[Any, Any]], app: APP) -> None:
+        """Process patches from a single bundle and add them to the patches dict.
+
+        Parameters
+        ----------
+        patches : list[dict[Any, Any]]
+            List of patches from a bundle
+        app : APP
+            The app instance
+        """
         for patch in patches:
             if not patch["compatiblePackages"]:
                 p = {x: patch[x] for x in ["name", "description"]}
@@ -133,9 +175,9 @@ class Patches(object):
                         p = {x: patch[x] for x in ["name", "description"]}
                         p["app"] = compatible_package
                         p["version"] = version[-1] if version else "all"
-                        self.patches_dict[app.app_name].append(p)
-
-        app.no_of_patches = len(self.patches_dict[app.app_name])
+                        # Avoid duplicate patches from multiple bundles
+                        if not any(existing["name"] == p["name"] for existing in self.patches_dict[app.app_name]):
+                            self.patches_dict[app.app_name].append(p)
 
     def __init__(self: Self, config: RevancedConfig, app: APP) -> None:
         self.patches_dict: dict[str, list[dict[str, str]]] = {"universal_patch": []}
@@ -191,28 +233,3 @@ class Patches(object):
         app.app_version = recommended_version
         app.experiment = experiment
         return total_patches
-
-
-class PatchLoader(object):
-    """Patch Loader."""
-
-    @staticmethod
-    def load_patches(file_name: str) -> Any:
-        """The function `load_patches` loads patches from a file and returns them.
-
-        Parameters
-        ----------
-        file_name : str
-            The `file_name` parameter is a string that represents the name or path of the file from which
-        the patches will be loaded.
-
-        Returns
-        -------
-            the patches loaded from the file.
-        """
-        try:
-            with Path(file_name).open() as f:
-                return json.load(f)
-        except FileNotFoundError as e:
-            msg = "File not found"
-            raise PatchesJsonLoadError(msg, file_name=file_name) from e

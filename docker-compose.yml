@@ -2,6 +2,7 @@ services:
   revanced:
     image: imxeren/docker-py-revanced
     container_name: revanced-builder
+    pull_policy: always
     env_file:
       - .env
     volumes:

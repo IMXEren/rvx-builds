@@ -4,7 +4,7 @@ env:
   COMPOSE_DOCKER_CLI_BUILD: 1
   HAVE_TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID != '' }}
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       GITHUB_UPLOAD:
         description: "Upload to GitHub"
@@ -26,8 +26,44 @@ on:
         required: false
         type: boolean
         default: false
-      VIRUSTOTAL_SCAN:
-        description: "Scan apks with VirusTotal"
+      CLEANUP:
+        description: "Clear GitHub(Useful if Telegram upload is enabled)"
+        required: false
+        type: boolean
+        default: false
+      COMMIT_CHANGELOG:
+        description: "Update Changelog"
+        type: boolean
+        required: false
+        default: true
+      DEBUG_ENABLED:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled.'
+        required: false
+        default: false
+      PREFERRED_PATCH_APPS:
+        description: "Apps to be patched. Overrides any env set"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      GITHUB_UPLOAD:
+        description: "Upload to GitHub"
+        required: false
+        type: boolean
+        default: true
+      TELEGRAM_NO_ROOT_UPLOAD:
+        description: "Upload Non Rooted APKs to Telegram"
+        required: false
+        type: boolean
+        default: false
+      TELEGRAM_ROOT_UPLOAD:
+        description: "Upload Magisk Module from nikhilbadyal/revanced-magisk-module to Telegram"
+        required: false
+        type: boolean
+        default: false
+      APPRISE_NOTIFY:
+        description: "Use Apprise to Notify"
         required: false
         type: boolean
         default: false
@@ -67,6 +103,7 @@ jobs:
       COMMIT_CHANGELOG: ${{ inputs.COMMIT_CHANGELOG }}
     secrets:
       ENVS: ${{ secrets.ENVS }}
+      DOCKER_PY_REVANCED_SECRETS: ${{ secrets.DOCKER_PY_REVANCED_SECRETS }}
       REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
 
   upload-to-github:
@@ -97,7 +134,7 @@ jobs:
       - name: Upload Build Artifact
         uses: ncipollo/release-action@main
         with:
-          artifacts: "*-output.apk"
+          artifacts: "apks/*-output.apk,updates.json,changelog.json,changelog.md"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: Build-${{ steps.get-date.outputs.date }}
           bodyFile: changelog.md
@@ -107,18 +144,6 @@ jobs:
       - name: Sleep for 10 seconds
         run: |
           sleep 10
-
-  virustotal-scan:
-    needs: [upload-to-github]
-    uses: nikhilbadyal/ghactions/.github/workflows/virustotal-scan.yml@main
-    with:
-      FILES: |
-        .apk$
-      request_rate: 4
-    if: inputs.VIRUSTOTAL_SCAN
-    secrets:
-      VT_API_KEY: ${{ secrets.VT_API_KEY }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   upload-to-telegram:
     needs: [upload-to-github]

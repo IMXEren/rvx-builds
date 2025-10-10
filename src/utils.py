@@ -43,8 +43,6 @@ request_header = {
 }
 default_cli = "https://github.com/revanced/revanced-cli/releases/latest"
 default_patches = "https://github.com/revanced/revanced-patches/releases/latest"
-default_patches_json = default_patches
-default_integrations = "https://github.com/revanced/revanced-integrations/releases/latest"
 bs4_parser = "html.parser"
 changelog_file = "changelog.md"
 changelog_json_file = "changelog.json"
@@ -62,17 +60,14 @@ updates_file_url = "https://raw.githubusercontent.com/{github_repository}/{branc
 changelogs: dict[str, dict[str, str]] = {}
 time_zone = "Asia/Kolkata"
 app_version_key = "app_version"
-integration_version_key = "integrations_version"
 patches_version_key = "patches_version"
 cli_version_key = "cli_version"
-patches_json_version_key = "patches_json_version"
 implement_method = "Please implement the method"
 status_code_200 = 200
 resource_folder = "apks"
 branch_name = "changelogs"
 app_dump_key = "app_dump"
 patches_dl_key = "patches_dl"
-integrations_dl_key = "integrations_dl"
 
 
 def update_session_data(user_agent: str | None = None) -> None:
@@ -272,16 +267,16 @@ def slugify(string: str) -> str:
     modified_string = string.lower()
 
     # Remove special characters
-    modified_string = re.sub(r"[^\w\s-]", "-", modified_string)
+    modified_string = re.sub(r"[^\w\s-]", ".", modified_string)
 
     # Replace spaces with dashes
-    modified_string = re.sub(r"\s+", "-", modified_string)
+    modified_string = re.sub(r"\s+", ".", modified_string)
 
     # Remove consecutive dashes
-    modified_string = re.sub(r"-+", "-", modified_string)
+    modified_string = re.sub(r"-+", ".", modified_string)
 
     # Remove leading and trailing dashes
-    return modified_string.strip("-")
+    return modified_string.strip(".")
 
 
 def _check_version(output: str) -> None:
@@ -340,7 +335,7 @@ def contains_any_word(string: str, words: list[str]) -> bool:
 def datetime_to_ms_epoch(dt: datetime) -> int:
     """Returns millis since epoch."""
     microseconds = time.mktime(dt.timetuple()) * 1000000 + dt.microsecond
-    return int(round(microseconds / float(1000)))
+    return round(microseconds / float(1000))
 
 
 def load_older_updates(env: Env) -> dict[str, Any]:
@@ -362,10 +357,8 @@ def save_patch_info(app: "APP", updates_info: dict[str, Any]) -> dict[str, Any]:
     """Save version info a patching resources used to a file."""
     updates_info[app.app_name] = {
         app_version_key: app.app_version,
-        integration_version_key: app.resource["integrations"]["version"],
         patches_version_key: app.resource["patches"]["version"],
         cli_version_key: app.resource["cli"]["version"],
-        patches_json_version_key: app.resource["patches_json"]["version"],
         "ms_epoch_since_patched": datetime_to_ms_epoch(datetime.now(timezone(time_zone))),
         "date_patched": datetime.now(timezone(time_zone)),
         "app_dump": app.for_dump(),

@@ -18,6 +18,8 @@ from src.utils import handle_request_response, request_timeout, update_changelog
 class Github(Downloader):
     """Files downloader."""
 
+    MIN_PATH_SEGMENTS = 2  # Minimum path segments for valid GitHub URL
+
     def latest_version(self: Self, app: APP, **kwargs: dict[str, str]) -> tuple[str, str]:
         """Function to download files from GitHub repositories.
 
@@ -35,7 +37,7 @@ class Github(Downloader):
         }
         if self.config.personal_access_token:
             logger.debug("Using personal access token")
-            headers["Authorization"] = f"token {self.config.personal_access_token}"
+            headers["Authorization"] = f"Bearer {self.config.personal_access_token}"
         response = requests.get(repo_url, headers=headers, timeout=request_timeout)
         handle_request_response(response, repo_url)
         if repo_name == "revanced-patches":
@@ -51,7 +53,9 @@ class Github(Downloader):
         """Extract repo owner and url from github url."""
         parsed_url = urlparse(url)
         path_segments = parsed_url.path.strip("/").split("/")
-
+        if len(path_segments) < Github.MIN_PATH_SEGMENTS:
+            msg = f"Invalid GitHub URL format: {url}"
+            raise DownloadError(msg)
         github_repo_owner = path_segments[0]
         github_repo_name = path_segments[1]
         tag_position = 3
@@ -80,7 +84,7 @@ class Github(Downloader):
             "Content-Type": "application/vnd.github.v3+json",
         }
         if config.personal_access_token:
-            headers["Authorization"] = f"token {config.personal_access_token}"
+            headers["Authorization"] = f"Bearer {config.personal_access_token}"
         response = requests.get(api_url, headers=headers, timeout=request_timeout)
         handle_request_response(response, api_url)
         update_changelog(f"{github_repo_owner}/{github_repo_name}", response.json())
