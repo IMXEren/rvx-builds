@@ -1,5 +1,5 @@
 beautifulsoup4==4.13.4
-browserforge==1.1.2
+browserforge==1.2.3
 environs==14.1.1
 google-play-scraper==1.2.7
 lastversion==3.5.7
@@ -9,5 +9,5 @@ pre-commit==4.2.0
 python-dotenv==1.1.0
 pytz==2025.1
 requests==2.32.4
-selenium-driverless==1.8.0.2
+selenium-driverless==1.9.4
 tqdm==4.67.1
