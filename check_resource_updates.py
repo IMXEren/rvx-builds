@@ -77,7 +77,7 @@ def check_if_build_is_required() -> bool:
                 break
     logger.info(f"{needs_to_repatched} are need to repatched.")
     if needs_to_repatched:
-        print(",".join(needs_to_repatched))  # noqa: T201
+        print(f"PATCH_APPS={",".join(needs_to_repatched)}")  # noqa: T201
         return True
     return False
 
