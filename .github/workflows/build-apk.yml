@@ -117,6 +117,8 @@ jobs:
     timeout-minutes: 30
     needs: build-apk
     if: inputs.GITHUB_UPLOAD
+    outputs:
+      release_url: ${{ steps.release.outputs.html_url }}
 
     steps:
       - name: Download Already Built APKs
@@ -137,6 +139,7 @@ jobs:
           RELEASE_PATTERN: ".*"
 
       - name: Upload Build Artifact
+        id: release
         uses: ncipollo/release-action@main
         with:
           artifacts: "apks/*-output.apk,updates.json,changelog.json,changelog.md"
@@ -223,23 +226,22 @@ jobs:
     needs: [upload-to-github]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
       - name: Send Join Notification
         env:
           JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
           JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RELEASE_URL: ${{ needs.upload-to-github.outputs.release_url }}
         run: |
           curl -X POST \
             -H "Content-Type: application/json" \
             -d '{
               "deviceId": "'${JOIN_DEVICE_ID}'",
-              "title": "IMXEren/RVX-Builds",
-              "text": "🚀 New Release Alert: Built ReVanced Apps has just been released on GitHub. Happy coding! 💻",
+              "title": "'${GITHUB_REPOSITORY}'",
+              "text": "🚀 New Release: Built ReVanced apps are now available on GitHub.",
               "icon": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
               "smallicon": "https://i.imgur.com/Elnh5VF.png",
-              "url": "https://www.github.com/imxeren/rvx-builds/releases/latest",
+              "url": "'${RELEASE_URL}'",
               "dismissOnTouch": "true"
             }' \
             "https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush?apikey=${JOIN_API_KEY}"
