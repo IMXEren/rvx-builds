@@ -20,7 +20,7 @@ on:
       COMMIT_CHANGELOG:
         type: boolean
         required: false
-        default: false
+        default: true
       DEBUG_ENABLED:
         type: boolean
         description: "Run the build with tmate debugging enabled."
@@ -101,6 +101,7 @@ jobs:
             updated_json=$(echo "${json_data}" | jq ". += [${new_object}]")
           fi
           echo "${updated_json}" > "${path}"
+
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@master

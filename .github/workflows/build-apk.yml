@@ -76,7 +76,7 @@ on:
         description: "Update Changelog"
         type: boolean
         required: false
-        default: false
+        default: true
       JOIN_NOTIFY:
         type: boolean
         description: "Notify with JOIN API when the build is complete."
