@@ -83,6 +83,8 @@ class Source:
 class Site:
     """Convenient default class to load any site."""
 
+    NOT_FOUND_STATUS_CODE: int = 404
+
     def __init__(self: Self, browser: Browser) -> None:
         self._browser = browser
         self.driver = browser.driver
@@ -134,7 +136,7 @@ class Site:
                 headers=self.response_headers,
                 user_agent=self.user_agent,
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             msg = f"unknown error while loading --> {e!r}"
             raise PageLoadError(msg) from e
 
@@ -169,7 +171,12 @@ class Site:
             self.status_code = status_code
             self.response_headers = _generate_headers(params.get("responseHeaders", []))
         logger.info(f"Status code: {status_code} -> Site: {url}")
-        if url == self.url and self.cf_encountered and not str(status_code).startswith("2"):
+        if (
+            url == self.url
+            and self.cf_encountered
+            and not str(status_code).startswith("2")
+            and status_code != self.NOT_FOUND_STATUS_CODE
+        ):
             self.cf_encountered = False
             logger.debug("CF re-encounter; Box appeared again")
         if params.get("responseStatusCode") in [301, 302, 303, 307, 308]:
@@ -202,13 +209,16 @@ class Site:
             if not self.cf_encountered:
                 await self._check_cf_encounter(url, body)
 
-            if url == (self.redirected_url or self.url) and str(params["responseStatusCode"]).startswith("2"):
+            _status_code = str(params["responseStatusCode"])
+            if url == (self.redirected_url or self.url) and (
+                _status_code.startswith("2") or _status_code == str(self.NOT_FOUND_STATUS_CODE)
+            ):
                 await self.remove_network_listeners()
                 self.status_code = status_code
                 self.response_headers = _generate_headers(params.get("responseHeaders", []))
                 self.response_found = True
 
-            if url == self.cf_encountered_on_url and str(params["responseStatusCode"]).startswith("2"):
+            if url == self.cf_encountered_on_url and _status_code.startswith("2"):
                 await self.remove_network_listeners()
                 self.status_code = status_code
                 self.response_headers = _generate_headers(params.get("responseHeaders", []))
