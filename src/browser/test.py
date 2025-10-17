@@ -7,7 +7,9 @@ from bs4 import BeautifulSoup
 from loguru import logger
 
 sys.path.append(str(Path.cwd()))
-from src.browser.site import source as page_source
+# from src.browser.site import source as page_source
+# import nodriver as uc
+import zendriver as uc
 
 
 async def main() -> None:  # noqa: D103
@@ -21,13 +23,19 @@ async def main() -> None:  # noqa: D103
     url = "https://fingerprintjs.github.io/BotD"  ## AntiBot validator
     url = "https://community.cloudflare.com/t/bot-traffic-managed-to-bypass-cloudflare-interactive-challenge-captcha/541364"  ## Cloudflare  # noqa: E501
     url = "https://nopecha.com/demo"  ## Cloudflare
+    url = "https://www.apkmirror.com/apk/facebook-2/facebook/facebook-490-0-0-release/"
 
     try:
-        r = await page_source(url)
-        soup = BeautifulSoup(r.text, "html.parser")
+        # r = await page_source(url)
+        browser = await uc.start()
+        page = await browser.get(url)
+        await page.verify_cf()
+        r = await page.get_content()
+        soup = BeautifulSoup(r, "html.parser")
         element = soup.select_one("title")
         if element:
             print(element.text)  # noqa: T201
+        await browser.stop()
     except Exception as e:  # noqa: BLE001
         logger.error(e)
 
