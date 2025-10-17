@@ -268,6 +268,7 @@ class Site:
         if coords:
             x, y = coords
             # await self.flash_point(x,y)
+            await self.driver.sleep(5)
             await self.driver.current_pointer.click(x,y)
             logger.debug("[Cloudflare] clicked")
         else:
