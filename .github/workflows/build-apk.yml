@@ -36,11 +36,21 @@ on:
         type: boolean
         required: false
         default: true
-      DEBUG_ENABLED:
+      JOIN_NOTIFY:
         type: boolean
-        description: 'Run the build with tmate debugging enabled.'
+        description: "Notify with JOIN API when the build is complete."
         required: false
+        default: true
+      PRE_RELEASE:
+        description: "Release as a pre-release"
+        required: false
+        type: boolean
         default: false
+      CACHE_RELEASES:
+        description: "Persist older releases to not delete them on the run."
+        required: false
+        type: boolean
+        default: true
       PREFERRED_PATCH_APPS:
         description: "Apps to be patched. Overrides any env set"
         required: false
