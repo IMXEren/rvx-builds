@@ -56,7 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           output=$(python check_resource_updates.py)
-          should_build=$(grep -Po '^PATCH_APPS=\K.*' <<< "$output")
+          should_build="$(grep -m1 '^PATCH_APPS=' <<< "$output" | cut -d= -f2- | tr -d '\r' || printf '')"
           echo "SHOULD_BUILD=$should_build" >> $GITHUB_OUTPUT
     outputs:
       SHOULD_BUILD: ${{ steps.should_build.outputs.SHOULD_BUILD }}
