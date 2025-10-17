@@ -263,10 +263,14 @@ class Site:
                 await self.verify_cf()
 
     async def verify_cf(self: Self, template_image = None) -> None:
-        x, y = await self.template_location(template_image=None)
-        # await self.flash_point(x,y)
-        await self.driver.current_pointer.click(x,y)
-        logger.debug("[Cloudflare] clicked")
+        coords = await self.template_location(template_image=None)
+        if coords:
+            x, y = coords
+            # await self.flash_point(x,y)
+            await self.driver.current_pointer.click(x,y)
+            logger.debug("[Cloudflare] clicked")
+        else:
+            logger.error("[Cloudflare] No coordinates")
 
     async def template_location(
         self, template_image: os.PathLike | None = None,
