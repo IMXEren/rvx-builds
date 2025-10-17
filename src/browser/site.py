@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 from typing import Any, Self
 
+import aiofiles
 from bs4 import BeautifulSoup
 from cdp_socket.exceptions import CDPError
 from loguru import logger
@@ -324,7 +325,11 @@ class Site:
                         "%s was not found in the current location : %s"
                         % (template_image, os.getcwd()),
                     )
-            await self.driver.save_screenshot("screen.jpg")
+            res = await self.driver.execute_cdp_cmd("Page.captureScreenshot", {"format": "jpeg"}, timeout=30)
+            jpg = base64.b64decode(res["data"].encode("ascii"))
+            async with aiofiles.open("screen.jpg", "wb") as f:
+                await f.write(jpg)
+            # await self.driver.save_screenshot("screen.jpg")
             await self.driver.sleep(0.05)
             im = cv2.imread("screen.jpg")
             im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
