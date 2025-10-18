@@ -1,6 +1,5 @@
 """Utilities."""
 
-import inspect
 import json
 import re
 import subprocess
@@ -28,6 +27,7 @@ if TYPE_CHECKING:
 
 from src.downloader.sources import APK_MIRROR_APK_CHECK
 from src.exceptions import ScrapingError
+from src.metadata.github import GithubSourceMetadata
 
 default_build = [
     "youtube",
@@ -57,7 +57,7 @@ session.headers.update(_headers)
 
 updates_file = "updates.json"
 updates_file_url = "https://raw.githubusercontent.com/{github_repository}/{branch_name}/{updates_file}"
-changelogs: dict[str, dict[str, str]] = {}
+changelogs: dict[str, GithubSourceMetadata] = {}
 time_zone = "Asia/Kolkata"
 app_version_key = "app_version"
 patches_versions_key = "patches_versions"
@@ -97,60 +97,49 @@ def update_changelog(name: str, response: dict[str, str]) -> None:
     in the dictionary represent the type of change (e.g., "bug fix", "feature", "documentation"), and
     the values represent the specific changes made for each type.
     """
-    app_change_log = format_changelog(name, response)
-    changelogs[name] = app_change_log
+    source_metadata = GithubSourceMetadata.from_json(response)
+    changelogs[name] = source_metadata
 
 
-def format_changelog(name: str, response: dict[str, str]) -> dict[str, str]:
+def format_changelog(metadata: GithubSourceMetadata) -> str:
     """The `format_changelog` returns formatted changelog string.
 
     Parameters
     ----------
-    name : str
-        The `name` parameter is a string that represents the name of the changelog. It is used to create a
-    collapsible section in the formatted changelog.
-    response : Dict[str, str]
-        The `response` parameter is a dictionary that contains information about a release. It has the
-    following keys:
+    metadata : GithubSourceMetadata
+        Represents the release metadata with sufficient info.
 
     Returns
     -------
-        a formatted changelog as a dict.
+        a formatted changelog as str
     """
-    final_name = f"[{name}]({response['html_url']})"
-    return {
-        "ResourceName": final_name,
-        "Version": response["tag_name"],
-        "Changelog": response["body"],
-        "PublishedOn": response["published_at"],
-    }
+    content = (
+        f"# {metadata.name}\n\n"
+        f"***Release Version: [{metadata.tag}]({metadata.html_url})***  \n"
+        f"***Release Date: {metadata.get_release_date()}***  \n"
+        f"<details>\n<summary><b><i>Changelog:</i></b></summary>\n\n{metadata.body}</details>\n\n"
+    )
+    return f"{content}"
 
 
 def write_changelog_to_file(updates_info: dict[str, Any]) -> None:
     """The function `write_changelog_to_file` writes a given changelog json to a file."""
-    markdown_table = inspect.cleandoc(
-        """
-    | Resource Name | Version | Changelog | Published On | Build By|
-    |---------------|---------|-----------|--------------|---------|
-    """,
-    )
-    for app_data in changelogs.values():
-        name_link = app_data["ResourceName"]
-        version = app_data["Version"]
-        changelog = app_data["Changelog"]
-        published_at = app_data["PublishedOn"]
-        built_by = get_parent_repo()
-
-        # Clean up changelog for markdown
-        changelog = changelog.replace("\r\n", "<br>")
-        changelog = changelog.replace("\n", "<br>")
-        changelog = changelog.replace("|", "\\|")
-
-        # Add row to the Markdown table string
-        markdown_table += f"\n| {name_link} | {version} | {changelog} | {published_at} | {built_by} |"
+    changelog_doc = ""
+    metadata_list = GithubSourceMetadata.sort_by_latest_release(changelogs.values())
+    for data in metadata_list:
+        changelog_doc += format_changelog(data)
     with Path(changelog_file).open("w", encoding="utf_8") as file1:
-        file1.write(markdown_table)
-    Path(changelog_json_file).write_text(json.dumps(changelogs, indent=4) + "\n")
+        file1.write(changelog_doc)
+
+    def encoder_default(obj: Any) -> Any:
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        if hasattr(obj, "__dict__"):
+            return obj.__dict__
+        msg = f"Object of type {type(obj).__name__} is not JSON serializable"
+        raise TypeError(msg)
+
+    Path(changelog_json_file).write_text(json.dumps(changelogs, default=encoder_default, indent=4) + "\n")
     Path(updates_file).write_text(json.dumps(updates_info, indent=4, default=str) + "\n")
 
 

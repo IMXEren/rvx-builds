@@ -135,11 +135,27 @@ jobs:
         uses: actions/download-artifact@main
         with:
           name: Built-APKs
+
+      - name: Check if patch updates changelog
+        id: check-patch-updates
+        uses: softwareforgood/check-artifact-v4-existence@v0
+        with:
+          name: Patch-Updates
+
+      - name: Download patch updates changelog
+        uses: actions/download-artifact@main
+        if: ${{ steps.check-patch-updates.outputs.exists == 'true' }}
+        with:
+          name: Patch-Updates
+
       - name: Get Date
         id: get-date
         run: |
           echo "date=$(TZ='Asia/Kolkata' date +"%Y.%m.%d-%H.%M.%S")" >> $GITHUB_OUTPUT
-          curl "https://raw.githubusercontent.com/${{ github.repository }}/check-updates/changelog.md" > changelog.md
+          # curl "https://raw.githubusercontent.com/${{ github.repository }}/check-updates/patch-updates.md" > patch-updates.md
+          if [ ! -f ./patch-updates.md ]; then
+              cp ./changelog.md ./patch-updates.md
+          fi
 
       - name: Delete Older Releases
         uses: nikhilbadyal/ghaction-rm-releases@v0.0.5
@@ -155,7 +171,7 @@ jobs:
           artifacts: "apks/*-output.apk,updates.json,changelog.json,changelog.md"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: Build-${{ steps.get-date.outputs.date }}
-          bodyFile: changelog.md
+          bodyFile: patch-updates.md
           artifactErrorsFailBuild: true
           prerelease: ${{ inputs.PRE_RELEASE }}
 

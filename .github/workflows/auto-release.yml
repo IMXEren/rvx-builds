@@ -58,6 +58,17 @@ jobs:
           output=$(python check_resource_updates.py)
           should_build="$(grep -m1 '^PATCH_APPS=' <<< "$output" | cut -d= -f2- | tr -d '\r' || printf '')"
           echo "SHOULD_BUILD=$should_build" >> $GITHUB_OUTPUT
+
+      - name: Upload patch updates changelog
+        uses: actions/upload-artifact@main
+        if: ${{ steps.should_build.outputs.SHOULD_BUILD != '' }}
+        with:
+          name: Patch-Updates
+          path: |
+            patch-updates.md
+          if-no-files-found: error
+          retention-days: 0
+
     outputs:
       SHOULD_BUILD: ${{ steps.should_build.outputs.SHOULD_BUILD }}
 
