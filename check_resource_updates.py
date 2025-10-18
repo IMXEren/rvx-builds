@@ -1,14 +1,25 @@
 """Check patching resource updates."""
 
+from pathlib import Path
 from threading import Lock
 
+import requests
 from environs import Env
 from loguru import logger
 
 from main import get_app
 from src.config import RevancedConfig
+from src.downloader.github import Github
+from src.downloader.github_metadata import GithubSourceMetadata
 from src.manager.github import GitHubManager
-from src.utils import default_build, patches_dl_list_key, patches_versions_key
+from src.utils import (
+    default_build,
+    format_changelog,
+    handle_request_response,
+    patches_dl_list_key,
+    patches_versions_key,
+    request_timeout,
+)
 
 
 def check_if_build_is_required() -> bool:
@@ -77,9 +88,46 @@ def check_if_build_is_required() -> bool:
                 break
     logger.info(f"{needs_to_repatched} are need to repatched.")
     if needs_to_repatched:
-        print(f"PATCH_APPS={",".join(needs_to_repatched)}")  # noqa: T201
+        print(f"PATCH_APPS={','.join(needs_to_repatched)}")  # noqa: T201
+        write_changelog(config, needs_to_repatched)
         return True
     return False
+
+
+def write_changelog(config: RevancedConfig, apps: list[str]) -> None:
+    """Write new changelog."""
+    patches_dl_set: set[str] = set()
+    for app_name in apps:
+        app_obj = get_app(config, app_name)
+        for dl in app_obj.patches_dl_list:
+            if dl.startswith("https://github.com/"):
+                patches_dl_set.add(dl)
+
+    metadata_set: set[GithubSourceMetadata] = set()
+    for dl in patches_dl_set:
+        owner, repo_name, release_tag = Github._extract_repo_owner_and_tag(dl)  # noqa: SLF001
+        repo_url = f"https://api.github.com/repos/{owner}/{repo_name}/releases/{release_tag}"
+        headers = {
+            "Content-Type": "application/vnd.github.v3+json",
+        }
+        if config.personal_access_token:
+            logger.debug("Using personal access token")
+            headers["Authorization"] = f"Bearer {config.personal_access_token}"
+        logger.debug(f"Fetching metadata from {repo_url}")
+        response = requests.get(repo_url, headers=headers, timeout=request_timeout)
+        handle_request_response(response, repo_url)
+        metadata_set.add(GithubSourceMetadata.from_json(response.json()))
+
+    changelog_doc = ""
+    changelog_doc_file = "patch-updates.md"
+    # Newer release first
+    sorted_metadata_list = sorted(metadata_set, key=lambda m: m.published_at, reverse=True)
+    if sorted_metadata_list:
+        logger.info(f"Writing to {changelog_doc_file}")
+    for app_data in sorted_metadata_list:
+        changelog_doc += format_changelog(app_data)
+    with Path(changelog_doc_file).open("w", encoding="utf_8") as file1:
+        file1.write(changelog_doc)
 
 
 check_if_build_is_required()
