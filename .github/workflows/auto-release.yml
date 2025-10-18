@@ -65,11 +65,11 @@ jobs:
     permissions: write-all
     needs: release-check
     uses: ./.github/workflows/build-apk.yml
-    if: ${{ needs.release-check.outputs.SHOULD_BUILD }}
+    if: ${{ needs.release-check.outputs.SHOULD_BUILD != '' }}
     secrets: inherit
     concurrency:
       group: Auto-Release-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
     with:
-      TELEGRAM_NO_ROOT_UPLOAD: ${{ inputs.TELEGRAM_NO_ROOT_UPLOAD }}
+      TELEGRAM_NO_ROOT_UPLOAD: ${{ inputs.TELEGRAM_NO_ROOT_UPLOAD || false }}
       PREFERRED_PATCH_APPS: ${{ needs.release-check.outputs.SHOULD_BUILD }}
