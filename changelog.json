@@ -1,0 +1,30 @@
+{
+    "WSTxda/MicroG-RE": {
+        "name": "WSTxda/MicroG-RE",
+        "tag": "5.13",
+        "body": "## MicroG RE\r\n\r\n- Bump GMS version to `25.38.50`\r\n- Added remove all registered apps option in cloud messaging settings\r\n- Shrink add account FAB on scroll and add padding in preferences\r\n- Fixed `PushNotificationAdvancedFragment` lifecycle handling\r\n- General layout improvements\r\n- Added russian translation\r\n- Updated Gradle and translations\r\n- Small changes\r\n\r\n## GmsCore\r\n\r\n- Auth: Migrate `SignlnConfiguration` to preprocessor-based safe parcelable\r\n- Bump actions/setup-java from 4 to 5\r\n- Bump actions/checkout from 4 to 5\r\n\r\n**Full Changelog**: https://github.com/WSTxda/MicroG-RE/compare/5.12...5.13",
+        "html_url": "https://github.com/WSTxda/MicroG-RE/releases/tag/5.13",
+        "published_at": "2025-09-28T14:39:17+00:00"
+    },
+    "REAndroid/APKEditor": {
+        "name": "REAndroid/APKEditor",
+        "tag": "V1.4.5",
+        "body": "## What's Changed\r\n* Minor improvement on dex building performance\r\n* Fix dex container building issues\r\n* Fix smali parsing #198 \r\n* Update README @yonggamer in https://github.com/REAndroid/APKEditor/pull/203\r\n\r\n\r\n**Full Changelog**: https://github.com/REAndroid/APKEditor/compare/V1.4.4...V1.4.5",
+        "html_url": "https://github.com/REAndroid/APKEditor/releases/tag/V1.4.5",
+        "published_at": "2025-08-13T20:00:41+00:00"
+    },
+    "inotia00/revanced-cli": {
+        "name": "inotia00/revanced-cli",
+        "tag": "v5.0.1",
+        "body": "- Based on ReVanced Cli [5.0.0](https://github.com/ReVanced/revanced-cli/tree/v5.0.0)\r\n- Added option command `options` (`options.json` file generator)\r\n- Added option command `patches` (`patches.json` file generator)\r\n- Added option command `--legacy-options` (set patch option via options.json file)\r\n- Added option command `--rip-libs` (remove native libs from apk)\r\n- Added option command `--unsigned` (disable signing of the final apk, regardless of whether it is mounted or not)\r\n- Added support anti-split (merged some [REAndroid/ARSCLib](https://github.com/REAndroid/ARSCLib) sources to implement anti-split)\r\n\r\n",
+        "html_url": "https://github.com/inotia00/revanced-cli/releases/tag/v5.0.1",
+        "published_at": "2024-12-08T09:50:42+00:00"
+    },
+    "revanced/revanced-patches": {
+        "name": "ReVanced/revanced-patches",
+        "tag": "v5.43.1",
+        "body": "## [5.43.1](https://github.com/ReVanced/revanced-patches/compare/v5.43.0...v5.43.1) (2025-10-15)\r\n\r\n\r\n### Bug Fixes\r\n\r\n* **X / Twitter - Change link sharing domain:** Resolve duplicate patch option ([#6119](https://github.com/ReVanced/revanced-patches/issues/6119)) ([7563990](https://github.com/ReVanced/revanced-patches/commit/75639907502382f63fa127a886362d4a4573e6e3))\r\n\r\n\r\n\r\n",
+        "html_url": "https://github.com/ReVanced/revanced-patches/releases/tag/v5.43.1",
+        "published_at": "2025-10-15T08:16:49+00:00"
+    }
+}
