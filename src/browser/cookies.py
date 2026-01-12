@@ -4,9 +4,26 @@ import json
 from collections.abc import Iterator
 from http.cookiejar import CookieJar
 from pathlib import Path
-from typing import Any, Self
+from typing import Self, TypedDict
 
+from pydoll.protocol.network.types import CookieParam as PyDollCookieParam
 from requests.cookies import create_cookie
+
+
+class Cookie(TypedDict):
+    """
+    Represents a cookie with basic properties.
+
+    https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Cookie
+    """
+
+    name: str
+    value: str
+    domain: str
+    path: str
+    expires: float | None
+    secure: bool
+    httpOnly: bool
 
 
 class Cookies:
@@ -14,16 +31,16 @@ class Cookies:
 
     def __init__(self: Self) -> None:
         self.cookies_file: Path = Path.cwd().joinpath("browser_cookies.json")
-        self.cookies: list[dict[str, Any]] = []
+        self.cookies: list[Cookie] = []
         self._load_cookies_from_file()
 
-    def update_cookie(self: Self, cookie_dict: dict[str, Any]) -> None:
+    def update_cookie(self: Self, cookie_dict: Cookie) -> None:
         """Update the cookie list by adding another cookie."""
         self.cookies = list(filter(lambda _cookie: not self._are_cookies_matching(cookie_dict, _cookie), self.cookies))
         self.cookies.append(cookie_dict)
         self.save_cookies()
 
-    def update_cookies(self: Self, cookie_list: list[dict[str, Any]]) -> None:
+    def update_cookies(self: Self, cookie_list: list[Cookie]) -> None:
         """Update the cookie list by extending another cookie list."""
         for cookie in cookie_list:
             self.update_cookie(cookie)
@@ -44,6 +61,25 @@ class Cookies:
             cookie_jar.set_cookie(cookie)
         return cookie_jar
 
+    @staticmethod
+    def into_cookie_param(cookie: Cookie) -> PyDollCookieParam:
+        """Loads defined Cookie into pydoll supported CookieParam."""
+        cookie_param = PyDollCookieParam(
+            name=cookie["name"],
+            value=cookie["value"],
+            domain=cookie["domain"],
+            path=cookie["path"],
+            secure=cookie["secure"],
+            httpOnly=cookie["httpOnly"],
+        )
+        if exp := cookie["expires"]:
+            cookie_param.update(expires=exp)
+        return cookie_param
+
+    def into_cookie_param_list(self) -> list[PyDollCookieParam]:
+        """Same as into_cookie_param but for list."""
+        return [Cookies.into_cookie_param(cookie) for cookie in self.cookies]
+
     def save_cookies(self: Self) -> None:
         """Save the cookies to the file."""
         self._save_cookies_to_file()
@@ -53,14 +89,14 @@ class Cookies:
         self.cookies_file.unlink(missing_ok=True)
 
     @staticmethod
-    def _are_cookies_matching(cookie_new: dict[str, Any], cookie_old: dict[str, Any]) -> bool:
+    def _are_cookies_matching(cookie_new: Cookie, cookie_old: Cookie) -> bool:
         return (
             cookie_new["name"] == cookie_old["name"]
             and cookie_new["domain"] == cookie_old["domain"]
             and cookie_new["path"] == cookie_old["path"]
         )
 
-    def _load_cookies_from_file(self: Self) -> list[dict[str, Any]]:
+    def _load_cookies_from_file(self: Self) -> list[Cookie]:
         if self.cookies_file.exists():
             try:
                 self.cookies = json.loads(self.cookies_file.read_text())
@@ -77,6 +113,6 @@ class Cookies:
         else:
             return True
 
-    def __iter__(self: Self) -> Iterator[dict[str, Any]]:
+    def __iter__(self: Self) -> Iterator[Cookie]:
         """Returns an iterator cookies."""
         return self.cookies.__iter__()

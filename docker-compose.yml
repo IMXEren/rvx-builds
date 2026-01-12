@@ -3,7 +3,29 @@ services:
     image: imxeren/docker-py-revanced
     container_name: revanced-builder
     pull_policy: always
+    depends_on:
+      - display
+      # - novnc
+    environment:
+      - DISPLAY=display:0
     env_file:
       - .env
     volumes:
       - .:/app:z
+  display:
+    image: ghcr.io/dtinth/xtigervnc-docker:main
+    tmpfs: /tmp
+    restart: always
+    environment:
+      VNC_GEOMETRY: 1920x1080
+    ports:
+      - 127.0.0.1:5900:5900
+      - 127.0.0.1:6000:6000
+  novnc:
+    image: geek1011/easy-novnc
+    restart: always
+    depends_on:
+      - display
+    command: -a :5800 -h display --no-url-password
+    ports:
+      - 127.0.0.1:5800:5800

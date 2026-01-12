@@ -15,7 +15,7 @@ class APKMirror(Site):
     def __init__(self: Self, browser: Browser) -> None:
         super().__init__(browser)
 
-    async def get(self: Self, url: str, timeout: float) -> Source:  # noqa: D102
+    async def get(self: Self, url: str, timeout: int) -> Source:  # noqa: ASYNC109, D102
         return await super().get(url, timeout)
 
     async def check_if_loaded(self: Self) -> bool:  # noqa: D102

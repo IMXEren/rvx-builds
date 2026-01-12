@@ -6,15 +6,16 @@ RUN python -m pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 ## Chrome dependencies
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-    curl gnupg2 unzip xvfb
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg unzip libx11-xcb1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install chrome and chromedriver
-COPY ./src/browser/setup_browser.sh /setup_chrome_webdriver.sh
-RUN sed -i 's/\r$//g' /setup_chrome_webdriver.sh && \
-    sed -i 's/sudo\s//g' /setup_chrome_webdriver.sh
-RUN bash /setup_chrome_webdriver.sh
+# Install chrome
+COPY ./src/browser/setup_browser.sh /setup_browser.sh
+RUN sed -i 's/\r$//g' /setup_browser.sh && \
+    sed -i 's/sudo\s//g' /setup_browser.sh && \
+    chmod +x /setup_browser.sh && \
+    /setup_browser.sh "google-chrome"
 
 # Copy entrypoint script
 COPY ./entrypoint /entrypoint

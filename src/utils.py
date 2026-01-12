@@ -189,7 +189,7 @@ def make_request(url: str, headers: dict[str, str] | None = None) -> Response | 
     return response
 
 
-def load_page_in_browser(url: str, timeout: float = request_timeout) -> Source | None:
+def load_page_in_browser(url: str, timeout: int = request_timeout) -> Source | None:
     """The `load_page_in_browser()` function loads the url in a browser.
 
     Parameters
@@ -214,7 +214,9 @@ def load_page_in_browser(url: str, timeout: float = request_timeout) -> Source |
         with ThreadPoolExecutor(1) as pool:
             source = pool.submit(lambda: asyncio.run(page_source(url, timeout))).result()
     except RuntimeError:
-        return asyncio.run(page_source(url, timeout))
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(page_source(url, timeout))
     except Exception as e:  # noqa: BLE001
         logger.exception(f"failed to load url in the browser => {e!r}")
         return None
