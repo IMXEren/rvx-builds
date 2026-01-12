@@ -11,27 +11,23 @@ from src.browser.site import source as page_source
 
 
 async def main() -> None:  # noqa: D103
-    # display = Display(visible=False, size=(800, 600))  # noqa: ERA001
-    # display.start()  # noqa: ERA001
-    # logger.info("Started display")  # noqa: ERA001
-
     url = "https://www.wikipedia.com/"  ## Redirect test
-    url = "https://nowsecure.nl"  ## Cloudflare
     url = "https://bot.sannysoft.com/"  ## AntiBot validator
-    url = "https://fingerprintjs.github.io/BotD"  ## AntiBot validator
-    url = "https://community.cloudflare.com/t/bot-traffic-managed-to-bypass-cloudflare-interactive-challenge-captcha/541364"  ## Cloudflare  # noqa: E501
-    url = "https://nopecha.com/demo"  ## Cloudflare
+    url = "https://nopecha.com/demo/cloudflare"  ## Cloudflare Interstitial
+    url = "https://nopecha.com/demo/turnstile"  ## Cloudflare Turnstile
+    url = "https://pixelscan.net/fingerprint-check" ## Fingerprint Checker
+    url = "https://abrahamjuliot.github.io/creepjs/" ## Fingerprint Checker
+    url = "https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram-401-0-0-48-79-release/" ## ApkMirror Cloudflare  # noqa: E501
 
     try:
-        r = await page_source(url)
+        r = await page_source(url, 60)
         soup = BeautifulSoup(r.text, "html.parser")
         element = soup.select_one("title")
         if element:
             print(element.text)  # noqa: T201
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(e)
-
-    # display.stop()  # noqa: ERA001
+        raise
 
 
 async def _looper() -> None:

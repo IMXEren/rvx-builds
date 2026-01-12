@@ -2,30 +2,51 @@
 
 check_browser_dependencies() {
     echo "Checking browser dependencies..."
-    browser="chromium-browser"
-    if command -v $browser >/dev/null 2>&1 && command -v chromedriver >/dev/null 2>&1; then
-        echo "Already installed $($browser --version)"
-        echo "Already installed $(chromedriver --version)"
-        echo "Browser dependencies are already present."
-    else
-        echo "Browser dependencies are missing! Installing $browser, chromedriver..."
-        install_browser $browser
-        # install_chromedriver
+    if [[ -n "$browser" ]]; then
+        if command -v "$browser" >/dev/null 2>&1; then
+            echo "Already installed $($browser --version)"
+        else
+            echo "Installing $browser..."
+            install_browser "$browser"
+        fi
+    fi
+    if [[ -n "$webdriver" ]]; then
+        if command -v "$webdriver" >/dev/null 2>&1; then
+            echo "Already installed $($webdriver --version)"
+        else
+            echo "Installing $webdriver..."
+            install_webdriver
+        fi
     fi
 }
 
-## Install Browser
 install_browser() {
-    local browser="$1"
-    if [ "$browser" = "google-chrome" ]; then
-        install_chrome
-    elif [[ "$browser" = "chromium-browser" ]]; then
-        install_chromium
-    fi
-
+    case "$browser" in
+        google-chrome)
+            install_chrome
+            ;;
+        chromium-browser)
+            install_chromium
+            ;;
+        *)
+            echo "[ERROR] Unknown browser: $browser" >&2
+            exit 1
+            ;;
+    esac
 }
 
-## Install Chrome
+install_webdriver() {
+    case "$webdriver" in
+        chromedriver)
+            install_chromedriver
+            ;;
+        *)
+            echo "[ERROR] Unknown webdriver: $webdriver" >&2
+            exit 1
+            ;;
+    esac
+}
+
 install_chrome() {
     sudo apt-get remove google-chrome-stable
     sudo curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add
@@ -35,17 +56,15 @@ install_chrome() {
     echo "Installed $(google-chrome --version)"
 }
 
-## Install Chromium
 install_chromium() {
     sudo apt-get -y update
     sudo apt-get -y --no-install-recommends install chromium
     echo "Installed $(chromium --version)"
 }
 
-## Install Chromedriver
 install_chromedriver() {
-    if ! google-chrome --version >/dev/null 2>&1; then
-        echo "Google Chrome not installed but required! Exiting..."
+    if ! command -v google-chrome >/dev/null 2>&1; then
+        echo "Google Chrome not installed but required! Exiting..." >&2
         exit 1
     fi
     CHROMEDRIVER_VERSION=$(google-chrome --version | awk '{print $3}')
@@ -64,13 +83,14 @@ delete_executable() {
     local exec_name="$1"
     local exec_path
     exec_path=$(which "$exec_name")
-    if [ -n "$exec_path" ]; then
+    if [[ -n "$exec_path" ]]; then
         sudo rm "$exec_path" 2>/dev/null && echo "Deleted $exec_name: $exec_path" || echo "Couldn't find $exec_name to delete: $exec_path"
     else
-        echo "Executable '$exec_name' not found to delete."
+        echo "Executable '$exec_name' not found to delete." >&2
     fi
 }
 
-## Install necessary packages
+browser="$1"
+webdriver="$2"
 check_browser_dependencies
 exit 0

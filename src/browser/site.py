@@ -5,18 +5,19 @@ import atexit
 import base64
 import json
 import time
-from typing import Any, Self
+from typing import Any, Self, cast
 
-import websockets
 from bs4 import BeautifulSoup
-from cdp_socket.exceptions import CDPError
 from loguru import logger
+from pydoll.commands.fetch_commands import FetchCommands
+from pydoll.constants import By as ByDoll
+from pydoll.exceptions import ElementNotVisible
+from pydoll.protocol.fetch.events import FetchEvent
+from pydoll.protocol.fetch.types import RequestStage
 from requests.structures import CaseInsensitiveDict
-from selenium_driverless import webdriver
-from selenium_driverless.types.by import By
 
 from src.browser.browser import Browser
-from src.browser.cookies import Cookies
+from src.browser.cookies import Cookie, Cookies
 from src.browser.exceptions import JSONExtractError, PageLoadError
 
 
@@ -87,15 +88,17 @@ class Site:
 
     def __init__(self: Self, browser: Browser) -> None:
         self._browser = browser
-        self.driver = browser.driver
+        self._cdp = browser.browser
         self.status_code = None
         self.response_found = False
         self.redirected_url = None
         self.cf_encountered = False
         self.cf_encountered_on_url = None
         self.user_agent = None
+        self._on_request_callback_id = None
+        self._loaded = asyncio.Event()
 
-    async def get(self: Self, url: str, timeout: float) -> Source:
+    async def get(self: Self, url: str, timeout: int) -> Source:  # noqa: ASYNC109
         """Loads the url.
 
         Waits for the page to load until timeout is hit.
@@ -106,24 +109,27 @@ class Site:
         logger.info(f"Non-exclusive impl to fetch page for url -> {self.url} : Fetching with default config...")
         try:
             self.start = time.perf_counter()
-            self.global_conn = self.driver.base_target
+            source = None
+            self.tab = await self._cdp.new_tab()
+            await self._browser.evader.apply_to_tab(self.tab)
             await self.add_network_listeners()
-            await self.driver.get(self.url, timeout=self.timeout, wait_load=False)
+            async with self.tab.expect_and_bypass_cloudflare_captcha(
+                custom_selector=(ByDoll.XPATH, "//*[div/div/input[@name='cf-turnstile-response']]"),
+                time_before_click=3,
+                time_to_wait_captcha=10,
+            ):
+                await self.tab.go_to(self.url, timeout=round(self.timeout))
+                await self._browser.evader.apply_to_tab(self.tab)
+
             if not await self.check_if_loaded():
-                msg = f"page load check mechanism failed out... for: {url}"
+                msg = f"page load check mechanism failed out for: {url}"
                 raise PageLoadError(msg)
 
-            await self.driver.refresh()
-            await self.driver.sleep(3)
-            source = await self.driver.page_source
-
-            """
-            # if await find_and_click(driver=self.driver, check=True):
-            #     logger.debug("[Cloudflare] found and clicked another checkbox")
-            #     await self.driver.sleep(5)
-            #     source = await self.driver.page_source
-            """
-
+            # Wait for page to load, if any redirects
+            logger.info("Waiting for requested page to load...")
+            await self.tab._wait_page_load(self.timeout)  # noqa: SLF001
+            await asyncio.sleep(30000)
+            source = await self.tab.page_source
             soup = BeautifulSoup(source, "html.parser")
             title = soup.select_one("title")
             if title and title.text.lower().startswith("just a moment"):
@@ -136,8 +142,10 @@ class Site:
                 headers=self.response_headers,
                 user_agent=self.user_agent,
             )
+        except PageLoadError:
+            raise
         except Exception as e:
-            msg = f"unknown error while loading --> {e!r}"
+            msg = f"unknown error while loading --> {e}"
             raise PageLoadError(msg) from e
 
     async def check_if_loaded(self: Self) -> bool:
@@ -147,32 +155,40 @@ class Site:
         Browsers's Network Monitor (CDP).
         """
         try:
-            while not self.response_found and self.timeout > time.perf_counter() - self.start:
-                await asyncio.sleep(1)
+            async with asyncio.timeout(self.timeout):
+                await self._loaded.wait()
+        except TimeoutError:
+            logger.error("Timeout occurred!")
+            return False
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"{e!r}")
+            return False
+        else:
+            return self.response_found is not None and self.response_found
+        finally:
             await self.remove_network_listeners()
             if self.response_found:
                 logger.success(f"Response found set from interceptor [loaded]: {self.status_code}")
             else:
                 logger.error(f"Response failed with possible status code: {self.status_code}")
-                return False
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"{e!r}")
-            return False
-        else:
-            return self.response_found is not None
 
-    async def on_request(self: Self, params: dict[str, Any]) -> None:  # noqa: C901
+    async def on_request(self: Self, event: dict[str, Any]) -> None:  # noqa: C901
         """Intercepts requests using CDP for the page."""
+        params = event["params"]
         _params = {"requestId": params["requestId"]}
+        if self.response_found:
+            # Don't intercept, just continue the request
+            await self.tab.continue_request(_params["requestId"])
+
         url = params["request"]["url"]
         status_code = params.get("responseStatusCode")
         self.user_agent = params["request"]["headers"]["User-Agent"]
-        if url == (self.cf_encountered_on_url or self.redirected_url or self.url):
+        if _are_urls_equal(url, (self.cf_encountered_on_url or self.redirected_url or self.url)):
             self.status_code = status_code
             self.response_headers = _generate_headers(params.get("responseHeaders", []))
-        logger.info(f"Status code: {status_code} -> Site: {url}")
+        logger.debug(f"Status code: {status_code} -> Site: {url}")
         if (
-            url == self.url
+            _are_urls_equal(url, self.url)
             and self.cf_encountered
             and not str(status_code).startswith("2")
             and status_code != self.NOT_FOUND_STATUS_CODE
@@ -181,66 +197,64 @@ class Site:
             logger.debug("CF re-encounter; Box appeared again")
         if params.get("responseStatusCode") in [301, 302, 303, 307, 308]:
             # redirected request
-            if url == (self.redirected_url or self.url):
+            if _are_urls_equal(url, (self.redirected_url or self.url)):
                 lheader = next(
                     filter(lambda obj: obj["name"].lower() == "location", params["responseHeaders"]),
                     None,
                 )
                 self.redirected_url: str | None = lheader["value"] if lheader else None
-            await self.global_conn.execute_cdp_cmd("Fetch.continueResponse", _params)
+            await self.tab.continue_request(_params["requestId"])
             return
 
-        try:
-            body = await self.global_conn.execute_cdp_cmd(
-                "Fetch.getResponseBody",
-                _params,
-                timeout=1,
-            )
-        except CDPError as e:
+        ## Ref: https://github.com/ttlns/Selenium-Driverless/blob/eca2bd74c17f071ce84b3eae63de81b74877956b/README.md?plain=1#L131
+        cmd = FetchCommands.get_response_body(_params["requestId"])
+        _body = await self.tab._execute_command(cmd)  # noqa: SLF001
+        body = _body.get("result", None)
+        if not body:
+            e = _body["error"]  # type: ignore  # noqa: PGH003
+            ERROR_CODE = -32000  # noqa: N806
             if (
-                e.code == -32000  # noqa: PLR2004
-                and e.message == "Can only get response body on requests captured after headers received."
+                e["code"] == ERROR_CODE
+                and e["message"] == "Can only get response body on requests captured after headers received."
             ):
-                await self.global_conn.execute_cdp_cmd("Fetch.continueResponse", _params)
+                cmd = FetchCommands.continue_response(_params["requestId"])
+                await self.tab._execute_command(cmd)  # noqa: SLF001
                 return
-            raise
-        else:
-            await self.global_conn.execute_cdp_cmd("Fetch.continueRequest", _params)
-            if not self.cf_encountered:
-                await self._check_cf_encounter(url, body)
+            raise RuntimeError(e)
 
-            _status_code = str(params["responseStatusCode"])
-            if url == (self.redirected_url or self.url) and (
-                _status_code.startswith("2") or _status_code == str(self.NOT_FOUND_STATUS_CODE)
-            ):
-                await self.remove_network_listeners()
-                self.status_code = status_code
-                self.response_headers = _generate_headers(params.get("responseHeaders", []))
-                self.response_found = True
+        await self.tab.continue_request(_params["requestId"])
+        if not self.cf_encountered:
+            await self._check_cf_encounter(url, dict(body))
 
-            if url == self.cf_encountered_on_url and _status_code.startswith("2"):
-                await self.remove_network_listeners()
-                self.status_code = status_code
-                self.response_headers = _generate_headers(params.get("responseHeaders", []))
-                self.response_found = True
+        _status_code = str(params["responseStatusCode"])
+        if _are_urls_equal(url, (self.redirected_url or self.url)) and (
+            _status_code.startswith("2") or _status_code == str(self.NOT_FOUND_STATUS_CODE)
+        ):
+            await self.remove_network_listeners()
+            self.status_code = status_code
+            self.response_headers = _generate_headers(params.get("responseHeaders", []))
+            self.response_found = True
+            self._loaded.set()
+
+        if _are_urls_equal(url, self.cf_encountered_on_url) and _status_code.startswith("2"):
+            await self.remove_network_listeners()
+            self.status_code = status_code
+            self.response_headers = _generate_headers(params.get("responseHeaders", []))
+            self.response_found = True
+            self._loaded.set()
 
         return
 
     async def add_network_listeners(self: Self) -> None:
         """Add network listeners to the browser session."""
-        await self.global_conn.execute_cdp_cmd(
-            "Fetch.enable",
-            cmd_args={"patterns": [{"requestStage": "Response", "urlPattern": "*"}]},
-        )
-        await self.global_conn.add_cdp_listener("Fetch.requestPaused", self.on_request)
+        await self.tab.enable_fetch_events(request_stage=RequestStage.RESPONSE)
+        self._on_request_callback_id = await self.tab.on(FetchEvent.REQUEST_PAUSED, self.on_request)
 
     async def remove_network_listeners(self: Self) -> None:
         """Remove network listeners from the browser session."""
-        try:
-            await self.global_conn.remove_cdp_listener("Fetch.requestPaused", self.on_request)
-            await self.global_conn.execute_cdp_cmd("Fetch.disable")
-        except ValueError:
-            pass
+        if callback_id := self._on_request_callback_id:
+            await self.tab.remove_callback(callback_id)
+        await self.tab.disable_fetch_events()
 
     async def _check_cf_encounter(self: Self, url: str, body: dict[str, Any]) -> None:
         """Check if cf was encountered on the page."""
@@ -257,8 +271,38 @@ class Site:
                 self.cf_encountered = True
                 self.cf_encountered_on_url = url
                 logger.debug("[Cloudflare] encountered the checkbox challenge")
-                await find_and_click(self.driver, check=False)
+                await self.find_and_click()
 
+    async def find_and_click(self) -> bool:
+        """Find and clicks the checkbox to complete cf challenge."""
+        selector = (ByDoll.XPATH, "//*[div/div/input[@name='cf-turnstile-response']]")
+        element = await self.tab.find_or_wait_element(
+            *selector,
+            timeout=10,
+            raise_exc=False,
+        )
+        if element and not isinstance(element, list):
+            logger.debug("[Cloudflare] trying to click cf checkbox")
+            await element.execute_script('this.style="width: 300px"')
+            await asyncio.sleep(2)
+            try:
+                await element.click()
+            except ElementNotVisible:
+                logger.debug("[Cloudflare] cf checkbox element not visible to click")
+                return False
+            else:
+                logger.debug("[Cloudflare] clicked cf checkbox")
+                return True
+        return False
+
+def _are_urls_equal(url1: str | None, url2: str | None) -> bool:
+    if url1 is None or url2 is None:
+        return False
+    if not url1.endswith("/"):
+        url1 += "/"
+    if not url2.endswith("/"):
+        url2 += "/"
+    return url1 == url2
 
 def _generate_headers(headers: list[dict[str, str]]) -> CaseInsensitiveDict:
     gen_headers = CaseInsensitiveDict()
@@ -267,76 +311,7 @@ def _generate_headers(headers: list[dict[str, str]]) -> CaseInsensitiveDict:
     return gen_headers
 
 
-async def find_iframe(driver: webdriver.Chrome, *, check: bool) -> webdriver.WebElement | None:
-    """Find if checkbox is there; to complete cf challenge.
-
-    `check` refers to whether check if the page title is Just a moment indicating cf.
-    """
-    iframe = None
-    if check:
-        try:
-            source = await driver.page_source
-            soup = BeautifulSoup(source, "html.parser")
-            title = soup.select_one("title")
-        except:  # noqa: E722, S110
-            pass
-        else:
-            if not title or not title.text.startswith("Just a moment"):
-                return iframe
-    await asyncio.sleep(0.1)
-
-    try:
-        async with asyncio.timeout(10):
-            while not iframe:
-                try:
-                    iframe = await driver.find_element(By.TAG_NAME, "iframe")
-                except:  # noqa: E722
-                    await asyncio.sleep(1)
-    except TimeoutError:
-        pass
-    return iframe
-
-
-async def find_and_click(driver: webdriver.Chrome, *, check: bool = True) -> bool:
-    """Find and clicks the checkbox to complete cf challenge.
-
-    `check` refers to whether check if the page title is Just a moment indicating cf.
-    """
-    button = None
-    is_clicked = False
-    iframe = await find_iframe(driver, check=check)
-    if not iframe:
-        return is_clicked
-    try:
-        async with asyncio.timeout(10):
-            while not button:
-                await asyncio.sleep(1)
-                try:
-                    iframe_document = await iframe.content_document
-                    button = (
-                        await iframe_document.find_element(By.CSS_SELECTOR, "#challenge-stage")
-                        if iframe_document
-                        else None
-                    )
-                except:  # noqa: E722
-                    await asyncio.sleep(0.1)
-    except TimeoutError:
-        await asyncio.sleep(0.1)
-    if not button:
-        return is_clicked
-    await asyncio.sleep(2)
-    logger.debug("[Cloudflare] trying to click cf checkbox")
-    try:
-        await button.click()
-    except websockets.exceptions.ConnectionClosedError:
-        logger.debug("[Cloudflare] no need to click the box")
-    else:
-        is_clicked = True
-        logger.debug("[Cloudflare] clicked cf checkbox")
-    return is_clicked
-
-
-async def source(url: str, timeout: float = 60) -> Source:
+async def source(url: str, timeout: int = 60) -> Source:  # noqa: ASYNC109
     """Wrapper to return html source of the url on successful loading.
 
     Waits for the page to load until timeout is hit.
@@ -346,16 +321,18 @@ async def source(url: str, timeout: float = 60) -> Source:
     setup won't run on Windows and you are responsible to download chrome,
     hence can error if they aren't detected when starting the Browser instance.
     """
+    browser = None
     try:
         browser = await Browser.create()
         stored_cookies = Cookies()
-        for cookie in stored_cookies:
-            await browser.driver.add_cookie(cookie_dict=cookie)
+        await browser.browser.set_cookies(stored_cookies.into_cookie_param_list())
         source = await browser.get(url, timeout)
-        stored_cookies.update_cookies(await browser.driver.get_cookies())
+        # Cookie doesn't have any extra methods so it's safe to assume it.
+        stored_cookies.update_cookies(cast("list[Cookie]", await browser.browser.get_cookies()))
         return source
     finally:
-        await browser.quit()
+        if browser:
+            await browser.quit()
 
 
 def _clear_stored_cookies() -> None:
