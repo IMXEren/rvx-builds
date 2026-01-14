@@ -128,7 +128,6 @@ class Site:
             # Wait for page to load, if any redirects
             logger.info("Waiting for requested page to load...")
             await self.tab._wait_page_load(self.timeout)  # noqa: SLF001
-            await asyncio.sleep(30000)
             source = await self.tab.page_source
             soup = BeautifulSoup(source, "html.parser")
             title = soup.select_one("title")
