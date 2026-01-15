@@ -168,7 +168,7 @@ jobs:
         id: release
         uses: ncipollo/release-action@main
         with:
-          artifacts: "apks/*-output.apk,updates.json,changelog.json,changelog.md"
+          artifacts: "apks/*-output.apk,updates.json,changelog.json"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: Build-${{ steps.get-date.outputs.date }}
           bodyFile: patch-updates.md
