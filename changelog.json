@@ -1,0 +1,30 @@
+{
+    "WSTxda/MicroG-RE": {
+        "name": "MorpheApp/MicroG-RE",
+        "tag": "6.1.0",
+        "body": "### Features\r\n\r\n- Added neutral result in Self-Check group to non required permission and actions (0384796baa284c163fda5e8c4f145f90cd0efdd4)\r\n  - Set neutral result on **overlay over others apps** permission\r\n\r\n### Bug Fixes\r\n\r\n- Fix #112: Open **App battery usage** screen to setup battery optimization permission in Xiaomi devices (f91315a8c834ed20a84131af6e39de47593ba1e8)\r\n- Privacy settings crash if open it in account manager activity (c17c7321f73abb85c5cf0d5b2b276b4afd844257)\r\n\r\n**Full Changelog**: https://github.com/MorpheApp/MicroG-RE/compare/6.0.0...6.1.0",
+        "html_url": "https://github.com/MorpheApp/MicroG-RE/releases/tag/6.1.0",
+        "published_at": "2026-01-17T15:58:05+00:00"
+    },
+    "REAndroid/APKEditor": {
+        "name": "REAndroid/APKEditor",
+        "tag": "V1.4.7",
+        "body": "## What's Changed\r\n* Set smali comment level to `basic` (For faster smali deompiling):https://github.com/REAndroid/APKEditor/commit/a5390a3401153ab9ac38b4487a279316eee7400d\r\n* Fix: Protector - dictionaries options by @Kirlif in https://github.com/REAndroid/APKEditor/pull/218\r\n\r\n\r\n**Full Changelog**: https://github.com/REAndroid/APKEditor/compare/V1.4.6...V1.4.7",
+        "html_url": "https://github.com/REAndroid/APKEditor/releases/tag/V1.4.7",
+        "published_at": "2025-12-28T11:00:45+00:00"
+    },
+    "IMXEren/mix-patches": {
+        "name": "IMXEren/mix-patches",
+        "tag": "v1.0.0",
+        "body": "# 1.0.0 (2026-01-18)\n\n\n### Features\n\n* **trakt:** add Unlock pro patch ([64af918](https://github.com/IMXEren/mix-patches/commit/64af918d36c364fe7f71c77d8170d1ded67afc97))\n\n\n\n",
+        "html_url": "https://github.com/IMXEren/mix-patches/releases/tag/v1.0.0",
+        "published_at": "2026-01-18T23:57:07+00:00"
+    },
+    "MorpheApp/morphe-cli": {
+        "name": "MorpheApp/morphe-cli",
+        "tag": "v1.1.0",
+        "body": "# [1.1.0](https://github.com/MorpheApp/morphe-cli/compare/v1.0.0...v1.1.0) (2026-01-10)\n\n\n### Bug Fixes\n\n* Use patcher / library 1.0.1 release ([0ca02e9](https://github.com/MorpheApp/morphe-cli/commit/0ca02e920b9e3189ac2b3a18587f0fb9efd0de4e))\n\n\n### Features\n\n* add command option `unsigned` ([#20](https://github.com/MorpheApp/morphe-cli/issues/20)) ([4505091](https://github.com/MorpheApp/morphe-cli/commit/4505091624b854706b39656bae642e5dc1132dcd))\n\n\n\n",
+        "html_url": "https://github.com/MorpheApp/morphe-cli/releases/tag/v1.1.0",
+        "published_at": "2026-01-10T15:50:06+00:00"
+    }
+}
