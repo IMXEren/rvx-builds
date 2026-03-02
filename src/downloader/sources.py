@@ -79,9 +79,9 @@ apk_sources = {
     "xiaomi-wearable": (
         f"{APK_MIRROR_BASE_APK_URL}/beijing-xiaomi-mobile-software-co-ltd/mi-wear-小米穿戴/mi-fitness-xiaomi-wear"
     ),
-    "my-expenses": UPTODOWN_BASE_URL.format("my-expenses"),
-    "spotify": UPTODOWN_BASE_URL.format("spotify"),
+    "spotify": f"{APK_MIRROR_BASE_APK_URL}/spotify-ab/spotify-music-podcasts/",
     "joey": UPTODOWN_BASE_URL.format("joey-for-reddit"),
+    "my-expenses": UPTODOWN_BASE_URL.format("my-expenses"),
     "scbeasy": UPTODOWN_BASE_URL.format("scb-easy"),
     "expensemanager": UPTODOWN_BASE_URL.format("bishinews-expense-manager"),
     "androidtwelvewidgets": APK_PURE_URL,
