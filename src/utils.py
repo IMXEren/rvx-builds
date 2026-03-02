@@ -18,20 +18,21 @@ from curl_cffi import Response as CurlResponse
 from curl_cffi import Session
 from environs import Env
 from loguru import logger
+from requests import Response
 
 from src.browser.cookies import Cookies
 from src.browser.site import Source
 from src.browser.site import source as page_source
 
 if TYPE_CHECKING:
-    from requests import Response
-
     from src.app import APP
-    ResponseType = Response | CurlResponse | Source
+
 
 from src.downloader.sources import APK_MIRROR_APK_CHECK
 from src.exceptions import ScrapingError
 from src.metadata.github import GithubSourceMetadata
+
+ResponseType = Response | CurlResponse | Source
 
 default_build = [
     "youtube",
