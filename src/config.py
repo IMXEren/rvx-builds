@@ -34,3 +34,5 @@ class RevancedConfig(object):
         self.max_resource_workers = env.int("MAX_RESOURCE_WORKERS", 3)
         self.max_parallel_apps = env.int("MAX_PARALLEL_APPS", 4)
         self.disable_caching = env.bool("DISABLE_CACHING", False)
+        self.repack_split_apks = env.bool("REPACK_SPLIT_APKS", False)
+        self.device_spec = self.temp_folder / "device-spec.json"

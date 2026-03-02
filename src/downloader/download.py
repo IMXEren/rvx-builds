@@ -13,6 +13,7 @@ from tqdm import tqdm
 from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import DownloadError
+from src.repack import repack_apks
 from src.utils import handle_request_response, implement_method, session
 
 
@@ -84,6 +85,21 @@ class Downloader(object):
         """Convert apks to apk."""
         if file_name.endswith(".apk"):
             return file_name
+
+        input_zip_path = self.config.temp_folder / file_name
+
+        # Repack apks based on device-spec.json
+        if self.config.repack_split_apks and self.config.device_spec.exists():
+            output_zip_name = self.replace_file_extension(file_name, "-repack.zip")
+            output_zip_path = self.config.temp_folder / output_zip_name
+            if repack_apks(input_zip_path, output_zip_path, self.config.device_spec):
+                Path(input_zip_path).unlink()
+                input_zip_path = output_zip_path
+            else:
+                logger.error(f"Failed to repack apk: {input_zip_path}")
+        elif self.config.repack_split_apks:
+            logger.warning(f"device-spec.json file not found at {self.config.device_spec}")
+
         output_apk_file = self.replace_file_extension(file_name, ".apk")
         output_path = f"{self.config.temp_folder}/{output_apk_file}"
         Path(output_path).unlink(missing_ok=True)
@@ -94,14 +110,14 @@ class Downloader(object):
                 f"{self.config.temp_folder}/{self.config.apk_editor}",
                 "m",
                 "-i",
-                f"{self.config.temp_folder}/{file_name}",
+                f"{input_zip_path}",
                 "-o",
                 output_path,
             ],
             capture_output=True,
             check=True,
         )
-        logger.info("Converted zip to apk.")
+        logger.info(f"Converted {file_name}.zip to apk.")
         return output_apk_file
 
     @staticmethod
