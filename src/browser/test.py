@@ -15,9 +15,9 @@ async def main() -> None:  # noqa: D103
     url = "https://bot.sannysoft.com/"  ## AntiBot validator
     url = "https://nopecha.com/demo/cloudflare"  ## Cloudflare Interstitial
     url = "https://nopecha.com/demo/turnstile"  ## Cloudflare Turnstile
-    url = "https://pixelscan.net/fingerprint-check" ## Fingerprint Checker
-    url = "https://abrahamjuliot.github.io/creepjs/" ## Fingerprint Checker
-    url = "https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram-401-0-0-48-79-release/" ## ApkMirror Cloudflare  # noqa: E501
+    url = "https://pixelscan.net/fingerprint-check"  ## Fingerprint Checker
+    url = "https://abrahamjuliot.github.io/creepjs/"  ## Fingerprint Checker
+    url = "https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram-401-0-0-48-79-release/"  ## ApkMirror Cloudflare  # noqa: E501
 
     try:
         r = await page_source(url, 60)

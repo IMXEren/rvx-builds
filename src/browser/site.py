@@ -294,6 +294,7 @@ class Site:
                 return True
         return False
 
+
 def _are_urls_equal(url1: str | None, url2: str | None) -> bool:
     if url1 is None or url2 is None:
         return False
@@ -302,6 +303,7 @@ def _are_urls_equal(url1: str | None, url2: str | None) -> bool:
     if not url2.endswith("/"):
         url2 += "/"
     return url1 == url2
+
 
 def _generate_headers(headers: list[dict[str, str]]) -> CaseInsensitiveDict:
     gen_headers = CaseInsensitiveDict()
