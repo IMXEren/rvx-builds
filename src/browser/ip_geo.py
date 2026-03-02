@@ -41,10 +41,17 @@ class IPGeolocationInfo:
 
         Returns cached instance if available, unless refresh=True.
         """
+        ## TODO @IMXEren: need to move to a different and (maybe) free
+        ## ip-geo API service because this one leads to Rate-Limiting
+
         if cls._instance is not None and not refresh:
             return cls._instance
 
-        with contextlib.suppress(requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        with contextlib.suppress(
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+            requests.exceptions.JSONDecodeError,
+        ):
             r = requests.get(
                 "https://ipapi.co/json/",
                 timeout=10,
@@ -52,7 +59,7 @@ class IPGeolocationInfo:
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                     "AppleWebKit/537.36 (HTML, like Gecko)"
                     " Chrome/143.0.0.0 Safari/537.36",
-                    "Content-Type": "application/json",
+                    "Accept": "application/json",
                 },
             )
             r = r.json()
