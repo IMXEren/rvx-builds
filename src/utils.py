@@ -49,7 +49,7 @@ changelog_json_file = "changelog.json"
 request_timeout = 60
 request_retries = 15
 session = Session()
-_browsers = [Browser("chrome", min_version=130, max_version=140)]
+_browsers = [Browser("chrome", min_version=137, max_version=145)]
 _headers = HeaderGenerator(browser=_browsers, os="linux", device="desktop").generate()
 _headers.pop("Accept-Encoding", None)
 request_header.update(_headers)
