@@ -12,18 +12,22 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
-import requests
+import curl_cffi
 from browserforge.headers import Browser, HeaderGenerator
+from curl_cffi import Response as CurlResponse
+from curl_cffi import Session
 from environs import Env
 from loguru import logger
-from requests import Response, Session
 
 from src.browser.cookies import Cookies
 from src.browser.site import Source
 from src.browser.site import source as page_source
 
 if TYPE_CHECKING:
+    from requests import Response
+
     from src.app import APP
+    ResponseType = Response | CurlResponse | Source
 
 from src.downloader.sources import APK_MIRROR_APK_CHECK
 from src.exceptions import ScrapingError
@@ -48,7 +52,7 @@ changelog_file = "changelog.md"
 changelog_json_file = "changelog.json"
 request_timeout = 60
 request_retries = 15
-session = Session()
+session = Session(impersonate="chrome142")
 _browsers = [Browser("chrome", min_version=137, max_version=145)]
 _headers = HeaderGenerator(browser=_browsers, os="linux", device="desktop").generate()
 _headers.pop("Accept-Encoding", None)
@@ -154,7 +158,7 @@ def get_parent_repo() -> str:
     return f"[Docker-py-revanced]({project_url})"
 
 
-def make_request(url: str, headers: dict[str, str] | None = None) -> Response | Source:
+def make_request(url: str, headers: dict[str, str] | None = None) -> ResponseType:
     """The `start_request()` function makes the GET request with the possible retrying methods.
 
     Parameters
@@ -166,7 +170,7 @@ def make_request(url: str, headers: dict[str, str] | None = None) -> Response | 
 
     Returns
     -------
-    response: Response
+    response: ResponseType
         The response object from the HTTP request.
     """
     i = 0
@@ -224,15 +228,15 @@ def load_page_in_browser(url: str, timeout: int = request_timeout) -> Source | N
         return source
 
 
-def handle_request_response(response: Response | Source, url: str) -> None:
+def handle_request_response(response: ResponseType, url: str) -> None:
     """The function handles the response of a GET request and raises an exception if the response code is not 200.
 
     Parameters
     ----------
-    response : Response
-        The parameter `response` is of type `Response`, which is likely referring to a response object from
-    an HTTP request. This object typically contains information about the response received from the
-    server, such as the status code, headers, and response body.
+    response : ResponseType
+        The parameter `response` is of type `ResponseType`, which is a union of `Response`, `CurlResponse`, and `Source`.
+        This object typically contains information about the response received from the server,
+        such as the status code, headers, and response body.
     url: str
         The url on which request was made
     """
@@ -314,7 +318,7 @@ def apkmirror_status_check(package_name: str) -> Any:
         the response from the APKMirror API as a JSON object.
     """
     body = {"pnames": [package_name]}
-    response = requests.post(APK_MIRROR_APK_CHECK, json=body, headers=request_header, timeout=60)
+    response = curl_cffi.post(APK_MIRROR_APK_CHECK, json=body, headers=request_header, timeout=60)
     return response.json()
 
 
