@@ -38,6 +38,7 @@ def get_filters(device_spec_path: Path) -> tuple[set[str], set[str]]:
 
     return allowed_arch, allowed_dpi
 
+
 def _should_keep(modifier: str, allowed_arch: set[str], allowed_dpi: set[str]) -> bool:
     keep = False
     if modifier in STANDARD_ARCHS:
