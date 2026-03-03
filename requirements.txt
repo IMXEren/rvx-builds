@@ -9,5 +9,5 @@ pre-commit==4.2.0
 python-dotenv==1.1.0
 requests==2.32.4
 tqdm==4.67.1
-pydoll-python==2.15.1
+pydoll-python==2.21.1
 curl_cffi==0.14.0

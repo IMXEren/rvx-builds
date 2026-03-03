@@ -98,6 +98,11 @@ class Site:
         self._on_request_callback_id = None
         self._loaded = asyncio.Event()
 
+    def get_time_left(self: Self) -> float:
+        """Get the left time before timeout."""
+        elapsed = time.perf_counter() - self.start
+        return max(0, self.timeout - elapsed)
+
     async def get(self: Self, url: str, timeout: int) -> Source:  # noqa: ASYNC109
         """Loads the url.
 
@@ -114,11 +119,9 @@ class Site:
             await self._browser.evader.apply_to_tab(self.tab)
             await self.add_network_listeners()
             async with self.tab.expect_and_bypass_cloudflare_captcha(
-                custom_selector=(ByDoll.XPATH, "//*[div/div/input[@name='cf-turnstile-response']]"),
-                time_before_click=3,
                 time_to_wait_captcha=10,
             ):
-                await self.tab.go_to(self.url, timeout=round(self.timeout))
+                await self.tab.go_to(self.url, timeout=round(self.get_time_left()))
                 await self._browser.evader.apply_to_tab(self.tab)
 
             if not await self.check_if_loaded():
@@ -127,7 +130,7 @@ class Site:
 
             # Wait for page to load, if any redirects
             logger.info("Waiting for requested page to load...")
-            await self.tab._wait_page_load(self.timeout)  # noqa: SLF001
+            await asyncio.wait_for(self.wait_page_load(), timeout=self.get_time_left())
             source = await self.tab.page_source
             soup = BeautifulSoup(source, "html.parser")
             title = soup.select_one("title")
@@ -146,6 +149,15 @@ class Site:
         except Exception as e:
             msg = f"unknown error while loading --> {e}"
             raise PageLoadError(msg) from e
+
+    async def wait_page_load(self) -> None:
+        """Wait for document.readyState to be browser.options.page_load_state."""
+        while True:
+            result = await self.tab.execute_script("document.readyState")
+            state: str | None = result["result"]["result"].get("value")
+            if state == self._browser.evader.options.page_load_state.value:
+                return
+            await asyncio.sleep(0.1)
 
     async def check_if_loaded(self: Self) -> bool:
         """Checks if the page was loaded.
