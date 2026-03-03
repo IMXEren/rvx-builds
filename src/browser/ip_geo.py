@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import ClassVar, Self
 
 import requests
+from loguru import logger
 
 
 @dataclass
@@ -58,6 +59,10 @@ class IPGeolocationInfo:
             )
             r = r.json()
             if r.get("error", False):
+                if r.get("reason") == "RateLimited":
+                    logger.warning("IP Geolocation API rate limit exceeded.")
+                    return None
+                logger.error(f"Unexpected error from IP Geolocation API: {r}")
                 raise RuntimeError(r)
             new_instance = cls(
                 ip=r["ip"],
