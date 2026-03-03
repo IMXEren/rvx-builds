@@ -265,6 +265,7 @@ class Site:
         """Remove network listeners from the browser session."""
         if callback_id := self._on_request_callback_id:
             await self.tab.remove_callback(callback_id)
+        self._on_request_callback_id = None
         await self.tab.disable_fetch_events()
 
     async def _check_cf_encounter(self: Self, url: str, body: dict[str, Any]) -> None:
