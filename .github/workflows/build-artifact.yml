@@ -55,7 +55,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@main
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install Requirements
         if: ${{ inputs.PREFERRED_PATCH_APPS }}
@@ -85,7 +85,7 @@ jobs:
           "patchName": "Spoof client",
           "options": [
             {
-              "key": "client-id",
+              "key": "OAuth client ID",
               "value": "'${client_id}'"
             }
           ]
@@ -101,7 +101,6 @@ jobs:
             updated_json=$(echo "${json_data}" | jq ". += [${new_object}]")
           fi
           echo "${updated_json}" > "${path}"
-
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@master
