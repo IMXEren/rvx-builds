@@ -61,7 +61,7 @@
 }, {
   "patchName" : "Spoof client",
   "options" : [ {
-    "key" : "OAuth client ID",
+    "key" : "client-id",
     "value" : null
   } ]
 }, {

@@ -150,7 +150,7 @@ class Downloader(object):
             capture_output=True,
             check=True,
         )
-        logger.info(f"Converted {file_name}.zip to apk.")
+        logger.info(f"Converted {file_name} to apk.")
         return output_apk_file
 
     @staticmethod
