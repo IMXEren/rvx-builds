@@ -100,4 +100,8 @@ def repack_apks(input_zip: Path, output_zip: Path, device_spec_path: Path) -> bo
             else:
                 logger.warning(f"[-] Dropping [{output_zip.name}/]: {basename}")
 
+    in_size = input_zip.stat().st_size
+    out_size = output_zip.stat().st_size
+    logger.info(f"[*] Packed [{output_zip.name}/]! Repacked Ratio: {in_size / out_size:.2f}")
+
     return True
