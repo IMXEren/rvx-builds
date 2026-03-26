@@ -48,12 +48,10 @@ def extract_compatible_packages_from_section(section: str) -> list[dict[str, Any
 
 def parse_option_match(option_dict: dict[str, Any]) -> dict[str, Any]:
     """Parse a single option match into a dictionary."""
-    title = option_dict.get("title", "")
-    if title:
-        title = title.strip()
-    # Use the title as the key if absent
+    name = option_dict.get("name", "").strip()
     key = option_dict.get("key", "")
-    key = key.strip() if key else title
+    # Use the name as the key if absent
+    key = key.strip() if key else name
 
     possible_values: list[str] = []
     if option_dict.get("possible_values"):
@@ -61,7 +59,7 @@ def parse_option_match(option_dict: dict[str, Any]) -> dict[str, Any]:
         possible_values = [val.strip() for val in raw_values]
 
     return {
-        "title": title,
+        "name": name,
         "description": option_dict.get("description", "").strip(),
         "required": option_dict.get("required", "").lower() == "true",
         "key": key,
@@ -74,7 +72,7 @@ def parse_option_match(option_dict: dict[str, Any]) -> dict[str, Any]:
 def extract_options_from_section(options_section: str) -> list[dict[str, Any]]:
     """Extract options from an options section."""
     regex = re.compile(
-        r"(?:Title|Name):\s*(?P<title>[^\n]+)\n"
+        r"(?:Title|Name):\s*(?P<name>[^\n]+)\n"
         r"\s*Description:\s*(?P<description>[^\n]+)\n"
         r"\s*Required:\s*(?P<required>true|false)\n"
         r"(?:\s*Key:\s*(?P<key>[^\n]+)\n)?"

@@ -9,6 +9,7 @@ from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import AppNotFoundError
 from src.patches_gen import convert_command_output_to_json
+from src.structs.patches import OptionInfo, PatchInfo
 
 
 class Patches(object):
@@ -156,12 +157,27 @@ class Patches(object):
 
         app.no_of_patches = len(self.patches_dict[app.app_name])
 
+    def _create_option_list(self: Self, options: list[dict[str, Any]] | None) -> list[OptionInfo]:
+        """Create a list of option dictionary with the required fields.
+
+        Parameters
+        ----------
+        options : list[dict[str, Any]] | None
+            list of option data, fields are what parsed from `patches_gen`
+
+        Returns
+        -------
+        list[OptionInfo]
+            list of option typed-dicts
+        """
+        return [OptionInfo(**opt) for opt in options] if options else []
+
     def _create_patch_dict(
         self: Self,
         patch: dict[Any, Any],
         app_name: str,
         version: str | list[str] | None,
-    ) -> dict[str, str]:
+    ) -> PatchInfo:
         """Create a patch dictionary with the required fields.
 
         Parameters
@@ -175,20 +191,24 @@ class Patches(object):
 
         Returns
         -------
-        dict[str, str]
-            Formatted patch dictionary
+        PatchInfo
+            Patch information as a typed-dict
         """
-        patch_dict = {x: patch[x] for x in ["name", "description"]}
-        patch_dict["app"] = app_name
-
         if isinstance(version, list) and version:
-            patch_dict["version"] = version[-1]
-        elif version:
-            patch_dict["version"] = version
+            preferred_version = version[-1]
+        elif isinstance(version, str) and version:
+            preferred_version = version
         else:
-            patch_dict["version"] = "all"
+            preferred_version = "all"
 
-        return patch_dict
+        options = self._create_option_list(patch["options"])
+        return PatchInfo(
+            name=patch["name"],
+            description=patch["description"],
+            app=app_name,
+            version=preferred_version,
+            options=options,
+        )
 
     def _is_duplicate_patch(self: Self, patch_name: str, app_name: str) -> bool:
         """Check if patch already exists to avoid duplicates.
@@ -255,10 +275,10 @@ class Patches(object):
                 self._process_app_specific_patch(patch, app)
 
     def __init__(self: Self, config: RevancedConfig, app: APP) -> None:
-        self.patches_dict: dict[str, list[dict[str, str]]] = {"universal_patch": []}
+        self.patches_dict: dict[str, list[PatchInfo]] = {"universal_patch": []}
         self.fetch_patches(config, app)
 
-    def get(self: Self, app: str) -> tuple[list[dict[str, str]], str]:
+    def get(self: Self, app: str) -> tuple[list[PatchInfo], str]:
         """The function `get` returns all patches and version for a given application.
 
         Parameters
@@ -296,7 +316,7 @@ class Patches(object):
         """
         return app_version == "latest" or app_version > recommended_version or app_version < recommended_version
 
-    def get_app_configs(self: Self, app: "APP") -> list[dict[str, str]]:
+    def get_app_configs(self: Self, app: "APP") -> list[PatchInfo]:
         """The function `get_app_configs` returns configurations for a given app.
 
         Parameters

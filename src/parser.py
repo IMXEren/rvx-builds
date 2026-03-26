@@ -12,6 +12,7 @@ from src.cli_args import DEFAULT_PATCH_ARGS, append_cli_argument, is_arg_enabled
 from src.config import RevancedConfig
 from src.exceptions import PatchingFailedError
 from src.patches import Patches
+from src.structs.patches import LoadedOption, LoadedOptionValue, LoadedPatchOption, PatchInfo
 from src.utils import possible_archs
 
 
@@ -32,27 +33,52 @@ class Parser(object):
         self._enable_arg: list[str] = self._patch_args["ENABLED"]
         self._disable_arg: list[str] = self._patch_args["DISABLED"]
 
-    def format_option(self: Self, opt: dict[str, Any]) -> str:
+    def _format_option_value(self: Self, value: LoadedOptionValue) -> str:
+        if isinstance(value, bool):
+            fvalue = f"{str(value).lower()}"
+        elif isinstance(value, (int, float)):
+            fvalue = f"{value}"  # Numbers should not be quoted
+        elif isinstance(value, list):
+            formatted_list = ",".join(map(self._format_option_value, value))
+            fvalue = f'"[{formatted_list}]"'  # Preserve list format
+        elif value:
+            fvalue = f'"{value}"'
+            if self.is_env_option_value(value):
+                env_key = self.get_env_option_value(value)
+                logger.info(f"[OPTIONS] Getting option value from env var: '{env_key}'")
+                raw_value = self.config.env.str(env_key, None)
+                if raw_value is not None:
+                    fvalue = raw_value
+                else:
+                    logger.warning(
+                        f"[OPTIONS] Failed to get option value from env var: '{env_key}'! "
+                        "Maybe it is not set?",
+                    )
+        else:
+            fvalue = "null"
+        return fvalue
+
+    def is_env_option_value(self: Self, value: LoadedOptionValue) -> bool:
+        """If the loaded option value supposed to be an env str."""
+        return isinstance(value, str) and value.startswith("$__") and value.endswith("__")
+
+    def get_env_option_value(self: Self, value: str) -> str:
+        """Return the env key, extracted from the value."""
+        return value[3:-2]
+
+    def format_option(self: Self, opt: LoadedOption) -> str:
         """
         The function `include` adds a given patch to the front of a list of patches.
 
         Parameters
         ----------
-        opt : dict[str, Any]
+        opt : LoadedOption
             The `opt` parameter is a dictionary that represents the key-value pair of options
             of the patch to be included.
         """
         pair: str = opt["key"]
         if value := opt.get("value"):
-            if isinstance(value, bool):
-                pair += f'="{str(value).lower()}"'
-            elif isinstance(value, (int, float)):
-                pair += f"={value}"  # Numbers should not be quoted
-            elif isinstance(value, list):
-                formatted_list = ",".join(map(str, value))
-                pair += f'="[ {formatted_list} ]"'  # Preserve list format
-            else:
-                pair += f'="{value}"'
+            pair += f"={self._format_option_value(value)}"
         return pair
 
     def _configure_patch_args(self: Self, app: APP) -> None:
@@ -64,35 +90,43 @@ class Parser(object):
         self._enable_arg = self._patch_args["ENABLED"]
         self._disable_arg = self._patch_args["DISABLED"]
 
-    def include(self: Self, name: str, options_list: list[dict[str, Any]]) -> None:
+    def include(self: Self, patch: PatchInfo, options_list: list[LoadedPatchOption]) -> None:
         """
         The function `include` adds a given patch to the front of a list of patches.
 
         Parameters
         ----------
-        name : str
-            The `name` parameter is a string that represents the name of the patch to be included.
-        options_list : list[dict[str, Any]]
+        patch : PatchInfo
+            The patch dict to be included.
+        options_list : list[LoadedPatchOption]
             Then `options_list` parameter is a list of dictionary that represents the options for all patches.
         """
-        options_dict: dict[str, Any] = self.fetch_patch_options(name, options_list)
-        options = options_dict.get("options", [])
+        options_dict = self.fetch_patch_options(patch["name"], options_list)
+        options = None
+        if options_dict:
+            options = options_dict["options"]
         if options:
             for opt in options:
-                pair = self.format_option(opt)
-                self._PATCHES[:0] = [self._options_arg, pair]
-        self._PATCHES[:0] = [self._enable_arg, name]
+                # This allows to have the loaded options to have key
+                # also as the title/name of the option
+                patch_option = next(filter(lambda po: opt["key"] in {po["key"], po["name"]}, patch["options"]), None)
+                if patch_option:
+                    opt["key"] = patch_option["key"]
 
-    def exclude(self: Self, name: str) -> None:
+                    pair = self.format_option(opt)
+                    self._PATCHES[:0] = [self._options_arg, pair]
+        self._PATCHES[:0] = [self._enable_arg, patch["name"]]
+
+    def exclude(self: Self, patch: PatchInfo) -> None:
         """The `exclude` function adds a given patch to the list of excluded patches.
 
         Parameters
         ----------
-        name : str
-            The `name` parameter is a string that represents the name of the patch to be excluded.
+        patch : PatchInfo
+            The patch dict to be excluded.
         """
-        self._PATCHES.extend([self._disable_arg, name])
-        self._EXCLUDED.append(name)
+        self._PATCHES.extend([self._disable_arg, patch["name"]])
+        self._EXCLUDED.append(patch["name"])
 
     def get_excluded_patches(self: Self) -> list[str]:
         """The function `get_excluded_patches` is a getter method that returns a list of excluded patches.
@@ -152,22 +186,22 @@ class Parser(object):
                     self._PATCHES = [self._enable_arg, first_patch]
                     break
 
-    def fetch_patch_options(self: Self, name: str, options_list: list[dict[str, Any]]) -> dict[str, Any]:
+    def fetch_patch_options(self: Self, name: str, options_list: list[LoadedPatchOption]) -> LoadedPatchOption | None:
         """The function `fetch_patch_options` finds patch options for the patch.
 
         Parameters
         ----------
         name : str
             Then `name` parameter is a string that represents the name of the patch.
-        options_list : list[dict[str, Any]]
+        options_list : list[LoadedOption]
             Then `options_list` parameter is a list of dictionary that represents the options for all patches.
         """
         return next(
             filter(lambda obj: obj.get("patchName") == name, options_list),
-            {},
+            None,
         )
 
-    def _load_options_from_file(self: Self, file_name: str) -> list[dict[str, Any]]:
+    def _load_options_from_file(self: Self, file_name: str) -> list[LoadedPatchOption]:
         """Load options from a single file.
 
         Parameters
@@ -177,40 +211,40 @@ class Parser(object):
 
         Returns
         -------
-        list[dict[str, Any]]
+        list[LoadedPatchOption]
             List of patch options from the file
         """
         try:
             with self.config.temp_folder.joinpath(file_name).open() as file:
                 options: list[dict[str, Any]] = json.load(file)
-                return options
+                return [LoadedPatchOption(**opt) for opt in options]
         except FileNotFoundError as e:
             logger.warning(str(e))
             return []
 
     def _merge_options(
         self: Self,
-        global_options: list[dict[str, Any]],
-        app_options: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
+        global_options: list[LoadedPatchOption],
+        app_options: list[LoadedPatchOption],
+    ) -> list[LoadedPatchOption]:
         """Merge global and app-specific options.
 
         App-specific options override global options for the same patch name.
 
         Parameters
         ----------
-        global_options : list[dict[str, Any]]
+        global_options : list[LoadedPatchOption]
             Options from the global options file
-        app_options : list[dict[str, Any]]
+        app_options : list[LoadedPatchOption]
             Options from the app-specific options file
 
         Returns
         -------
-        list[dict[str, Any]]
+        list[LoadedPatchOption]
             Merged options list
         """
         # Create a dict keyed by patchName for easy lookup and merging
-        merged: dict[str, dict[str, Any]] = {}
+        merged: dict[str, LoadedPatchOption] = {}
 
         # Add global options first
         for opt in global_options:
@@ -226,7 +260,7 @@ class Parser(object):
 
         return list(merged.values())
 
-    def _load_patch_options(self: Self, app: APP) -> list[dict[str, Any]]:
+    def _load_patch_options(self: Self, app: APP) -> list[LoadedPatchOption]:
         """Load patch options from file.
 
         Loads global options first, then merges app-specific options on top.
@@ -239,7 +273,7 @@ class Parser(object):
 
         Returns
         -------
-        list[dict[str, Any]]
+        list[LoadedPatchOption]
             List of patch options
         """
         # Load global options first
@@ -251,7 +285,7 @@ class Parser(object):
             app_options = self._load_options_from_file(app.options_file)
             return self._merge_options(global_options, app_options)
 
-        return global_options or [{}]
+        return global_options or []
 
     def _normalize_patch_name(self: Self, patch_name: str, *, space_formatted: bool) -> str:
         """Normalize patch name based on formatting preference.
@@ -314,19 +348,19 @@ class Parser(object):
 
     def _process_regular_patches(
         self: Self,
-        patches: list[dict[str, str]],
+        patches: list[PatchInfo],
         app: APP,
-        options_list: list[dict[str, Any]],
+        options_list: list[LoadedPatchOption],
     ) -> None:
         """Process regular patches for include/exclude.
 
         Parameters
         ----------
-        patches : list[dict[str, str]]
+        patches : list[PatchInfo]
             List of regular patches
         app : APP
             The app instance
-        options_list : list[dict[str, Any]]
+        options_list : list[LoadedPatchOption]
             List of patch options
         """
         for patch in patches:
@@ -334,25 +368,25 @@ class Parser(object):
             normalized_name = self._normalize_patch_name(patch_name, space_formatted=app.space_formatted)
 
             if self._should_include_regular_patch(patch_name, normalized_name, app):
-                self.include(patch_name, options_list)
+                self.include(patch, options_list)
             else:
-                self.exclude(patch_name)
+                self.exclude(patch)
 
     def _process_universal_patches(
         self: Self,
-        universal_patches: list[dict[str, str]],
+        universal_patches: list[PatchInfo],
         app: APP,
-        options_list: list[dict[str, Any]],
+        options_list: list[LoadedPatchOption],
     ) -> None:
         """Process universal patches for include.
 
         Parameters
         ----------
-        universal_patches : list[dict[str, str]]
+        universal_patches : list[PatchInfo]
             List of universal patches
         app : APP
             The app instance
-        options_list : list[dict[str, Any]]
+        options_list : list[LoadedPatchOption]
             List of patch options
         """
         for patch in universal_patches:
@@ -360,13 +394,13 @@ class Parser(object):
             normalized_name = self._normalize_patch_name(patch_name, space_formatted=app.space_formatted)
 
             if self._should_include_universal_patch(patch_name, normalized_name, app):
-                self.include(patch_name, options_list)
+                self.include(patch, options_list)
 
     def include_exclude_patch(
         self: Self,
         app: APP,
-        patches: list[dict[str, str]],
-        patches_dict: dict[str, list[dict[str, str]]],
+        patches: list[PatchInfo],
+        patches_dict: dict[str, list[PatchInfo]],
     ) -> None:
         """The function `include_exclude_patch` includes and excludes patches for a given app."""
         # We configure patch argument templates before include/exclude so generated flags match current CLI profile.

@@ -61,8 +61,8 @@
 }, {
   "patchName" : "Spoof client",
   "options" : [ {
-    "key" : "client-id",
-    "value" : null
+    "key" : "OAuth client ID",
+    "value" : "$__REDDIT_CLIENT_ID__"
   } ]
 }, {
   "patchName" : "Hex",
