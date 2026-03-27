@@ -12,6 +12,8 @@ on:
         required: false
       REDDIT_CLIENT_ID:
         required: false
+      SECRET_REDDIT_CLIENT_ID:
+        required: false
     inputs:
       CI_TEST:
         required: false
@@ -104,7 +106,8 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@master
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.DEBUG_ENABLED }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.DEBUG_ENABLED
+          }}
         with:
           detached: true
 
