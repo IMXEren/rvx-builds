@@ -6,7 +6,7 @@
 
 ### Secret Values in Options
 
-For setting sensitive values/secrets in your options, you should prefer adding them as a key-value pair to GitHub secrets (prefixed by `SECRET_`) and then referencing the key as the value.
+For setting sensitive values/secrets in your options, you should prefer adding them as a key-value pair to GitHub secrets (prefixed by `SECRET_`) and then referencing the key as the value. When setting them to GitHub secrets, run the workflow _Sync Secrets to Reusable Workflow_ ([sync-secrets.yml](../.github/workflows/sync-secrets.yml)).
 
 For example: In case of reddit client-id required by 3rd party clients.
 
