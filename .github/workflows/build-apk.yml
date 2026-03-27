@@ -116,10 +116,7 @@ jobs:
     with:
       COMMIT_CHANGELOG: ${{ inputs.COMMIT_CHANGELOG }}
       PREFERRED_PATCH_APPS: ${{ inputs.PREFERRED_PATCH_APPS }}
-    secrets:
-      ENVS: ${{ secrets.ENVS }}
-      DOCKER_PY_REVANCED_SECRETS: ${{ secrets.DOCKER_PY_REVANCED_SECRETS }}
-      REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+    secrets: inherit
 
   upload-to-github:
     name: GitHub Upload
