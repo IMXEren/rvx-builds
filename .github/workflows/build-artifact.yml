@@ -10,8 +10,6 @@ on:
         required: false
       DOCKER_PY_REVANCED_SECRETS:
         required: false
-      REDDIT_CLIENT_ID:
-        required: false
     inputs:
       CI_TEST:
         required: false
@@ -42,15 +40,15 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@main
 
-      - name: Update Env for custom build
+      - name: Inject custom secrets into .env file
+        env:
+          ALL_SECRETS: ${{ toJson(secrets) }}
         run: |
           echo "${{ secrets.ENVS }}" >> .env
           echo "GITHUB_REPOSITORY=${{ github.repository }}" >> .env
-
-      - name: Update Env from secrets for custom build
-        run: |
           echo "${{ secrets.DOCKER_PY_REVANCED_SECRETS }}" >> .env
-          echo "Added envs"
+          echo "$ALL_SECRETS" | jq -r 'to_entries | .[] | select(.key | startswith("SECRET_")) | "\(.key | sub("^SECRET_"; ""))=\(.value)"' >> .env
+          echo "Injected custom secrets into .env file"
 
       - name: Setup python
         uses: actions/setup-python@main
@@ -71,36 +69,6 @@ jobs:
           PREFERRED_PATCH_APPS: ${{ inputs.PREFERRED_PATCH_APPS }}
         run: |
           python -m scripts.prefered_apps
-
-      - name: Inject Reddit Client ID
-        env:
-          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
-        if: env.REDDIT_CLIENT_ID != null
-        run: |
-          client_id="${REDDIT_CLIENT_ID}"
-          path="apks/options.json"
-          json_data=$(cat "${path}")
-
-          new_object='{
-          "patchName": "Spoof client",
-          "options": [
-            {
-              "key": "OAuth client ID",
-              "value": "'${client_id}'"
-            }
-          ]
-          }'
-          # Check if an object with the patchName "Spoof client" already exists
-          existing_object_index=$(echo "${json_data}" | jq 'map(.patchName) | index("Spoof client")')
-          echo "${existing_object_index}"
-          if [[ ${existing_object_index} != "null" ]]; then
-            echo "Patch entry already exists. Overriding client ID in it."
-            updated_json=$(echo "${json_data}" | jq ".[${existing_object_index}].options[0].value = \"${client_id}\"")
-          else
-            echo "Patch entry doesn't exists. Adding new entry."
-            updated_json=$(echo "${json_data}" | jq ". += [${new_object}]")
-          fi
-          echo "${updated_json}" > "${path}"
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@master
