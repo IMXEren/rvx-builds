@@ -5,6 +5,13 @@ env:
 on:
   workflow_dispatch:
   workflow_call:
+    secrets:
+      ENVS:
+        required: false
+      DOCKER_PY_REVANCED_SECRETS:
+        required: false
+      REDDIT_CLIENT_ID:
+        required: false
     inputs:
       CI_TEST:
         required: false
