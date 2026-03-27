@@ -10,6 +10,8 @@ on:
         required: false
       DOCKER_PY_REVANCED_SECRETS:
         required: false
+      SECRET_REDDIT_CLIENT_ID:
+        required: false
     inputs:
       CI_TEST:
         required: false
