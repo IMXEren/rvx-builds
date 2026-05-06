@@ -33,7 +33,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | [GLOBAL_INTEGRATIONS_DL\*](#global-resources)             | DL for Integrations to be used for patching apps. | [Revanced Integrations](https://github.com/revanced/revanced-integrations)                               |
 | [GLOBAL_KEYSTORE_FILE_NAME\*](#global-keystore-file-name) |       Key file to be used for signing apps        | [Builder's own key](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)              |
 | [GLOBAL_OLD_KEY\*](#global-keystore-file-name)            | Whether key was generated with cli v4(new) or not | False [[Builder's own key (v3)](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)] |
-| [GLOBAL_OPTIONS_FILE\*](#global-options-file)             |              Options file to be used              | [Builder's options.json](https://github.com/IMXEren/rvx-builds/blob/main/apks/options.json)              |
+| [GLOBAL_OPTIONS_FILE\*](#global-options-file)             |              Options file to be used              | [Builder's options.yml](https://github.com/IMXEren/rvx-builds/blob/main/apks/options.yml)              |
 | [GLOBAL_ARCHS_TO_BUILD\*](#global-archs-to-build)         |         Arch to keep in the patched apk.          | All                                                                                                      |
 | [GLOBAL_CLI_ARGSF\*](#cli-arg-compatibility)              |   CLI argument profile (`revanced-cli` default)   | revanced-cli                                                                                             |
 | [GLOBAL_CLI_LPARGS\*](#cli-arg-compatibility)             |   Override map for `list-patches` command args    | None                                                                                                     |
@@ -61,6 +61,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | [_APP_NAME_\_KEYSTORE_FILE_NAME](#global-keystore-file-name)    |       Key file to be used for signing **APP_NAME**.       | GLOBAL_KEYSTORE_FILE_NAME      |
 | [_APP_NAME_\_OLD_KEY](#global-keystore-file-name)               | Whether key used was generated with cli v4 (new) or not.  | GLOBAL_OLD_KEY                 |
 | [_APP_NAME_\_OPTIONS_FILE](#global-options-file)                |           Options file to be used **APP_NAME**.           | GLOBAL_OPTIONS_FILE            |
+| [_APP_NAME_\_OPTIONS_RAW](#global-options-file)                 |     Raw Options (overrides) to be used **APP_NAME**.      | ""                             |
 | [_APP_NAME_\_ARCHS_TO_BUILD](#global-archs-to-build)            |         Arch to keep in the patched **APP_NAME**.         | GLOBAL_ARCHS_TO_BUILD          |
 | [**APP_NAME**\_CLI_ARGSF](#cli-arg-compatibility)               |          CLI argument profile for **APP_NAME**.           | GLOBAL_CLI_ARGSF               |
 | [**APP_NAME**\_CLI_LPARGS](#cli-arg-compatibility)              |     Override map for **APP_NAME** list-patches args.      | GLOBAL_CLI_LPARGS              |
@@ -229,24 +230,29 @@ secrets` in the format -
    ```ini
    YOUTUBE_OLD_KEY=False
    ```
-9. <a id="global-options-file"></a>If you don't want to use default `apks/options.json` file. You can
+9. <a id="global-options-file"></a>If you don't want to use default `apks/options.yml` file. You can
    provide your own by placing it inside `apks` folder and adding the name of `options-file` in `.env` file
    or in `ENVS` in `GitHub secrets` in the format.
 
    ```ini
-    GLOBAL_OPTIONS_FILE=my_options.json
+    GLOBAL_OPTIONS_FILE=my_options.yml
    ```
 
-   Tool also support configuring at app level.<br>
+   Tool also support configuring at app level with file as well as raw options (overrides).<br>
 
    Example:
 
    ```ini
-    YOUTUBE_OPTIONS_FILE=my_cool_yt_options.json
+    YOUTUBE_OPTIONS_FILE=my_cool_yt_options.yml
+    YOUTUBE_OPTIONS_RAW="
+    Custom branding:
+      App name: YouTube
+      Some setting: some value
+    "
    ```
 
    Note that this customization isn't available in the `RVX-Builds` tasker project. For now, use the `Universal` option
-   for Patch Options to include options.json entries from all patch resources being used.
+   for Patch Options to include options.yml entries from all patch resources being used.
 
 10. <a id="global-archs-to-build"></a>You can build only for a particular arch in order to get smaller apk files. This
     can be done with by adding comma separated `ARCHS_TO_BUILD` in `.env` file or `ENVS` in `GitHub secrets` in the

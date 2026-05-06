@@ -1,11 +1,11 @@
 """Revanced Parser."""
 
-import json
 from subprocess import PIPE, Popen
 from time import perf_counter
 from typing import Any, Self
 
 from loguru import logger
+from ruamel.yaml import YAML
 
 from src.app import APP
 from src.cli_args import DEFAULT_PATCH_ARGS, append_cli_argument, is_arg_enabled
@@ -201,6 +201,35 @@ class Parser(object):
             None,
         )
 
+    def _load_options_from_ymlstr(self: Self, yaml_content: str) -> list[LoadedPatchOption]:
+        """Load options from a YAML string.
+
+        Parameters
+        ----------
+        yaml_content : str
+            The YAML content as a string
+
+        Returns
+        -------
+        list[LoadedPatchOption]
+            List of patch options from the YAML content
+        """
+        yaml = YAML()
+        options_yaml: dict[str, dict[str, Any]] = yaml.load(yaml_content)
+        options: list[LoadedPatchOption] = []
+        for patch_name, patch_options in options_yaml.items():
+            options_list: list[LoadedOption] = []
+            for option_key, option_value in patch_options.items():
+                options_list.append(LoadedOption(key=option_key, value=option_value))
+            if len(options_list) > 0:
+                options.append(
+                    LoadedPatchOption(
+                        patchName=patch_name,
+                        options=options_list,
+                    ),
+                )
+        return options
+
     def _load_options_from_file(self: Self, file_name: str) -> list[LoadedPatchOption]:
         """Load options from a single file.
 
@@ -216,27 +245,27 @@ class Parser(object):
         """
         try:
             with self.config.temp_folder.joinpath(file_name).open() as file:
-                options: list[dict[str, Any]] = json.load(file)
-                return [LoadedPatchOption(**opt) for opt in options]
+                yaml_content = file.read()
+                return self._load_options_from_ymlstr(yaml_content)
         except FileNotFoundError as e:
             logger.warning(str(e))
             return []
 
     def _merge_options(
         self: Self,
-        global_options: list[LoadedPatchOption],
-        app_options: list[LoadedPatchOption],
+        base_options: list[LoadedPatchOption],
+        override_options: list[LoadedPatchOption],
     ) -> list[LoadedPatchOption]:
-        """Merge global and app-specific options.
+        """Merge base with overridden options.
 
         App-specific options override global options for the same patch name.
 
         Parameters
         ----------
-        global_options : list[LoadedPatchOption]
-            Options from the global options file
-        app_options : list[LoadedPatchOption]
-            Options from the app-specific options file
+        base_options : list[LoadedPatchOption]
+            Options from the base options file
+        override_options : list[LoadedPatchOption]
+            Options from the override options file
 
         Returns
         -------
@@ -246,14 +275,14 @@ class Parser(object):
         # Create a dict keyed by patchName for easy lookup and merging
         merged: dict[str, LoadedPatchOption] = {}
 
-        # Add global options first
-        for opt in global_options:
+        # Add base options first
+        for opt in base_options:
             patch_name = opt.get("patchName")
             if patch_name:
                 merged[patch_name] = opt
 
         # Override/add with app-specific options
-        for opt in app_options:
+        for opt in override_options:
             patch_name = opt.get("patchName")
             if patch_name:
                 merged[patch_name] = opt
@@ -283,7 +312,12 @@ class Parser(object):
         if app.options_file != self.config.global_options_file:
             logger.info(f"Loading app-specific options from {app.options_file} and merging with global options")
             app_options = self._load_options_from_file(app.options_file)
-            return self._merge_options(global_options, app_options)
+            global_options = self._merge_options(global_options, app_options)
+
+        # If app has raw options defined, load and merge them as well
+        if app.options_raw.strip():
+            app_options_raw = self._load_options_from_ymlstr(app.options_raw)
+            global_options = self._merge_options(global_options, app_options_raw)
 
         return global_options or []
 

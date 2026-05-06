@@ -23,7 +23,7 @@ class RevancedConfig(object):
         self.global_cli_dl = env.str("GLOBAL_CLI_DL", default_cli)
         self.global_patches_dl = env.str("GLOBAL_PATCHES_DL", default_patches)
         self.global_keystore_name = env.str("GLOBAL_KEYSTORE_FILE_NAME", "revanced.keystore")
-        self.global_options_file = env.str("GLOBAL_OPTIONS_FILE", "options.json")
+        self.global_options_file = env.str("GLOBAL_OPTIONS_FILE", "options.yml")
         self.global_archs_to_build = env.list("GLOBAL_ARCHS_TO_BUILD", possible_archs)
         self.extra_download_files: list[str] = env.list("EXTRA_FILES", [])
         self.apk_editor = "apkeditor-output.jar"
