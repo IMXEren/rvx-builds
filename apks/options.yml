@@ -1,31 +1,9 @@
-Custom branding icon for YouTube:
-  appIcon: MMT
-  changeSplashIcon: true
-  restoreOldSplashAnimation: false
-
-Custom branding icon for YouTube Music:
-  appIcon: MMT
-  changeSplashIcon: true
-  restoreOldSplashAnimation: false
-
-Custom branding name for Reddit:
-  appName: Reddit
-
-Custom branding name for YouTube:
-  appName: RVX
-
-Custom branding name for YouTube Music:
-  appNameNotification: RVX Music
-  appNameLauncher: RVX Music
-
 GmsCore support:
   gmsCoreVendorGroupId: app.revanced
   checkGmsCore: true
-  packageNameYouTube: app.rvx.android.youtube
-  packageNameYouTubeMusic: app.rvx.android.apps.youtube.music
 
 Spoof client:
-  "OAuth client ID": "$__REDDIT_CLIENT_ID__"
+  OAuth client ID: "$__REDDIT_CLIENT_ID__"
 
 Hex:
   replacements: null
