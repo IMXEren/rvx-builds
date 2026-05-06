@@ -6,7 +6,7 @@
 **cache**
 /changelog.md
 .idea
-/apks/*.json
+/apks/*.yml
 status.md
 *.zip
 *.rvp
