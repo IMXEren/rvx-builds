@@ -7,6 +7,7 @@
 /changelog.md
 .idea
 /apks/*.yml
+/apks/temp-*
 status.md
 *.zip
 *.rvp

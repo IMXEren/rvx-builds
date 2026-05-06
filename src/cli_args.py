@@ -50,6 +50,7 @@ PATCH_KEYS: Final[set[str]] = {
     "PURGE",
     "RIP_LIB",
     "STRIPLIBS",
+    "TEMP_PATH",
 }
 
 # These defaults intentionally match the existing builder behavior for current stable users.
@@ -87,6 +88,7 @@ DEFAULT_PATCH_ARGS: Final[dict[str, list[str]]] = {
     "PURGE": ["--purge"],
     "RIP_LIB": ["--rip-lib"],
     "STRIPLIBS": [],
+    "TEMP_PATH": ["-t"],
 }
 
 # Profile map centralizes known CLI families so users can switch format with one env variable.
@@ -133,6 +135,7 @@ CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
             "PURGE": ["--purge"],
             "RIP_LIB": [],
             "STRIPLIBS": [],
+            "TEMP_PATH": ["-t"],
         },
     },
     "morphe-cli": {
@@ -171,6 +174,7 @@ CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
             "PURGE": ["--purge"],
             "RIP_LIB": [],
             "STRIPLIBS": ["--striplibs"],
+            "TEMP_PATH": ["-t"],
         },
     },
 }

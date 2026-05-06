@@ -540,6 +540,8 @@ class Parser(object):
                     args.append(item)
 
         self._add_architecture_args(args, app)
+        temp_path = self.config.temp_folder / f"temp-{app.app_name}"
+        append_cli_argument(args, self._patch_args["TEMP_PATH"], [str(temp_path)])
         # Purge behavior remains enabled by default and can be remapped per CLI profile.
         append_cli_argument(args, self._patch_args["PURGE"])
 
