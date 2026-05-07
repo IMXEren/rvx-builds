@@ -115,6 +115,12 @@ class Parser(object):
 
                     pair = self.format_option(opt)
                     self._PATCHES[:0] = [self._options_arg, pair]
+                else:
+                    logger.warning(
+                        "Failed to find matching patch option for loaded option key "
+                        f"'{opt['key']}' in patch '{patch['name']}'! "
+                        "Maybe the option key is not valid for this patch?",
+                    )
         self._PATCHES[:0] = [self._enable_arg, patch["name"]]
 
     def exclude(self: Self, patch: PatchInfo) -> None:
