@@ -155,7 +155,7 @@ jobs:
           fi
 
       - name: Delete Older Releases
-        uses: nikhilbadyal/ghaction-rm-releases@v0.0.5
+        uses: nikhilbadyal/ghaction-rm-releases@0a58d2ce5d2bf162d18e6c01712cc0e53b2bab45 # v0.8.0
         if: ${{ inputs.CACHE_RELEASES == false }}
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

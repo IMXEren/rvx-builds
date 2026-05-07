@@ -23,19 +23,17 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | :-------------------------------------------------------- | :-----------------------------------------------: | :------------------------------------------------------------------------------------------------------- |
 | [PATCH_APPS](#patch-apps)                                 |                Apps to patch/build                | youtube                                                                                                  |
 | [EXISTING_DOWNLOADED_APKS ](#existing-downloaded-apks)    |           Already downloaded clean apks           | []                                                                                                       |
-| [PERSONAL_ACCESS_TOKEN](#personal-access-token)           |              Github Token to be used              | None                                                                                                     |
+| [PERSONAL_ACCESS_TOKEN](#personal-access-token)           |             GitHub/GitLab Token to be used        | None                                                                                                     |
 | DRY_RUN                                                   |                   Do a dry run                    | False                                                                                                    |
 | [EXTRA_FILES](#extra-files)                               |    Extra files apk to upload in GitHub upload.    | None                                                                                                     |
-| [GLOBAL_CLI_DL\*](#global-resources)                      |     DL for CLI to be used for patching apps.      | [Revanced CLI](https://github.com/revanced/revanced-cli)                                                 |
-| [GLOBAL_PATCHES_DL\*](#global-resources)                  |   DL for Patches to be used for patching apps.    | [Revanced Patches](https://github.com/revanced/revanced-patches)                                         |
+| [GLOBAL_CLI_DL\*](#global-resources)                      |     DL for CLI to be used for patching apps.      | [Revanced CLI](https://github.com/revanced/revanced-cli)                                                                        |
+| [GLOBAL_PATCHES_DL\*](#global-resources)                  |   DL for Patches to be used for patching apps.    | [ReVanced API patches bundle](https://api.revanced.app/v5/patches.rvp)                                                         |
 | [GLOBAL_SPACE_FORMATTED_PATCHES\*](#global-resources)     |       Whether patches are space formatted.        | True                                                                                                     |
-| [GLOBAL_PATCHES_JSON_DL\*](#global-resources)             | DL for Patches Json to be used for patching apps. | [Revanced Patches](https://github.com/revanced/revanced-patches)                                         |
-| [GLOBAL_INTEGRATIONS_DL\*](#global-resources)             | DL for Integrations to be used for patching apps. | [Revanced Integrations](https://github.com/revanced/revanced-integrations)                               |
-| [GLOBAL_KEYSTORE_FILE_NAME\*](#global-keystore-file-name) |       Key file to be used for signing apps        | [Builder's own key](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)              |
-| [GLOBAL_OLD_KEY\*](#global-keystore-file-name)            | Whether key was generated with cli v4(new) or not | False [[Builder's own key (v3)](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)] |
-| [GLOBAL_OPTIONS_FILE\*](#global-options-file)             |              Options file to be used              | [Builder's options.yml](https://github.com/IMXEren/rvx-builds/blob/main/apks/options.yml)              |
+| [GLOBAL_KEYSTORE_FILE_NAME\*](#global-keystore-file-name) |       Key file to be used for signing apps        | [Builder's own key](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)                                          |
+| [GLOBAL_OLD_KEY\*](#global-keystore-file-name)            | Whether key was generated with cli v4(new) or not | False [[Builder's own key (v3)](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)]                           |
+| [GLOBAL_OPTIONS_FILE\*](#global-options-file)             |              Options file to be used              | [Builder's options.yml](https://github.com/IMXEren/rvx-builds/blob/main/apks/options.yml)                                       |
 | [GLOBAL_ARCHS_TO_BUILD\*](#global-archs-to-build)         |         Arch to keep in the patched apk.          | All                                                                                                      |
-| [GLOBAL_CLI_ARGSF\*](#cli-arg-compatibility)              |   CLI argument profile (`revanced-cli` default)   | revanced-cli                                                                                             |
+| [GLOBAL_CLI_ARGSF\*](#cli-arg-compatibility)              |               CLI argument profile                 | revanced-cli-v6                                                                                             |
 | [GLOBAL_CLI_LPARGS\*](#cli-arg-compatibility)             |   Override map for `list-patches` command args    | None                                                                                                     |
 | [GLOBAL_CLI_PARGS\*](#cli-arg-compatibility)              |       Override map for `patch` command args       | None                                                                                                     |
 | [REDDIT_CLIENT_ID](#reddit-client)                        |       Reddit Client ID to patch reddit apps       | None                                                                                                     |
@@ -56,8 +54,6 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | :-------------------------------------------------------------- | :-------------------------------------------------------: | :----------------------------- |
 | [_APP_NAME_\_CLI_DL](#global-resources)                         |     DL for CLI to be used for patching **APP_NAME**.      | GLOBAL_CLI_DL                  |
 | [_APP_NAME_\_PATCHES_DL](#global-resources)                     |   DL for Patches to be used for patching **APP_NAME**.    | GLOBAL_PATCHES_DL              |
-| [_APP_NAME_\_PATCHES_JSON_DL](#global-resources)                | DL for Patches Json to be used for patching **APP_NAME**. | GLOBAL_PATCHES_JSON_DL         |
-| [_APP_NAME_\_INTEGRATIONS_DL](#global-resources)                | DL for Integrations to be used for patching **APP_NAME**. | GLOBAL_INTEGRATIONS_DL         |
 | [_APP_NAME_\_KEYSTORE_FILE_NAME](#global-keystore-file-name)    |       Key file to be used for signing **APP_NAME**.       | GLOBAL_KEYSTORE_FILE_NAME      |
 | [_APP_NAME_\_OLD_KEY](#global-keystore-file-name)               | Whether key used was generated with cli v4 (new) or not.  | GLOBAL_OLD_KEY                 |
 | [_APP_NAME_\_OPTIONS_FILE](#global-options-file)                |           Options file to be used **APP_NAME**.           | GLOBAL_OPTIONS_FILE            |
@@ -81,7 +77,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 ## Customization
 
 1. **Officially** Supported values for **APP_NAME\*** are listed under `Code` column [here](../../../changelogs/auto/apps/README.md#supported-apps).
-   <br>Note that the page syncs itself with the usage of `PATCHES_JSON_DL` resources in the `.env` file.
+   <br>Note that the page syncs itself with the usage of `PATCHES_DL` resources in the `.env` file.
    <br>The sources of original APKs are from one of these apkmirror, apkpure, uptodown & apksos sites. I'm not responsible for any damaged caused.
    If you know any better/safe source to download clean. Open a discussion.
 
@@ -146,16 +142,23 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    ```
    If you add above. Script will not download the `YouTube` & `YouTube Music` apks from internet and expects an apk in
    `/apks` folder with names `youtube.apk` & `youtube_music.apk` (apk naming format - `<APP_NAME>.apk`) respectively.
-6. <a id="personal-access-token"></a>If you run script again & again. You might hit GitHub API limit. In that case you can provide your Personal
-   GitHub Access Token by adding a secret `PERSONAL_ACCESS_TOKEN` in `GitHub secrets`.
+6. <a id="personal-access-token"></a>If you run script again & again. You might hit GitHub/GitLab API limits. 
+   In that case you can provide your Personal Access Token by adding a secret `PERSONAL_ACCESS_TOKEN` in `GitHub secrets`.
 7. <a id="global-resources"></a>You can provide Direct download to the resource to used for patching apps `.env` file
    or in `ENVS` in `GitHub secrets` in the format -
 
    ```ini
     GLOBAL_CLI_DL=https://github.com/revanced/revanced-cli
-    GLOBAL_PATCHES_DL=https://github.com/revanced/revanced-patches/releases/latest
-    GLOBAL_PATCHES_JSON_DL=https://github.com/revanced/revanced-patches/releases/tag/v2.190.0
-    GLOBAL_INTEGRATIONS_DL=local://integrations.apk
+    GLOBAL_PATCHES_DL=https://api.revanced.app/v5/patches.rvp
+   ```
+
+   The ReVanced API `.rvp` endpoint is the default patches source because it provides the binary patch bundle directly.
+   GitLab release URLs are also supported for resources. The tool resolves the latest release through GitLab's
+   release API and filters release links/sources with the same asset extension regex used for GitHub.
+
+   ```ini
+    GLOBAL_CLI_DL=https://gitlab.com/example/revanced-cli
+    GLOBAL_PATCHES_DL=https://gitlab.com/example/revanced-patches/-/releases/permalink/latest
    ```
 
    Resources downloaded from envs and will be used for patching for any **APP_NAME**.
@@ -168,22 +171,44 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    ```ini
     YOUTUBE_CLI_DL=https://github.com/inotia00/revanced-cli
     YOUTUBE_PATCHES_DL=https://github.com/inotia00/revanced-patches/releases/latest
-    YOUTUBE_PATCHES_JSON_DL=https://github.com/inotia00/revanced-patches/releases/tag/v2.187.1
-    YOUTUBE_INTEGRATIONS_DL=local://inotia00-integrations.apk
    ```
 
    With the config tool will try to patch YouTube with resources from inotia00 while other global resource will used
    for patching other apps.<br>
+   **Multi-Patching Support**: You can now use multiple patch bundles from different creators for the same app:
+
+   ```ini
+    # Comma-separated URLs
+    YOUTUBE_PATCHES_DL=https://gitlab.com/revanced/revanced-patches,https://github.com/indrastorm/Dropped-patches
+   ```
+
+   The tool will download all specified patch bundles and apply them together using the ReVanced CLI's multiple `-p` argument support.<br>
    If you have want to provide resource locally in the apks folder. You can specify that by mentioning filename
    prefixed with `local://`.<br>
-   _Note_ - The link provided must be direct DLs, unless they are from GitHub.
+   _Note_ - The link provided must be direct DLs, unless they are from GitHub or GitLab.<br>
+   _Note_ - If your patches resource are available on GitHub/GitLab and you want to select latest resource without
+    excluding pre-release you can add `latest-prerelease` to the URL.<br>
+
+   Example:
+   ```ini
+    YOUTUBE_PATCHES_DL=https://github.com/inotia00/revanced-patches/releases/latest-prerelease
+   ```
+   For above example tool while selecting latest patches will consider pre-releases/beta too.
+   For GitLab, `latest-prerelease` maps to GitLab's latest release because GitLab releases do not expose a separate
+   pre-release flag in the release API.
+    ```ini
+    YOUTUBE_PATCHES_DL=https://github.com/inotia00/revanced-patches/releases/latest
+   ```
+   For above example tool while selecting latest patches will exclude any pre-release/beta ie. will consider only
+    stable releases..<br>
+
    _Note_ - Some of the patch sources (like inotia00) may provide **-** seperated patches while some (ReVanced) shifted to
    Space formatted patches. Use `SPACE_FORMATTED_PATCHES` to define the type of patches.
 
    <a id="cli-arg-compatibility"></a>CLI argument compatibility profiles and overrides:
    This builder now supports multiple CLI syntax families and key-value override maps.
 
-   ```dotenv
+   ```ini
    GLOBAL_CLI_ARGSF=morphe-cli
    GLOBAL_CLI_ARGSF=revanced-cli
    ```
@@ -195,7 +220,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 
    Override maps use unordered `KEY=value` pairs in a single string:
 
-   ```dotenv
+   ```ini
    GLOBAL_CLI_LPARGS="CMD=list-patches INDEX=-i PACKAGES=-p UNIVERSAL=-u VERSIONS=-v OPTIONS=-o PATCHES=__POSITIONAL__ PATCHES_POST="
    GLOBAL_CLI_PARGS="CMD=patch PATCHES=-p PATCHES_POST= ENABLED=-e DISABLED=-d OPTIONS=-O PURGE=--purge KEYSTORE=--keystore KEYSTORE_OLD='--keystore-entry-alias=alias --keystore-entry-password=ReVanced --keystore-password=ReVanced' EXCLUSIVE=--exclusive APK=__POSITIONAL__ OUTPUT=-o FORCE=--force RIP_LIB=--rip-lib"
    ```
@@ -203,7 +228,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    `PATCHES_POST` is an optional companion argument appended after every patch bundle (used by ReVanced v6 with `-b`).
    App-level overrides are also supported and take precedence:
 
-   ```dotenv
+   ```ini
    YOUTUBE_CLI_ARGSF=morphe-cli
    YOUTUBE_CLI_LPARGS="PATCHES=--patches"
    YOUTUBE_CLI_PARGS="PATCHES=-p STRIPLIBS=--striplibs FORCE='--force --continue-on-error'"
@@ -281,7 +306,7 @@ secrets` in the format -
     ```
     Example:
     ```ini
-     EXTRA_FILES=https://github.com/inotia00/mMicroG/releases/latest@Mmicrog.apk,https://github.com/inotia00/VancedMicroG/releases/tag/v0.2.27.230755@Vmicrog.apk,https://github.com/revanced/revanced-integrations@integrations.apk
+     EXTRA_FILES=https://github.com/inotia00/mMicroG/releases/latest@Mmicrog.apk,https://github.com/inotia00/VancedMicroG/releases/tag/v0.2.27.230755@Vmicrog.apk
     ```
 12. <a id="custom-exclude-patching"></a>If you want to exclude any patch. Set comma separated patch in `.env` file
     or in `ENVS` in `GitHub secrets` in the format -
