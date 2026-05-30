@@ -12,3 +12,4 @@ tqdm==4.67.3
 pydoll-python==2.21.1
 curl_cffi==0.14.0
 ruamel.yaml==0.19.1
+semver==3.0.4

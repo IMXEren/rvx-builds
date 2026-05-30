@@ -3,6 +3,8 @@
 import contextlib
 from typing import Any, ClassVar, Self
 
+import packaging.version
+import semver
 from loguru import logger
 
 from src.app import APP
@@ -172,6 +174,32 @@ class Patches(object):
         """
         return [OptionInfo(**opt) for opt in options] if options else []
 
+    def _get_preferred_version(self: Self, version: str | list[str] | None) -> str:
+        """Get the preferred version from a list of versions or a single version.
+
+        Currently, it returns the latest version (for list of versions).
+        """
+        if isinstance(version, list) and version:
+
+            def _version_key(v: str) -> semver.Version:
+                try:
+                    ver = packaging.version.parse(v)
+                    pre = None if not ver.pre else "".join([str(i) for i in ver.pre])
+                    return semver.Version(*ver.release, prerelease=pre, build=ver.dev)
+                except packaging.version.InvalidVersion:
+                    pass
+
+                try:
+                    return semver.Version.parse(v)
+                except ValueError:
+                    return semver.Version(0, 0, 0)
+
+            version.sort(key=_version_key)
+            return version[-1]
+        if isinstance(version, str) and version:
+            return version
+        return "all"
+
     def _create_patch_dict(
         self: Self,
         patch: dict[Any, Any],
@@ -194,12 +222,7 @@ class Patches(object):
         PatchInfo
             Patch information as a typed-dict
         """
-        if isinstance(version, list) and version:
-            preferred_version = version[-1]
-        elif isinstance(version, str) and version:
-            preferred_version = version
-        else:
-            preferred_version = "all"
+        preferred_version = self._get_preferred_version(version)
 
         options = self._create_option_list(patch["options"])
         return PatchInfo(
