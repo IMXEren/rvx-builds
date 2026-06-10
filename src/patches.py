@@ -182,11 +182,23 @@ class Patches(object):
         if isinstance(version, list) and version:
 
             def _version_key(v: str) -> semver.Version:
+                min_components = 3
                 try:
                     ver = packaging.version.parse(v)
-                    pre = None if not ver.pre else "".join([str(i) for i in ver.pre])
-                    return semver.Version(*ver.release, prerelease=pre, build=ver.dev)
-                except packaging.version.InvalidVersion:
+                    components = list(ver.release[:3])
+                    while len(components) < min_components:
+                        components.append(0)
+                    major, minor, patch = components
+                    pre = "".join([str(i) for i in ver.pre]) if ver.pre else None
+                    extra_digits = ".".join(map(str, ver.release[3:])) if len(ver.release) > min_components else None
+                    build_components = []
+                    if extra_digits:
+                        build_components.append(extra_digits)
+                    if ver.dev:
+                        build_components.append(str(ver.dev))
+                    build_meta = ".".join(build_components) if build_components else None
+                    return semver.Version(major, minor, patch, prerelease=pre, build=build_meta)
+                except (packaging.version.InvalidVersion, ValueError):
                     pass
 
                 try:
