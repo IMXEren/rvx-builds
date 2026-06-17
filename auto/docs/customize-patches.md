@@ -28,7 +28,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | [EXTRA_FILES](#extra-files)                               |    Extra files apk to upload in GitHub upload.    | None                                                                                                     |
 | [GLOBAL_CLI_DL\*](#global-resources)                      |     DL for CLI to be used for patching apps.      | [Revanced CLI](https://github.com/revanced/revanced-cli)                                                                        |
 | [GLOBAL_PATCHES_DL\*](#global-resources)                  |   DL for Patches to be used for patching apps.    | [ReVanced API patches bundle](https://api.revanced.app/v5/patches.rvp)                                                         |
-| [GLOBAL_SPACE_FORMATTED_PATCHES\*](#global-resources)     |       Whether patches are space formatted.        | True                                                                                                     |
+| [GLOBAL_NORMALIZE_PATCH_NAMES\*](#global-resources)       |   Normalize patch names to lowercase dash-form   | True                                                                                                     |
 | [GLOBAL_KEYSTORE_FILE_NAME\*](#global-keystore-file-name) |       Key file to be used for signing apps        | [Builder's own key](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)                                          |
 | [GLOBAL_OLD_KEY\*](#global-keystore-file-name)            | Whether key was generated with cli v4(new) or not | False [[Builder's own key (v3)](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)]                           |
 | [GLOBAL_OPTIONS_FILE\*](#global-options-file)             |              Options file to be used              | [Builder's options.yml](https://github.com/IMXEren/rvx-builds/blob/main/apks/options.yml)                                       |
@@ -68,7 +68,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | [**APP_NAME**\_CLI_ARGSF](#cli-arg-compatibility)               |          CLI argument profile for **APP_NAME**.           | GLOBAL_CLI_ARGSF               |
 | [**APP_NAME**\_CLI_LPARGS](#cli-arg-compatibility)              |     Override map for **APP_NAME** list-patches args.      | GLOBAL_CLI_LPARGS              |
 | [**APP_NAME**\_CLI_PARGS](#cli-arg-compatibility)               |         Override map for **APP_NAME** patch args.         | GLOBAL_CLI_PARGS               |
-| [_APP_NAME_\_SPACE_FORMATTED_PATCHES](#custom-exclude-patching) |   Whether patches are space formatted for **APP_NAME**.   | GLOBAL_SPACE_FORMATTED_PATCHES |
+| [_APP_NAME_\_NORMALIZE_PATCH_NAMES](#custom-exclude-patching)   |   Normalize patch names for **APP_NAME**.                 | GLOBAL_NORMALIZE_PATCH_NAMES    |
 | [_APP_NAME_\_EXCLUDE_PATCH\*](#custom-exclude-patching)         |      Patches to exclude while patching **APP_NAME**.      | []                             |
 | [_APP_NAME_\_INCLUDE_PATCH\*\*](#custom-include-patching)       |      Patches to include while patching **APP_NAME**.      | []                             |
 | [_APP_NAME_\_VERSION](#app-version)                             |         Version to use for download for patching.         | Recommended by patch resources |
@@ -203,8 +203,8 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    For above example tool while selecting latest patches will exclude any pre-release/beta ie. will consider only
     stable releases..<br>
 
-   _Note_ - Some of the patch sources (like inotia00) may provide **-** seperated patches while some (ReVanced) shifted to
-   Space formatted patches. Use `SPACE_FORMATTED_PATCHES` to define the type of patches.
+   _Note_ - Some patch sources use **-** seperated names while others use space-separated names.
+   Set `GLOBAL_NORMALIZE_PATCH_NAMES=False` to match patch names exactly as they appear in the source.
 
    <a id="cli-arg-compatibility"></a>CLI argument compatibility profiles and overrides:
    This builder now supports multiple CLI syntax families and key-value override maps.
@@ -343,24 +343,64 @@ secrets` in the format -
      YOUTUBE_EXCLUDE_PATCH=custom-branding,hide-get-premium
      YOUTUBE_MUSIC_EXCLUDE_PATCH=yt-music-is-shit
     ```
+    <br>**Bundle-scoped exclusions** — When using multiple patch bundles, you can target a specific bundle
+    by prefixing the patch name with a selector and colon:
+    ```ini
+     YOUTUBE_EXCLUDE_PATCH=2:disable-ads,^1-3:disable-analytics
+    ```
+    Where the selector before the colon is:
+    - `N` — bundle index (1-indexed) only
+    - `N-M` — bundle range
+    - `^selector` — negation (except)
+    - `*` — all bundles (same as bare patch name)
+
+     <br>**Allowlist mode** — Prefix any entry with `!` to flip the list from "deny these" to "keep only these":
+     ```ini
+      # Only keep custom-branding, deny everything else
+      YOUTUBE_EXCLUDE_PATCH=!custom-branding
+      # Only keep custom-branding from bundle 2 and ads from bundle 1
+      YOUTUBE_EXCLUDE_PATCH=!2:custom-branding,!1:disable-ads
+     ```
+
+     <br>**Name normalization** — Patch names are automatically normalized to lowercase
+     dash-separated form. This lets you write names without worrying about the exact
+     formatting used by the patch source:
+     ```
+     "Fix /s/ links"                  →  fix-s-links
+     "Enable Android debugging"       →  enable-android-debugging
+     "Custom Branding Icon (fork)"    →  custom-branding-icon-fork
+     "Hide 'premium' banner!"         →  hide-premium-banner
+     ```
+     Set ``GLOBAL_NORMALIZE_PATCH_NAMES=False`` or
+     ``<APP_NAME>_NORMALIZE_PATCH_NAMES=False`` to disable normalization and
+     match patch names exactly as they appear in the source.
+
     Note -
     1. **All** the patches for an app are **included** by default.<br>
-    2. Some of the patch sources (like inotia00) may provide **-** seperated patches while some (ReVanced) shifted to
-       Space formatted patches. Use `<APP_NAME>_SPACE_FORMATTED_PATCHES` to define the type of patches at app level, if varies from global.
+    2. Some patch sources use **-** separated names while others use space-separated names.
+       Set `<APP_NAME>_NORMALIZE_PATCH_NAMES=False` to match patch names exactly as they appear in the source.
     3. Some patches are provided as space separated, make sure you type those in lowercase and **-** (hyphen or dash) separated here.
        It means a patch named `Hey There` must be entered as `hey-there` in the above example.
 13. <a id="custom-include-patching"></a>If you want to include any universal patch. Set comma separated patch in `.env`
     file or in `ENVS` in `GitHub secrets` in the format -
     ```ini
-    <APP_NAME>_INCLUDE_PATCH=<PATCH_TO_EXCLUDE-1,PATCH_TO_EXCLUDE-2>
+    <APP_NAME>_INCLUDE_PATCH=<PATCH_TO_INCLUDE-1,PATCH_TO_INCLUDE-2>
     ```
     Example:
     ```ini
      YOUTUBE_INCLUDE_PATCH=remove-screenshot-restriction
     ```
+
+    The same [bundle-scoped selectors](#custom-exclude-patching) and name normalization
+    from ``EXCLUDE_PATCH`` also apply here. For example, to include a universal patch
+    only from bundle 2:
+    ```ini
+     YOUTUBE_INCLUDE_PATCH=2:some-universal-patch
+    ```
+
     Note -
     1. Some of the patch sources (like inotia00) may provide **-** seperated patches while some (ReVanced) shifted to
-       Space formatted patches. Use `<APP_NAME>_SPACE_FORMATTED_PATCHES` to define the type of patches at app level, if varies from global.
+       Space formatted patches. Set `<APP_NAME>_NORMALIZE_PATCH_NAMES=False` to match patch names exactly as they appear in the source, if different from global.
     2. Some patches are provided as space separated, make sure you type those in lowercase and **-** (hyphen or dash) separated here.
        It means a patch named `Hey There` must be entered as `hey-there` in the above example.
     3. Not all patch sources provide universal patches.
