@@ -143,7 +143,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    ```
    If you add above. Script will not download the `YouTube` & `YouTube Music` apks from internet and expects an apk in
    `/apks` folder with names `youtube.apk` & `youtube_music.apk` (apk naming format - `<APP_NAME>.apk`) respectively.
-6. <a id="personal-access-token"></a>If you run script again & again. You might hit GitHub/GitLab API limits. 
+6. <a id="personal-access-token"></a>If you run script again & again. You might hit GitHub/GitLab API limits.
    In that case you can provide your Personal Access Token by adding a secret `PERSONAL_ACCESS_TOKEN` in `GitHub secrets`.
 7. <a id="global-resources"></a>You can provide Direct download to the resource to used for patching apps `.env` file
    or in `ENVS` in `GitHub secrets` in the format -
@@ -286,7 +286,7 @@ secrets` in the format -
 
    When an app-specific options file is provided, its contents are **merged** with the global options file instead of replacing it. App-specific options override global options for the same patch/option key, while all non-conflicting global options are preserved.
 
-   **Options Merging Example:**  
+   **Options Merging Example:**
    If your global `options.yml` defines Theme and SponsorBlock options, and your app-specific `my_cool_yt_options.yml` contains only a custom package name entry, the final merged set will include all three:
 
    ```
