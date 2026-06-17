@@ -1,5 +1,6 @@
 """Revanced Parser."""
 
+import re
 from subprocess import PIPE, STDOUT, Popen
 from time import perf_counter
 from typing import Any, Self
@@ -7,6 +8,7 @@ from typing import Any, Self
 from loguru import logger
 from ruamel.yaml import YAML
 
+from src._bundle_selector import entry_matches as _entry_matches_fn
 from src.app import APP
 from src.cli_args import DEFAULT_PATCH_ARGS, append_cli_argument, is_arg_enabled
 from src.config import RevancedConfig
@@ -25,6 +27,7 @@ class Parser(object):
         self._PATCHES: list[str | list[str]] = []
         self._BUNDLE_PATCHES: dict[str | None, list[str | list[str]]] = {}
         self._EXCLUDED: list[str] = []
+        self._bundle_index_map: dict[str, int] = {}
         self.patcher = patcher
         self.config = config
         # We initialize with default patch argument templates and update them per app profile when needed.
@@ -52,7 +55,7 @@ class Parser(object):
                     fvalue = raw_value
                 else:
                     logger.warning(
-                        f"[OPTIONS] Failed to get option value from env var: '{env_key}'! " "Maybe it is not set?",
+                        f"[OPTIONS] Failed to get option value from env var: '{env_key}'! Maybe it is not set?",
                     )
         else:
             fvalue = "null"
@@ -354,30 +357,53 @@ class Parser(object):
 
         return global_options or []
 
-    def _normalize_patch_name(self: Self, patch_name: str, *, space_formatted: bool) -> str:
-        """Normalize patch name based on formatting preference.
+    _NORMALIZE_PATTERN = re.compile(r"[^a-z0-9]+")
+
+    def _normalize_patch_name(self: Self, patch_name: str, *, normalize: bool) -> str:
+        """Normalize patch name to lowercase dash-separated form.
+
+        Converts any non-alphanumeric sequence to a single dash and strips
+        leading/trailing dashes.  E.g. ``Fix /s/ links`` → ``fix-s-links``.
 
         Parameters
         ----------
         patch_name : str
             The original patch name
-        space_formatted : bool
-            Whether to use space formatting
+        normalize : bool
+            Whether to normalize
 
         Returns
         -------
         str
             Normalized patch name
         """
-        return patch_name.lower().replace(" ", "-") if space_formatted else patch_name
+        if not normalize:
+            return patch_name
+        name = patch_name.lower()
+        name = self._NORMALIZE_PATTERN.sub("-", name)
+        return name.strip("-")
 
-    def _should_include_regular_patch(self: Self, patch_name: str, normalized_name: str, app: APP) -> bool:
+    def _get_bundle_index(self: Self, patch: PatchInfo) -> int | None:
+        """Resolve the 1-indexed bundle position for a patch's source bundle."""
+        bundle_file = patch.get("bundle_file")
+        if bundle_file and bundle_file in self._bundle_index_map:
+            return self._bundle_index_map[bundle_file]
+        return None
+
+    def _matches_exclude(self: Self, entry: str, patch_name: str, bundle_index: int | None) -> bool:
+        """Check if an exclude entry applies to a given patch and bundle.
+
+        Delegates to :func:`src._bundle_selector.entry_matches`.
+        """
+        return _entry_matches_fn(entry, patch_name, bundle_index)
+
+    def _should_include_regular_patch(self: Self, patch: PatchInfo, normalized_name: str, app: APP) -> bool:
         """Determine if a regular patch should be included.
 
         Parameters
         ----------
-        patch_name : str
-            The original patch name
+        patch : PatchInfo
+            The patch dict
         normalized_name : str
             The normalized patch name
         app : APP
@@ -388,17 +414,38 @@ class Parser(object):
         bool
             True if patch should be included
         """
-        exclude_list = app.exclude_request
-        check_name = normalized_name if app.space_formatted else patch_name
-        return check_name not in exclude_list
+        patch_name = patch["name"]
+        bundle_index = self._get_bundle_index(patch)
+        check_name = normalized_name if app.normalize_patch_names else patch_name
+        return self._check_exclude_request(app.exclude_request, check_name, bundle_index)
 
-    def _should_include_universal_patch(self: Self, patch_name: str, normalized_name: str, app: APP) -> bool:
+    def _check_exclude_request(
+        self: Self,
+        exclude_request: list[str],
+        check_name: str,
+        bundle_index: int | None,
+    ) -> bool:
+        """Check exclude entries, supporting ``!``-prefixed allowlist mode.
+
+        Normal mode (no ``!`` entries): return False if any entry matches.
+        Allowlist mode (any entry starts with ``!``): return True only if a ``!`` entry matches.
+        """
+        has_allowlist = any(e.startswith("!") for e in exclude_request)
+
+        if has_allowlist:
+            return any(
+                self._matches_exclude(e[1:], check_name, bundle_index) for e in exclude_request if e.startswith("!")
+            )
+
+        return not any(self._matches_exclude(e, check_name, bundle_index) for e in exclude_request)
+
+    def _should_include_universal_patch(self: Self, patch: PatchInfo, normalized_name: str, app: APP) -> bool:
         """Determine if a universal patch should be included.
 
         Parameters
         ----------
-        patch_name : str
-            The original patch name
+        patch : PatchInfo
+            The patch dict
         normalized_name : str
             The normalized patch name
         app : APP
@@ -409,9 +456,15 @@ class Parser(object):
         bool
             True if patch should be included
         """
+        patch_name = patch["name"]
+        bundle_index = self._get_bundle_index(patch)
+        check_name = normalized_name if app.normalize_patch_names else patch_name
         include_list = app.include_request
-        check_name = normalized_name if app.space_formatted else patch_name
-        return check_name in include_list
+        return check_name in include_list and self._check_exclude_request(
+            app.exclude_request,
+            check_name,
+            bundle_index,
+        )
 
     def _process_regular_patches(
         self: Self,
@@ -432,9 +485,9 @@ class Parser(object):
         """
         for patch in patches:
             patch_name = patch["name"]
-            normalized_name = self._normalize_patch_name(patch_name, space_formatted=app.space_formatted)
+            normalized_name = self._normalize_patch_name(patch_name, normalize=app.normalize_patch_names)
 
-            if self._should_include_regular_patch(patch_name, normalized_name, app):
+            if self._should_include_regular_patch(patch, normalized_name, app):
                 self.include(patch, options_list)
             else:
                 self.exclude(patch)
@@ -458,9 +511,9 @@ class Parser(object):
         """
         for patch in universal_patches:
             patch_name = patch["name"]
-            normalized_name = self._normalize_patch_name(patch_name, space_formatted=app.space_formatted)
+            normalized_name = self._normalize_patch_name(patch_name, normalize=app.normalize_patch_names)
 
-            if self._should_include_universal_patch(patch_name, normalized_name, app):
+            if self._should_include_universal_patch(patch, normalized_name, app):
                 self.include(patch, options_list)
 
     def include_exclude_patch(
@@ -474,6 +527,10 @@ class Parser(object):
         self._configure_patch_args(app)
         # Start fresh per-app bundle tracking - repopulated by include()/exclude() during processing below
         self._BUNDLE_PATCHES.clear()
+        # Build bundle_file → 1-indexed map for per-bundle exclude matching
+        self._bundle_index_map = {}
+        for idx, bundle in enumerate(app.patch_bundles):
+            self._bundle_index_map[bundle["file_name"]] = idx + 1
         options_list = self._load_patch_options(app)
 
         self._process_regular_patches(patches, app, options_list)

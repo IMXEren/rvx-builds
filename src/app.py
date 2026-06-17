@@ -56,9 +56,9 @@ class APP(object):
         self.package_name = package_name
         self.old_key = config.env.bool(f"{app_name}_OLD_KEY".upper(), config.global_old_key)
         self.patches: list[dict[Any, Any]] = []
-        self.space_formatted = config.env.bool(
-            f"{app_name}_SPACE_FORMATTED_PATCHES".upper(),
-            config.global_space_formatted,
+        self.normalize_patch_names = config.env.bool(
+            f"{app_name}_NORMALIZE_PATCH_NAMES".upper(),
+            config.global_normalize_patch_names,
         )
         # This optional app-level profile allows switching argument families per app.
         self.cli_argsf = config.env.str(f"{app_name}_CLI_ARGSF".upper(), "")
@@ -269,7 +269,7 @@ class APP(object):
 
         # Download multiple patch bundles
         for i, patches_url in enumerate(self.patches_dl_list):
-            bundle_name = f"patches_{i}" if len(self.patches_dl_list) > 1 else "patches"
+            bundle_name = f"patches_{i + 1}" if len(self.patches_dl_list) > 1 else "patches"
             download_tasks.append((bundle_name, patches_url, None, ".*(rvp|mpp)"))
 
         return download_tasks

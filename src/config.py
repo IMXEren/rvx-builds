@@ -30,7 +30,7 @@ class RevancedConfig(object):
         self.extra_download_files.append("https://github.com/REAndroid/APKEditor@apkeditor.jar")
         self.apps = sorted(env.list("PATCH_APPS", default_build))
         self.global_old_key = env.bool("GLOBAL_OLD_KEY", True)
-        self.global_space_formatted = env.bool("GLOBAL_SPACE_FORMATTED_PATCHES", True)
+        self.global_normalize_patch_names = env.bool("GLOBAL_NORMALIZE_PATCH_NAMES", True)
         # This profile controls the default CLI flag family (revanced v5/v6/morphe) for all apps.
         self.global_cli_argsf = env.str("GLOBAL_CLI_ARGSF", DEFAULT_CLI_PROFILE)
         # This env allows global overrides for `list-patches` key-value argument map.
