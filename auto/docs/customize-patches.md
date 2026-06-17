@@ -354,12 +354,13 @@ secrets` in the format -
     - `^selector` — negation (except)
     - `*` — all bundles (same as bare patch name)
 
-     <br>**Allowlist mode** — Prefix any entry with `!` to flip the list from "deny these" to "keep only these":
+     <br>**Allowlist mode** — Prefix the first entry with ``EXCEPT::`` to flip the list from
+     "deny these" to "keep only these":
      ```ini
       # Only keep custom-branding, deny everything else
-      YOUTUBE_EXCLUDE_PATCH=!custom-branding
+      YOUTUBE_EXCLUDE_PATCH=EXCEPT::custom-branding
       # Only keep custom-branding from bundle 2 and ads from bundle 1
-      YOUTUBE_EXCLUDE_PATCH=!2:custom-branding,!1:disable-ads
+      YOUTUBE_EXCLUDE_PATCH=EXCEPT::2:custom-branding,1:disable-ads
      ```
 
      <br>**Name normalization** — Patch names are automatically normalized to lowercase
