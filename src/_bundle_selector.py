@@ -11,6 +11,16 @@ import re
 
 # Matches bundle selectors: 1, 1-3, ^1, ^1-3
 _BUNDLE_SELECTOR_RE = re.compile(r"^(\^)?(\d+)(?:-(\d+))?$")
+# Converts any non-alphanumeric sequence to dash for matching
+_NORMALIZE_PATTERN = re.compile(r"[^a-z0-9]+")
+
+
+def normalize_patch_name(name: str) -> str:
+    """Lowercase a patch name and replace all non-alphanumeric runs with ``-``.
+
+    E.g. ``"Fix /s/ links"`` → ``"fix-s-links"``.
+    """
+    return _NORMALIZE_PATTERN.sub("-", name.lower()).strip("-")
 
 
 def selector_matches(selector: str, bundle_index: int) -> bool:

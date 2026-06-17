@@ -146,7 +146,6 @@ class Parser(object):
         self._PATCHES.extend([self._disable_arg, patch["name"]])
         if bundle_id is not None:
             self._BUNDLE_PATCHES.setdefault(bundle_id, []).extend([self._disable_arg, patch["name"]])
-        self._EXCLUDED.append(patch["name"])
 
     def get_excluded_patches(self: Self) -> list[str]:
         """The function `get_excluded_patches` is a getter method that returns a list of excluded patches.
@@ -414,9 +413,8 @@ class Parser(object):
         bool
             True if patch should be included
         """
-        patch_name = patch["name"]
+        check_name = normalized_name if app.normalize_patch_names else patch["name"]
         bundle_index = self._get_bundle_index(patch)
-        check_name = normalized_name if app.normalize_patch_names else patch_name
         return self._check_exclude_request(app.exclude_request, check_name, bundle_index)
 
     def _check_exclude_request(
@@ -425,16 +423,24 @@ class Parser(object):
         check_name: str,
         bundle_index: int | None,
     ) -> bool:
-        """Check exclude entries, supporting ``!``-prefixed allowlist mode.
+        """Check exclude entries, supporting ``EXCEPT``-prefixed allowlist mode.
 
-        Normal mode (no ``!`` entries): return False if any entry matches.
-        Allowlist mode (any entry starts with ``!``): return True only if a ``!`` entry matches.
+        Normal mode (no ``EXCEPT::`` entries): return False if any entry matches.
+        Allowlist mode (first entry starts with ``EXCEPT::``): return True only if
+        an entry (after stripping the ``EXCEPT::`` prefix) matches.
         """
-        has_allowlist = any(e.startswith("!") for e in exclude_request)
+        # Check if the first entry uses EXCEPT allowlist prefix
+        except_prefix = "EXCEPT::"
+        has_allowlist = any(e.startswith(except_prefix) for e in exclude_request)
 
         if has_allowlist:
             return any(
-                self._matches_exclude(e[1:], check_name, bundle_index) for e in exclude_request if e.startswith("!")
+                self._matches_exclude(
+                    e.removeprefix(except_prefix),
+                    check_name,
+                    bundle_index,
+                )
+                for e in exclude_request
             )
 
         return not any(self._matches_exclude(e, check_name, bundle_index) for e in exclude_request)

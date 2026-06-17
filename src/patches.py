@@ -342,9 +342,11 @@ class Patches(object):
 
             if app.package_name == package_name:
                 patch_dict = self._create_patch_dict(patch, package_name, versions)
-
-                if not self._is_duplicate_patch(patch_dict["name"], app.app_name):
-                    self.patches_dict[app.app_name].append(patch_dict)
+                # Do NOT deduplicate by name here.  Bundle-scoped exclude selectors
+                # (e.g. ``2:some-patch``) rely on each bundle retaining its own copy
+                # tagged with ``bundle_file``.  Dedup would silently discard later
+                # copies and break those selectors.
+                self.patches_dict[app.app_name].append(patch_dict)
 
     def _process_patches(self: Self, patches: list[dict[Any, Any]], app: APP) -> None:
         """Process patches from a single bundle and add them to the patches dict.
