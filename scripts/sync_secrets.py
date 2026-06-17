@@ -26,7 +26,7 @@ def main() -> None:
     yaml = YAML()
     yaml.preserve_quotes = True
     yaml.indent(mapping=2, sequence=4, offset=2)
-    yaml.width = 4096 # prevent auto-wrapping long lines
+    yaml.width = 4096  # prevent auto-wrapping long lines
 
     file_path = ".github/workflows/build-artifact.yml"
 
@@ -62,6 +62,7 @@ def main() -> None:
         yaml.dump(data, f)
 
     logger.info(f"Successfully synced {len(all_expected)} secrets to {file_path}")
+
 
 if __name__ == "__main__":
     main()

@@ -35,7 +35,7 @@ from src.downloader.sources import APK_MIRROR_APK_CHECK
 from src.exceptions import ScrapingError
 from src.metadata.github import GithubSourceMetadata
 
-ResponseType = Response | CurlResponse | Source
+type ResponseType = Response | CurlResponse | Source
 
 default_build = [
     "youtube",

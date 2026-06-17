@@ -79,7 +79,7 @@ def entry_matches(entry: str, patch_name: str, bundle_index: int | None) -> bool
     colon_idx = entry.find(":")
     if colon_idx > 0:
         selector_str = entry[:colon_idx]
-        name = entry[colon_idx + 1:]
+        name = entry[colon_idx + 1 :]
         if name != patch_name:
             return False
         if bundle_index is not None:

@@ -154,7 +154,7 @@ class BuilderFailureTests(TestCase):
             parser = Parser(cast("Patches", object()), _config(temp_folder))
             app = _patch_app()
             # This flag models Morphe's profile behavior and activates the non-zero-output success path.
-            app.cli_p_args["CONTINUE_ON_ERROR"] = "--continue-on-error"
+            app.cli_p_args["CONTINUE_ON_ERROR"] = ["--continue-on-error"]
             output_file = temp_folder.joinpath(app.get_output_file_name())
 
             with patch("src.parser.Popen", return_value=_FailedProcessProducingOutput(output_file)):

@@ -85,10 +85,10 @@ def _build_v5_list_patches_command(cli_file: Path, patches_file: Path) -> list[s
 
     # Keep the emitted fields aligned with the existing parser's expected ReVanced-family output.
     for key in ("INDEX", "PACKAGES", "UNIVERSAL", "VERSIONS", "OPTIONS", "DESCRIPTIONS"):
-        append_cli_argument(command, list_patches_args.get(key, ""))
+        append_cli_argument(command, list_patches_args.get(key, []))
 
     # Status check needs every compatible package, so no package-name filter is emitted here.
-    append_cli_argument(command, list_patches_args.get("FILTER_PACKAGE_NAME", ""))
+    append_cli_argument(command, list_patches_args.get("FILTER_PACKAGE_NAME", []))
     append_cli_argument(command, list_patches_args["PATCHES"], [str(patches_file)])
     append_cli_argument(command, list_patches_args["PATCHES_POST"])
 
