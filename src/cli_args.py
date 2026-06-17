@@ -10,8 +10,8 @@ from loguru import logger
 
 # This sentinel makes it explicit that the value is positional and should not be prefixed with any flag.
 POSITIONAL_ARG: Final[str] = "__POSITIONAL__"
-# This profile keeps current behavior and remains the default until the project intentionally switches versions.
-DEFAULT_CLI_PROFILE: Final[str] = "revanced-cli-v6"
+# The default profile follows the current ReVanced CLI argument shape used by the builder.
+DEFAULT_CLI_PROFILE: Final[str] = "revanced-cli"
 # This constant centralizes legacy old-key alias behavior shared across profiles.
 KEYSTORE_ALIAS_ARG: Final[str] = "--keystore-entry-alias=alias"
 # This constant centralizes legacy old-key entry password behavior shared across profiles.
@@ -29,6 +29,7 @@ LIST_PATCHES_KEYS: Final[set[str]] = {
     "PACKAGES",
     "PATCHES",
     "PATCHES_POST",
+    "TEMPORARY_FILES_PATH",
     "UNIVERSAL",
     "VERSIONS",
 }
@@ -37,6 +38,7 @@ LIST_PATCHES_KEYS: Final[set[str]] = {
 PATCH_KEYS: Final[set[str]] = {
     "APK",
     "CMD",
+    "CONTINUE_ON_ERROR",
     "DISABLED",
     "ENABLED",
     "EXCLUSIVE",
@@ -50,27 +52,32 @@ PATCH_KEYS: Final[set[str]] = {
     "PURGE",
     "RIP_LIB",
     "STRIPLIBS",
-    "TEMP_PATH",
+    "TEMPORARY_FILES_PATH",
 }
 
 # These defaults intentionally match the existing builder behavior for current stable users.
 DEFAULT_LIST_PATCHES_ARGS: Final[dict[str, list[str]]] = {
     "CMD": ["list-patches"],
-    "DESCRIPTIONS": [],
+    "DESCRIPTIONS": ["--descriptions"],
+    # Filter flag is optional and should not be emitted unless the user explicitly overrides it.
     "FILTER_PACKAGE_NAME": [],
-    "INDEX": ["-i"],
-    "OPTIONS": ["-o"],
-    "PACKAGES": ["-p"],
-    "PATCHES": [POSITIONAL_ARG],
-    "PATCHES_POST": [],
-    "UNIVERSAL": ["-u"],
-    "VERSIONS": ["-v"],
+    "INDEX": ["--index"],
+    "OPTIONS": ["--options"],
+    "PACKAGES": ["--packages"],
+    "PATCHES": ["-p"],
+    "PATCHES_POST": ["-b"],
+    # ReVanced list-patches does not expose a temp-path flag, so the dynamic temp value must be ignored here.
+    "TEMPORARY_FILES_PATH": [],
+    "UNIVERSAL": ["--universal-patches"],
+    "VERSIONS": ["--versions"],
 }
 
 # These defaults intentionally match the existing patch invocation and keep old-key signing behavior compatible.
 DEFAULT_PATCH_ARGS: Final[dict[str, list[str]]] = {
     "APK": [POSITIONAL_ARG],
     "CMD": ["patch"],
+    # ReVanced CLI docs do not currently advertise this Morphe-only flag, so keep it opt-in here.
+    "CONTINUE_ON_ERROR": [],
     "DISABLED": ["-d"],
     "ENABLED": ["-e"],
     "EXCLUSIVE": ["--exclusive"],
@@ -84,59 +91,21 @@ DEFAULT_PATCH_ARGS: Final[dict[str, list[str]]] = {
     "OPTIONS": ["-O"],
     "OUTPUT": ["-o"],
     "PATCHES": ["-p"],
-    "PATCHES_POST": [],
+    # ReVanced v6 requires verification companion flags for every patches file group.
+    "PATCHES_POST": ["-b"],
     "PURGE": ["--purge"],
-    "RIP_LIB": ["--rip-lib"],
+    "RIP_LIB": [],
     "STRIPLIBS": [],
-    "TEMP_PATH": ["-t"],
+    # ReVanced patch exposes `-t`, so each parallel app gets its own temporary files directory.
+    "TEMPORARY_FILES_PATH": ["-t"],
 }
 
 # Profile map centralizes known CLI families so users can switch format with one env variable.
 CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
+    # The primary ReVanced profile uses the current flag-based command shape.
     "revanced-cli": {
         "list_patches": deepcopy(DEFAULT_LIST_PATCHES_ARGS),
         "patch": deepcopy(DEFAULT_PATCH_ARGS),
-    },
-    "revanced-cli-v6": {
-        # ReVanced v6 moved list flags to long names and made patches flag-based.
-        "list_patches": {
-            "CMD": ["list-patches"],
-            "DESCRIPTIONS": ["--descriptions"],
-            # Filter flag is optional and should not be emitted unless the user explicitly overrides it.
-            "FILTER_PACKAGE_NAME": [],
-            "INDEX": ["--index"],
-            "OPTIONS": ["--options"],
-            "PACKAGES": ["--packages"],
-            "PATCHES": ["-p"],
-            # ReVanced v6 requires verification companion flags for every patches file group.
-            "PATCHES_POST": ["-b"],
-            "UNIVERSAL": ["--universal-patches"],
-            "VERSIONS": ["--versions"],
-        },
-        # Patch command still supports most legacy short flags, but v6 removes rip-lib behavior.
-        "patch": {
-            "APK": [POSITIONAL_ARG],
-            "CMD": ["patch"],
-            "DISABLED": ["-d"],
-            "ENABLED": ["-e"],
-            "EXCLUSIVE": ["--exclusive"],
-            "FORCE": ["--force"],
-            "KEYSTORE": ["--keystore"],
-            "KEYSTORE_OLD": [
-                KEYSTORE_ALIAS_ARG,
-                KEYSTORE_ENTRY_PASSWORD_ARG,
-                KEYSTORE_PASSWORD_ARG,
-            ],
-            "OPTIONS": ["-O"],
-            "OUTPUT": ["-o"],
-            "PATCHES": ["-p"],
-            # ReVanced v6 requires verification companion flags for every patches file group.
-            "PATCHES_POST": ["-b"],
-            "PURGE": ["--purge"],
-            "RIP_LIB": [],
-            "STRIPLIBS": [],
-            "TEMP_PATH": ["-t"],
-        },
     },
     "morphe-cli": {
         # Morphe list-patches requires explicit patch bundle flags instead of positional files.
@@ -150,6 +119,8 @@ CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
             "PACKAGES": ["-p"],
             "PATCHES": ["--patches"],
             "PATCHES_POST": [],
+            # Morphe list commands share the same temp-path flag as patching and can run concurrently per app.
+            "TEMPORARY_FILES_PATH": ["-t"],
             "UNIVERSAL": ["-u"],
             "VERSIONS": ["-v"],
         },
@@ -157,6 +128,8 @@ CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
         "patch": {
             "APK": [POSITIONAL_ARG],
             "CMD": ["patch"],
+            # Morphe can skip failed individual patches so one bad optional patch does not abort the whole app.
+            "CONTINUE_ON_ERROR": ["--continue-on-error"],
             "DISABLED": ["-d"],
             "ENABLED": ["-e"],
             "EXCLUSIVE": ["--exclusive"],
@@ -174,7 +147,8 @@ CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
             "PURGE": ["--purge"],
             "RIP_LIB": [],
             "STRIPLIBS": ["--striplibs"],
-            "TEMP_PATH": ["-t"],
+            # Morphe otherwise uses `/app/morphe-temporary-files`, which parallel apps can delete mid-patch.
+            "TEMPORARY_FILES_PATH": ["-t"],
         },
     },
 }

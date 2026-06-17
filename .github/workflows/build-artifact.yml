@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Inject custom secrets into .env file
         env:
@@ -73,7 +73,7 @@ jobs:
           python -m scripts.prefered_apps
 
       - name: Setup tmate session
-        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
+        uses: mxschmitt/action-tmate@35b54afac29c97fb54faba5b513f8fbd1882f113 # v3.24
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.DEBUG_ENABLED }}
         with:
           detached: true
@@ -138,6 +138,6 @@ jobs:
         with:
           branch: changelogs
           skip_checkout: true
-          file_pattern: "changelog.md changelog.json updates.json"
+          file_pattern: "changelog.md changelog.json updates.json obtainium_sources/*"
           commit_message: 🚀New Build
           push_options: "--force"

@@ -1,55 +1,143 @@
 """Status check."""
 
+import json
 import re
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Any
 
 import requests
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from google_play_scraper import app as gplay_app
 from google_play_scraper.exceptions import GooglePlayScraperException
 
+from src.cli_args import CLI_PROFILES, append_cli_argument
 from src.downloader.sources import (
-    APK_COMBO_GENERIC_URL,
     APK_MIRROR_BASE_URL,
     APK_MIRROR_PACKAGE_URL,
-    APK_MONK_APK_URL,
-    APK_MONK_ICON_URL,
-    APK_PURE_ICON_URL,
     PLAY_STORE_APK_URL,
     not_found_icon,
     revanced_api,
 )
 from src.exceptions import (
-    APKComboIconScrapError,
     APKMirrorIconScrapError,
-    APKMonkIconScrapError,
-    APKPureIconScrapError,
     BuilderError,
+    DownloadError,
 )
 from src.patches import Patches
+from src.patches_gen import parse_text_to_json, run_command_and_capture_output
 from src.utils import apkmirror_status_check, bs4_parser, handle_request_response, request_header, request_timeout
 
-no_of_col = 9
+no_of_col = 4
 combo_headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/116.0"}
+github_release_api_headers = {"Accept": "application/vnd.github+json"}
+revanced_cli_latest_release_api = "https://api.github.com/repos/ReVanced/revanced-cli/releases/latest"
+revanced_cli_file_name = "revanced-cli.jar"
+revanced_patches_file_name = "patches.rvp"
+download_chunk_size = 1024 * 1024
+missing_apps_file = "missing_apps.json"
 
 
-def apkcombo_scrapper(package_name: str) -> str:
-    """Apkcombo scrapper."""
-    apkcombo_url = APK_COMBO_GENERIC_URL.format(package_name)
-    try:
-        r = requests.get(apkcombo_url, headers=combo_headers, allow_redirects=True, timeout=request_timeout)
-        handle_request_response(r, apkcombo_url)
-        soup = BeautifulSoup(r.text, bs4_parser)
-        avatar = soup.find(class_="avatar")
-        if not isinstance(avatar, Tag):
-            raise APKComboIconScrapError(url=apkcombo_url)
-        icon_element = avatar.find("img")
-        if not isinstance(icon_element, Tag):
-            raise APKComboIconScrapError(url=apkcombo_url)
-        url = icon_element.get("data-src")
-        return re.sub(r"=.*$", "", url)  # type: ignore[arg-type]
-    except BuilderError as e:
-        raise APKComboIconScrapError(url=apkcombo_url) from e
+def _download_file(url: str, destination: Path, headers: dict[str, str] | None = None) -> None:
+    """Download an API-selected resource into the temporary status-check workspace."""
+    # Streaming keeps the status check memory usage bounded while downloading the CLI and patch bundle.
+    with requests.get(url, headers=headers, stream=True, timeout=request_timeout) as response:
+        handle_request_response(response, url)
+        # The destination lives in a TemporaryDirectory, so direct overwrite is acceptable for this short-lived file.
+        with destination.open("wb") as file:
+            for chunk in response.iter_content(chunk_size=download_chunk_size):
+                # requests can yield keep-alive chunks; skipping empty chunks avoids writing meaningless bytes.
+                if chunk:
+                    file.write(chunk)
+
+
+def _latest_revanced_cli_download_url() -> str:
+    """Resolve the current ReVanced CLI JAR from GitHub release metadata."""
+    response = requests.get(
+        revanced_cli_latest_release_api,
+        headers=github_release_api_headers,
+        timeout=request_timeout,
+    )
+    handle_request_response(response, revanced_cli_latest_release_api)
+
+    # The release can include signatures or checksums, so match the executable JAR by asset name.
+    for asset in response.json()["assets"]:
+        asset_name = asset["name"]
+        if asset_name.endswith(".jar"):
+            return str(asset["browser_download_url"])
+
+    msg = "Unable to find a ReVanced CLI JAR asset in the latest release."
+    raise DownloadError(msg, url=revanced_cli_latest_release_api)
+
+
+def _current_revanced_patches_download_url() -> str:
+    """Resolve the v5 patch bundle URL from the ReVanced API release object."""
+    response = requests.get(revanced_api, timeout=request_timeout)
+    handle_request_response(response, revanced_api)
+    # OpenAPI marks `download_url` as required for `/v5/patches`, so missing data should fail loudly.
+    return str(response.json()["download_url"])
+
+
+def _build_v5_list_patches_command(cli_file: Path, patches_file: Path) -> list[str]:
+    """Build the ReVanced CLI command that expands a v5 `.rvp` bundle into patch metadata."""
+    list_patches_args = CLI_PROFILES["revanced-cli"]["list_patches"]
+    command = ["java", "-jar", str(cli_file), list_patches_args["CMD"]]
+
+    # Keep the emitted fields aligned with the existing parser's expected ReVanced-family output.
+    for key in ("INDEX", "PACKAGES", "UNIVERSAL", "VERSIONS", "OPTIONS", "DESCRIPTIONS"):
+        append_cli_argument(command, list_patches_args.get(key, ""))
+
+    # Status check needs every compatible package, so no package-name filter is emitted here.
+    append_cli_argument(command, list_patches_args.get("FILTER_PACKAGE_NAME", ""))
+    append_cli_argument(command, list_patches_args["PATCHES"], str(patches_file))
+    append_cli_argument(command, list_patches_args["PATCHES_POST"])
+
+    return command
+
+
+def _list_v5_patches(cli_file: Path, patches_file: Path) -> list[dict[Any, Any]]:
+    """List and parse patch metadata from the downloaded v5 patch bundle."""
+    output = run_command_and_capture_output(_build_v5_list_patches_command(cli_file, patches_file))
+    patches = parse_text_to_json(output)
+    # ReVanced CLI may emit non-patch lines, so the status check keeps only parser-confirmed patch entries.
+    return sorted((patch for patch in patches if patch["name"] is not None), key=lambda patch: patch["name"])
+
+
+def _fetch_v5_patches() -> list[dict[Any, Any]]:
+    """Download the current v5 resources and return parsed patch metadata."""
+    # A temporary directory keeps large downloaded artifacts out of the repository workspace and CI artifacts.
+    with TemporaryDirectory() as temp_dir:
+        workspace = Path(temp_dir)
+        cli_file = workspace / revanced_cli_file_name
+        patches_file = workspace / revanced_patches_file_name
+
+        _download_file(_latest_revanced_cli_download_url(), cli_file, headers=github_release_api_headers)
+        _download_file(
+            _current_revanced_patches_download_url(),
+            patches_file,
+            headers={"Accept": "application/octet-stream"},
+        )
+
+        return _list_v5_patches(cli_file, patches_file)
+
+
+def _compatible_apps_from_patches(patches: list[dict[Any, Any]]) -> set[str]:
+    """Collect compatible package names from parsed ReVanced CLI patch metadata."""
+    possible_apps: set[str] = set()
+    for patch in patches:
+        compatible_packages = patch.get("compatiblePackages")
+        if not compatible_packages:
+            continue
+        for compatible_package in compatible_packages:
+            # The v5 path uses the repo parser output, where compatible packages are dictionaries with `name`.
+            possible_apps.add(compatible_package["name"])
+    return possible_apps
+
+
+def _write_missing_apps_file(missing_support: list[str]) -> None:
+    """Write missing packages as compact JSON for downstream automation jobs."""
+    # Compact JSON keeps the GitHub Actions job output small enough to pass between jobs without artifacts.
+    Path(missing_apps_file).write_text(json.dumps(missing_support, separators=(",", ":")) + "\n", encoding="utf_8")
 
 
 def bigger_image(possible_links: list[str]) -> str:
@@ -69,25 +157,6 @@ def bigger_image(possible_links: list[str]) -> str:
             higher_dimension_url = url
 
     return higher_dimension_url
-
-
-def apkmonk_scrapper(package_name: str) -> str:
-    """APKMonk scrapper."""
-    apkmonk_url = APK_MONK_APK_URL.format(package_name)
-    icon_logo = APK_MONK_ICON_URL.format(package_name)
-    r = requests.get(apkmonk_url, headers=combo_headers, allow_redirects=True, timeout=request_timeout)
-    handle_request_response(r, apkmonk_url)
-    if head := BeautifulSoup(r.text, bs4_parser).head:
-        parsed_head = BeautifulSoup(str(head), bs4_parser)
-        href_elements = parsed_head.find_all(href=True)
-        possible_link = []
-        for element in href_elements:
-            href_value = element.get("href")
-            if href_value.startswith(icon_logo):
-                possible_link.append(href_value)
-        if possible_link:
-            return bigger_image(possible_link)
-    raise APKMonkIconScrapError(url=apkmonk_url)
 
 
 def apkmirror_scrapper(package_name: str) -> str:
@@ -130,30 +199,11 @@ def gplay_icon_scrapper(package_name: str) -> str:
         raise GooglePlayScraperException from e
 
 
-def apkpure_scrapper(package_name: str) -> str:
-    """Scrap Icon from apkpure."""
-    apkpure_url = APK_PURE_ICON_URL.format(package_name)
-    try:
-        r = requests.get(apkpure_url, headers=combo_headers, allow_redirects=True, timeout=request_timeout)
-        handle_request_response(r, apkpure_url)
-        soup = BeautifulSoup(r.text, bs4_parser)
-        search_result = soup.find_all(class_="brand-info-top")
-        for brand_info in search_result:
-            if icon_element := brand_info.find(class_="icon"):
-                return str(icon_element.get("src"))
-        raise APKPureIconScrapError(url=apkpure_url)
-    except BuilderError as e:
-        raise APKPureIconScrapError(url=apkpure_url) from e
-
-
 def icon_scrapper(package_name: str) -> str:
     """Scrap Icon."""
     scraper_names = {
         "gplay_icon_scrapper": GooglePlayScraperException,
         "apkmirror_scrapper": APKMirrorIconScrapError,
-        "apkmonk_scrapper": APKMonkIconScrapError,
-        "apkpure_scrapper": APKPureIconScrapError,
-        "apkcombo_scrapper": APKComboIconScrapError,
     }
 
     for scraper_name, error_type in scraper_names.items():
@@ -168,55 +218,98 @@ def icon_scrapper(package_name: str) -> str:
     return not_found_icon
 
 
+def _is_on_apkmirror(package_name: str) -> bool:
+    """Helper to check if a package actually exists on APKMirror.
+
+    This queries apkmirror API through the utility function. If the API check fails
+    or rate-limits, we default to False to be conservative and prevent workflow crashes.
+    """
+    try:
+        response = apkmirror_status_check(package_name)
+    except Exception:  # noqa: BLE001
+        # Fallback to False if check fails to avoid crashing status script.
+        # We catch Exception broadly with noqa: BLE001 to prevent any API/scraping failures from halting execution.
+        return False
+    else:
+        # Check exists field from the successfully returned API data.
+        return bool(response["data"][0]["exists"])
+
+
+def _is_on_google_play(package_name: str) -> bool:
+    """Helper to check if a package actually exists on Google Play.
+
+    This sends a fast HTTP HEAD request to the Play Store. A 200 OK status indicates
+    the app is active, while a 404 indicates it is absent or delisted.
+    """
+    # Build the full URL targeting the app details page on the Play Store.
+    url = PLAY_STORE_APK_URL.format(package_name)
+    try:
+        # We perform a HEAD request rather than a full GET request.
+        # This only fetches response headers, bypassing downloading the full HTML page content.
+        # It is significantly faster and consumes minimal network bandwidth.
+        # We also pass request_header to present a standard User-Agent and prevent requests from being blocked.
+        response = requests.head(url, headers=request_header, timeout=request_timeout)
+    except Exception:  # noqa: BLE001
+        # Fallback to False if check fails (e.g. request timeouts, network failure, or rate limit)
+        # to ensure the automated status pipeline never crashes.
+        # We catch Exception broadly with noqa: BLE001 to prevent any connection/network errors from halting execution.
+        return False
+    else:
+        # HTTP 200 means the app details page is available (app exists).
+        # HTTP 404 means the app is not found on Google Play.
+        # We use noqa: PLR2004 as 200 is a standard HTTP status code here.
+        return response.status_code == 200  # noqa: PLR2004
+
+
 def generate_markdown_table(data: list[list[str]]) -> str:
     """Generate markdown table."""
     if not data:
         return "No data to generate for the table."
 
-    table = (
-        "| Package Name | App Icon | PlayStore| APKMirror |APKMonk |ApkPure | ApkCombo |Available patches |Supported?|\n"  # noqa: E501
-        "|--------------|----------|----------|-----------|--------|--------|----------|------------------|----------|\n"
-    )
+    table = "| Package Name | App Icon | PlayStore| APKMirror |\n|--------------|----------|----------|-----------|\n"
     for row in data:
         if len(row) != no_of_col:
             msg = f"Each row must contain {no_of_col} columns of data."
             raise ValueError(msg)
 
-        table += f"| {row[0]} | {row[1]} | {row[2]} | {row[3]} |{row[4]} |{row[5]} | {row[6]} | {row[7]} | {row[8]} |\n"
+        table += f"| {row[0]} | {row[1]} | {row[2]} | {row[3]} |\n"
 
     return table
 
 
 def main() -> None:
     """Entrypoint."""
-    response = requests.get(revanced_api, timeout=request_timeout)
-    handle_request_response(response, revanced_api)
-
-    patches = response.json()
-
-    possible_apps = set()
-    for patch in patches:
-        if patch.get("compatiblePackages", None):
-            for compatible_package in patch["compatiblePackages"]:
-                possible_apps.add(compatible_package)
-
+    patches = _fetch_v5_patches()
+    possible_apps = _compatible_apps_from_patches(patches)
     supported_app = set(Patches.support_app().keys())
     missing_support = sorted(possible_apps.difference(supported_app))
+    _write_missing_apps_file(missing_support)
     output = "New app found which aren't supported.\n\n"
-    data = [
-        [
-            app,
-            f'<img src="{icon_scrapper(app)}" width=50 height=50>',
-            f"[PlayStore Link]({PLAY_STORE_APK_URL.format(app)})",
-            f"[APKMirror Link]({APK_MIRROR_PACKAGE_URL.format(app)})",
-            f"[APKMonk Link]({APK_MONK_APK_URL.format(app)})",
-            f"[APKPure Link]({APK_PURE_ICON_URL.format(app)})",
-            f"[APKCombo Link]({APK_COMBO_GENERIC_URL.format(app)})",
-            f"[Patches](https://revanced.app/patches?pkg={app})",
-            "<li>- [ ] </li>",
-        ]
-        for app in missing_support
-    ]
+    data = []
+    for app in missing_support:
+        # Query APKMirror status API to see if the app exists.
+        exists_on_apkmirror = _is_on_apkmirror(app)
+        apkmirror_link_text = f"[APKMirror Link]({APK_MIRROR_PACKAGE_URL.format(app)})"
+        # Strikethrough (cancelling text) in Markdown is supported via ~~text~~.
+        # If the app doesn't exist on APKMirror, we cancel the link.
+        if not exists_on_apkmirror:
+            apkmirror_link_text = f"~~{apkmirror_link_text}~~"
+
+        # Query Google Play Store scraper to see if the app exists.
+        exists_on_google_play = _is_on_google_play(app)
+        playstore_link_text = f"[PlayStore Link]({PLAY_STORE_APK_URL.format(app)})"
+        # If the app doesn't exist on Google Play, we cancel the link.
+        if not exists_on_google_play:
+            playstore_link_text = f"~~{playstore_link_text}~~"
+
+        data.append(
+            [
+                app,
+                f'<img src="{icon_scrapper(app)}" width=50 height=50>',
+                playstore_link_text,
+                apkmirror_link_text,
+            ],
+        )
     table = generate_markdown_table(data)
     output += table
     with Path("status.md").open("w", encoding="utf_8") as status:

@@ -33,7 +33,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | [GLOBAL_OLD_KEY\*](#global-keystore-file-name)            | Whether key was generated with cli v4(new) or not | False [[Builder's own key (v3)](https://github.com/IMXEren/rvx-builds/blob/main/apks/revanced.keystore)]                           |
 | [GLOBAL_OPTIONS_FILE\*](#global-options-file)             |              Options file to be used              | [Builder's options.yml](https://github.com/IMXEren/rvx-builds/blob/main/apks/options.yml)                                       |
 | [GLOBAL_ARCHS_TO_BUILD\*](#global-archs-to-build)         |         Arch to keep in the patched apk.          | All                                                                                                      |
-| [GLOBAL_CLI_ARGSF\*](#cli-arg-compatibility)              |               CLI argument profile                 | revanced-cli-v6                                                                                             |
+| [GLOBAL_CLI_ARGSF\*](#cli-arg-compatibility)              |               CLI argument profile                 | revanced-cli                                                                                             |
 | [GLOBAL_CLI_LPARGS\*](#cli-arg-compatibility)             |   Override map for `list-patches` command args    | None                                                                                                     |
 | [GLOBAL_CLI_PARGS\*](#cli-arg-compatibility)              |       Override map for `patch` command args       | None                                                                                                     |
 | [REDDIT_CLIENT_ID](#reddit-client)                        |       Reddit Client ID to patch reddit apps       | None                                                                                                     |
@@ -45,6 +45,12 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | [APPRISE_URL](#apprise)                                   |                   Apprise URL .                   | None                                                                                                     |
 | [APPRISE_NOTIFICATION_TITLE](#apprise)                    |           Apprise Notification Title .            | None                                                                                                     |
 | [APPRISE_NOTIFICATION_BODY](#apprise)                     |            Apprise Notification Body .            | None                                                                                                     |
+| CLI_TEMP_FOLDER_NAME                                      |   Parent folder for per-app CLI temporary files   | patch-source-temporary-files                                                                             |
+| MAX_RESOURCE_WORKERS                                      |     Maximum workers for downloading resources     | 3                                                                                                        |
+| MAX_PARALLEL_APPS                                         |   Maximum number of apps to process in parallel   | 4                                                                                                        |
+| DISABLE_CACHING                                           |       Disable download and resource caching       | False                                                                                                    |
+| OBTAINIUM_EXPORT                                          |   Export html of apk sources pointing to GitHub   | False                                                                                                    |
+| OBTAINIUM_GITHUB_TAG                                      |   The release tag to be pointed to on export      | latest                                                                                                   |
 
 `*` - Can be overridden for individual app.
 
@@ -103,18 +109,13 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    2. UPTODOWN - Supports downloading any available version
       1. Link Format - `https://<app-name>.en.uptodown.com/android`
       2. Example Link - https://spotify.en.uptodown.com/android
-   3. APKSOS - Supports downloading any available version
-      1. Link Format - `https://apksos.com/download-app/<package-name>`
-      2. Example Link - https://apksos.com/download-app/com.expensemanager
-   4. APKPURE - Supports downloading any available version
-      1. Link Format - `https://apkpure.net/-/<package-name>`
-      2. Example Link - https://apkpure.net/-/com.google.android.youtube
-   5. APKMonk - Supports downloading any available version
-      1. Link Format - `https://www.apkmonk.com/app/<package-name>/`
-      2. Example Link - https://www.apkmonk.com/app/com.duolingo/
-   6. Google Drive - Supports downloading from Google Drive
-      1. Link Format - `https://drive.google.com/uc?<id>`
-      2. Example Link - https://drive.google.com/uc?id=1ad44UTghbDty8o36Nrp3ZMyUzkPckIqY
+   3. APKPURE - Supports downloading any available version
+       1. Link Format - `https://apkpure.net/-/<package-name>`
+       2. Example Link - https://apkpure.net/-/com.google.android.youtube
+   4. APKEEP - Supports downloading any available version using [APKEEP](https://github.com/EFForg/apkeep)
+       1. Link Format - `apkeep`
+       2. Example Link - `apkeep`
+       3. You need to provide `APKEEP_EMAIL` and `APKEEP_TOKEN` in `GitHub secrets` for authentication.
 
    <br>Please verify the source of original APKs yourself with links provided. I'm not responsible for any damage
    caused.If you know any better/safe source to download clean. Open a discussion.
@@ -214,8 +215,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    ```
 
    Built-in profile values:
-   - `revanced-cli` (v5-style list-patches positional patch files)
-   - `revanced-cli-v6` (default, v6-style list-patches requires `-p/--patches`)
+   - `revanced-cli` (default, v6-style list-patches requires `-p/--patches`)
    - `morphe-cli` (morphe-style list-patches requires `--patches`)
 
    Override maps use unordered `KEY=value` pairs in a single string:
@@ -263,7 +263,7 @@ secrets` in the format -
     GLOBAL_OPTIONS_FILE=my_options.yml
    ```
 
-   Tool also support configuring at app level with file as well as raw options (overrides).<br>
+   Tool also supports configuring at app level with file as well as raw options (overrides).<br>
 
    Example:
 
@@ -275,6 +275,31 @@ secrets` in the format -
       Some setting: some value
     "
    ```
+
+   **Options Merging & Precedence** — Options are resolved at three levels, each overriding the previous:
+
+   ```
+   Level 1: INI defaults from env vars / GitHub Secrets
+   Level 2: YAML file (per-app with merging)
+   Level 3: RAW string overrides (highest priority)
+   ```
+
+   When an app-specific options file is provided, its contents are **merged** with the global options file instead of replacing it. App-specific options override global options for the same patch/option key, while all non-conflicting global options are preserved.
+
+   **Options Merging Example:**  
+   If your global `options.yml` defines Theme and SponsorBlock options, and your app-specific `my_cool_yt_options.yml` contains only a custom package name entry, the final merged set will include all three:
+
+   ```
+   Global options.yml         App options.yml           Final Merged Options
+   ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+   │ Theme           │       │ Change package  │  =>   │ Theme           │
+   │ SponsorBlock    │   +   │ name            │       │ SponsorBlock    │
+   │ Custom branding │       └─────────────────┘       │ Change package  │
+   └─────────────────┘                                 │ name            │
+                                                       └─────────────────┘
+   ```
+
+   RAW overrides (Level 3) are applied on top of the merged result, giving you fine-grained control without duplicating entire option files.
 
    Note that this customization isn't available in the `RVX-Builds` tasker project. For now, use the `Universal` option
    for Patch Options to include options.yml entries from all patch resources being used.
@@ -403,3 +428,23 @@ secrets` in the format -
     <img src="https://i.imgur.com/STSv2D3.png" width="400">
 
     You may also require to [enable scheduled workflows](extras.md#scheduled-workflows) for the first time.
+
+23. <a id="obtainium"></a>[Obtainium](https://github.com/ImranR98/Obtainium)<br>
+    We support generating HTML files for Obtainium to scrape and download the latest patched APKs directly from your
+    GitHub Releases. Enable this only when you are comfortable exposing a public APK discovery URL for your fork or
+    self-hosted setup. Add below envs in `.env` file or in `ENVS` in `GitHub secrets` in the format
+    ```ini
+    OBTAINIUM_EXPORT=true
+    ```
+    This will generate an `obtainium_sources/` folder in the `changelogs` branch containing HTML files (e.g., `youtube.html`).
+    You can then add the raw GitHub URL of these HTML files to Obtainium as an "HTML" source.
+    Example URL: `https://raw.githubusercontent.com/<user>/<repo>/changelogs/obtainium_sources/youtube.html`
+    Obtainium's HTML source can use the APK link hash as its release ID, so patch-only updates are detected through
+    the generated release asset name without requiring a custom version extraction regex.
+
+    **Optional Configuration**:
+    ```ini
+    OBTAINIUM_GITHUB_TAG=latest
+    ```
+    By default, links point to the `latest` release. If you want to link to a specific tag, set this variable.
+    > **Warning**: Ensure your CI workflow is configured to release with the exact tag you specify. The default CI uses dynamic timestamp-based tags.

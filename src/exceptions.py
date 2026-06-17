@@ -43,18 +43,6 @@ class APKMirrorIconScrapError(ScrapingError):
     """Exception raised when the icon cannot be scraped from apkmirror."""
 
 
-class APKComboIconScrapError(ScrapingError):
-    """Exception raised when the icon cannot be scraped from apkcombo."""
-
-
-class APKPureIconScrapError(ScrapingError):
-    """Exception raised when the icon cannot be scraped from apkpure."""
-
-
-class APKMonkIconScrapError(ScrapingError):
-    """Exception raised when the icon cannot be scraped from apkmonk."""
-
-
 class DownloadError(BuilderError):
     """Generic Download failure."""
 
@@ -84,24 +72,12 @@ class APKMirrorAPKDownloadError(APKDownloadError):
     """Exception raised when downloading an APK from apkmirror failed."""
 
 
-class APKMonkAPKDownloadError(APKDownloadError):
-    """Exception raised when downloading an APK from apkmonk failed."""
-
-
 class APKMirrorAPKNotFoundError(APKDownloadError):
     """Exception raised when apk doesn't exist on APKMirror."""
 
 
 class UptoDownAPKDownloadError(APKDownloadError):
     """Exception raised when downloading an APK from uptodown failed."""
-
-
-class APKPureAPKDownloadError(APKDownloadError):
-    """Exception raised when downloading an APK from apkpure failed."""
-
-
-class APKSosAPKDownloadError(APKDownloadError):
-    """Exception raised when downloading an APK from apksos failed."""
 
 
 class PatchingFailedError(BuilderError):

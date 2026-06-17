@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from threading import Lock
 from typing import Any, Self
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 from loguru import logger
@@ -61,6 +62,8 @@ class APP(object):
         )
         # This optional app-level profile allows switching argument families per app.
         self.cli_argsf = config.env.str(f"{app_name}_CLI_ARGSF".upper(), "")
+        # Scheduling code needs the effective profile even when it came from the global default.
+        self.effective_cli_argsf = self.cli_argsf or config.global_cli_argsf
         # This optional app-level override customizes list-patches argument mapping.
         self.cli_lpargs = config.env.str(f"{app_name}_CLI_LPARGS".upper(), "")
         # This optional app-level override customizes patch command argument mapping.
@@ -72,6 +75,8 @@ class APP(object):
             (self.cli_lpargs, self.cli_pargs),
             self.cli_argsf,
         )
+        # Obtainium metadata reuses the computed output name, so cache the value with an explicit string type.
+        self._cached_output_file_name: str = ""
 
     def download_apk_for_patching(
         self: Self,
@@ -98,6 +103,13 @@ class APP(object):
 
             # Get unique cache key for this app
             cache_key = self.get_download_cache_key()
+
+            if config.disable_caching:
+                # Operators use this mode to force fresh APK resolution instead of reusing another app's in-run result.
+                logger.info(f"Caching disabled. Downloading APK for {self.app_name} without cache lookup.")
+                downloader = DownloaderFactory.create_downloader(config=config, apk_source=self.download_source)
+                self.download_file_name, self.download_dl = downloader.download(self.app_version, self)
+                return
 
             # Optimistic cache check (outside lock for better performance)
             if cache_key in download_cache:
@@ -141,6 +153,28 @@ class APP(object):
         # For URL-based sources, source+version is already unique
         return (self.download_source, version)
 
+    def get_cli_temporary_files_path(self: Self, config: RevancedConfig) -> str:
+        """Return this app's isolated CLI temp path for tools that support caller-selected temp dirs."""
+        # Including patch source and app name prevents parallel patch families from sharing purge-sensitive work dirs.
+        temp_leaf = slugify(f"{self._get_patch_source_label()}-{self.app_name}") or slugify(self.app_name)
+        return str(config.temp_folder.joinpath(config.cli_temp_folder_name, temp_leaf))
+
+    def _get_patch_source_label(self: Self) -> str:
+        """Return a stable human-readable patch source label for temp directory names."""
+        if not self.patches_dl_list:
+            # Apps without patch bundles still need deterministic temp names when custom profiles use temp flags.
+            return str(self.effective_cli_argsf)
+
+        parsed_url = urlparse(self.patches_dl_list[0])
+        path_parts = [part for part in parsed_url.path.split("/") if part]
+        if parsed_url.netloc == "github.com" and len(path_parts) > 1:
+            # GitHub patch sources are best identified by owner and repository rather than release path details.
+            return f"{path_parts[0]}-{path_parts[1]}"
+        if parsed_url.netloc and path_parts:
+            # Non-GitHub sources keep the host plus leaf artifact so API bundles remain distinguishable.
+            return f"{parsed_url.netloc}-{path_parts[-1]}"
+        return str(self.effective_cli_argsf)
+
     def get_output_file_name(self: Self) -> str:
         """The function returns a string representing the output file name.
 
@@ -148,12 +182,23 @@ class APP(object):
         -------
             a string that represents the output file name for an APK file.
         """
+        if self._cached_output_file_name:
+            return self._cached_output_file_name
+
+        # The patch set identity includes every bundle file and version so Obtainium detects patch-only updates.
+        patch_bundle_identity = "|".join(f"{bundle['file_name']}@{bundle['version']}" for bundle in self.patch_bundles)
+        # A short digest keeps the release asset name readable while still changing when any bundle changes.
+        patch_bundle_digest = hashlib.sha256(patch_bundle_identity.encode()).hexdigest()[:12]
+        # The visible version segment remains useful for humans, but includes every bundle version now.
+        patch_bundle_versions = "-".join(bundle["version"] for bundle in self.patch_bundles) or "unknown"
         current_date = datetime.now(ZoneInfo(time_zone))
         formatted_date = current_date.strftime("%Y%b%d.%I%M%p").upper()
-        return (
+        self._cached_output_file_name = (
             f"Re{self.app_name}-Version{slugify(self.app_version)}"
-            f"-PatchVersion{slugify(self.patch_bundles[0]["version"])}-{formatted_date}-output.apk"
+            f"-PatchVersion{slugify(patch_bundle_versions)}"
+            f"-PatchSet{patch_bundle_digest}-{formatted_date}-output.apk"
         )
+        return self._cached_output_file_name
 
     def get_patch_bundles_versions(self: Self) -> list[str]:
         """Get versions of all patch bundles."""
@@ -285,6 +330,13 @@ class APP(object):
         """Filter out cached resources and handle cached ones."""
         resources_to_download: list[tuple[str, str, RevancedConfig, str]] = []
 
+        if self._config_disables_caching(download_tasks):
+            # Resource caching disabled means every configured resource URL is resolved freshly for this app.
+            return [
+                (resource_name, raw_url.strip(), cfg, assets_filter)
+                for resource_name, raw_url, cfg, assets_filter in download_tasks
+            ]
+
         with resource_lock:
             for resource_name, raw_url, cfg, assets_filter in download_tasks:
                 url = raw_url.strip()
@@ -313,7 +365,13 @@ class APP(object):
                 futures[resource_name] = executor.submit(self.download, url, cfg, assets_filter)
 
             concurrent.futures.wait(futures.values())
-            self._update_resource_cache(futures, resources_to_download, download_tasks, resource_cache, resource_lock)
+            self._update_resource_cache(
+                futures,
+                resources_to_download,
+                download_tasks,
+                resource_cache,
+                resource_lock,
+            )
 
     def _update_resource_cache(
         self: Self,
@@ -324,11 +382,17 @@ class APP(object):
         resource_lock: Lock,
     ) -> None:
         """Update resource cache with downloaded resources."""
+        disable_caching = self._config_disables_caching(resources_to_download)
         with resource_lock:
             for resource_name, future in futures.items():
                 try:
                     tag, file_name = future.result()
                     corresponding_url = next(url for name, url, _, _ in resources_to_download if name == resource_name)
+                    if disable_caching:
+                        # The app still needs resource metadata, but the shared cache must remain untouched.
+                        self._handle_cached_resource(resource_name, tag, file_name)
+                        logger.info(f"Downloaded {resource_name} without caching: {corresponding_url}")
+                        continue
                     if corresponding_url not in resource_cache:
                         self._handle_downloaded_resource(
                             resource_name,
@@ -347,6 +411,12 @@ class APP(object):
                 except BuilderError as e:
                     msg = f"Failed to download {resource_name} resource."
                     raise PatchingFailedError(msg) from e
+
+    @staticmethod
+    def _config_disables_caching(download_tasks: list[tuple[str, str, RevancedConfig, str]]) -> bool:
+        """Return whether the prepared resource tasks are configured to skip shared caches."""
+        # Every prepared task carries the same config object, so the first entry is enough to read the run policy.
+        return bool(download_tasks and download_tasks[0][2].disable_caching)
 
     def download_patch_resources(
         self: Self,

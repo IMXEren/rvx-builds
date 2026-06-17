@@ -14,6 +14,28 @@ from src.utils import bs4_parser, handle_request_response, make_request, request
 class UptoDown(Downloader):
     """Files downloader."""
 
+    @staticmethod
+    def _is_xapk_variant_page(page: str) -> bool:
+        """Detect Uptodown variant URLs that expose the real XAPK file instead of the store bridge."""
+        return page.rstrip("/").endswith("-x")
+
+    @staticmethod
+    def _is_xapk_store_bridge(detail_download_button: Tag, page: str) -> bool:
+        """Detect generic XAPK download pages whose direct token is missing and needs the legacy variant path."""
+        button_classes = detail_download_button.get("class", [])
+        # Direct variant pages already point at app bytes, so only generic pages are eligible for fallback rewriting.
+        return "xapk" in button_classes and not UptoDown._is_xapk_variant_page(page)
+
+    def _resolve_xapk_variant_page(self: Self, detail_download_button: Tag, page: str, app: str) -> str:
+        """Build the direct XAPK variant URL from Uptodown's generic app-store bridge button."""
+        download_version = detail_download_button.get("data-download-version")
+        if not download_version:
+            msg = f"Unable to resolve direct XAPK download for {app} from uptodown."
+            raise UptoDownAPKDownloadError(msg, url=page)
+
+        # Uptodown encodes the real file endpoint as `/download/<file-id>-x` behind the variants UI.
+        return f"{page.rstrip('/')}/{download_version}-x"
+
     def extract_download_link(self: Self, page: str, app: str) -> tuple[str, str]:
         """Extract download link from uptodown url."""
         r = make_request(page, headers=request_header)
@@ -26,9 +48,26 @@ class UptoDown(Downloader):
             raise UptoDownAPKDownloadError(msg, url=page)
 
         data_url = detail_download_button.get("data-url")
+        if not isinstance(data_url, str) or not data_url:
+            if self._is_xapk_store_bridge(detail_download_button, page):
+                # Older Uptodown pages omitted the direct token, so keep the variant-page fallback for that shape.
+                return self.extract_download_link(
+                    self._resolve_xapk_variant_page(detail_download_button, page, app),
+                    app,
+                )
+
+            msg = f"Unable to download {app} from uptodown."
+            raise UptoDownAPKDownloadError(msg, url=page)
+
         download_url = f"https://dw.uptodown.com/dwn/{data_url}"
-        file_name = f"{app}.apk"
-        self._download(download_url, file_name)
+        # Generic pages may be labeled XAPK while redirecting to one APK; archive inspection handles splits later.
+        file_name = f"{app}.xapk" if self._is_xapk_variant_page(page) else f"{app}.apk"
+        # Uptodown signs direct download tokens against its API headers, so reuse the scrape auth for the binary GET.
+        download_headers = {
+            "User-Agent": request_header["User-Agent"],
+            "Authorization": request_header["Authorization"],
+        }
+        self._download(download_url, file_name, extra_headers=download_headers)
 
         return file_name, download_url
 

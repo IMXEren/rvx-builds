@@ -1,6 +1,6 @@
 """Revanced Parser."""
 
-from subprocess import PIPE, Popen
+from subprocess import PIPE, STDOUT, Popen
 from time import perf_counter
 from typing import Any, Self
 
@@ -515,6 +515,15 @@ class Parser(object):
         if is_arg_enabled(self._patch_args["RIP_LIB"]):
             append_cli_argument(args, self._patch_args["RIP_LIB"], list(excluded))
 
+    def _add_temporary_files_args(self: Self, args: list[str], app: APP) -> None:
+        """Add an isolated temporary-files directory for CLIs that expose one."""
+        # Morphe defaults to a shared temp path, so configured profiles pass a per-app directory for parallel builds.
+        append_cli_argument(
+            args,
+            self._patch_args["TEMPORARY_FILES_PATH"],
+            [app.get_cli_temporary_files_path(self.config)],
+        )
+
     # noinspection IncorrectFormatting
     def patch_app(
         self: Self,
@@ -546,19 +555,38 @@ class Parser(object):
                     args.append(item)
 
         self._add_architecture_args(args, app)
-        temp_path = self.config.temp_folder / f"temp-{app.app_name}"
-        append_cli_argument(args, self._patch_args["TEMP_PATH"], [str(temp_path)])
+        self._add_temporary_files_args(args, app)
         # Purge behavior remains enabled by default and can be remapped per CLI profile.
         append_cli_argument(args, self._patch_args["PURGE"])
+        # Continue-on-error is profile-controlled because Morphe supports it but ReVanced may reject unknown flags.
+        append_cli_argument(args, self._patch_args["CONTINUE_ON_ERROR"])
+
+        output_file_path = self.config.temp_folder.joinpath(app.get_output_file_name())
+        if output_file_path.exists():
+            # Removing the target first prevents a stale APK from masking a failed patch command.
+            output_file_path.unlink()
 
         start = perf_counter()
         logger.debug(f"Sending request to revanced cli for building with args java {args}")
-        process = Popen(["java", *args], stdout=PIPE)
+        # stderr is merged into stdout so CLI failures are visible in the existing build log stream.
+        process = Popen(["java", *args], stdout=PIPE, stderr=STDOUT)
         output = process.stdout
         if not output:
             msg = "Failed to send request for patching."
             raise PatchingFailedError(msg)
         for line in output:
             logger.debug(line.decode(), flush=True, end="")
-        process.wait()
+        # A non-zero CLI exit means the APK was not patched even if the command produced log output.
+        return_code = process.wait()
+        if return_code != 0:
+            output_was_written = output_file_path.is_file() and output_file_path.stat().st_size > 0
+            if self._patch_args["CONTINUE_ON_ERROR"] and output_was_written:
+                # Morphe reports skipped patch failures with a non-zero code, but the produced APK is still usable.
+                logger.warning(
+                    f"ReVanced CLI exited with code {return_code} for {app.app_name}; "
+                    f"continuing because {output_file_path.name} was produced.",
+                )
+                return
+            msg = f"ReVanced CLI exited with code {return_code} for {app.app_name}."
+            raise PatchingFailedError(msg)
         logger.info(f"Patching completed for app {app} in {perf_counter() - start:.2f} seconds.")

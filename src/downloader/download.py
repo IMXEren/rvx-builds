@@ -2,11 +2,13 @@
 
 import os
 import subprocess
+import zipfile
 from pathlib import Path
 from queue import PriorityQueue
 from time import perf_counter
 from typing import Any, Self
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from curl_cffi import Session
 from loguru import logger
@@ -16,7 +18,7 @@ from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import DownloadError
 from src.repack import repack_apks
-from src.utils import handle_request_response, implement_method, session
+from src.utils import handle_request_response, implement_method, request_timeout, session
 
 
 class Downloader(object):
@@ -29,6 +31,41 @@ class Downloader(object):
         self.config = config
         self.global_archs_priority: Any = None
         self.app_version: Any = None
+
+    @staticmethod
+    def _existing_file_size(file_path: Path) -> int | None:
+        """Return an existing artifact size when the final cache path is present."""
+        # Returning None keeps the caller's branch explicit without overloading zero-byte files as "missing."
+        if not file_path.exists():
+            return None
+        return file_path.stat().st_size
+
+    @staticmethod
+    def _existing_download_is_complete(existing_size: int | None, expected_size: int) -> bool:
+        """Decide whether an existing artifact can be reused instead of redownloaded."""
+        # Zero-byte files are always treated as broken because interrupted downloads commonly leave empty targets.
+        if not existing_size:
+            return False
+        # Some endpoints omit content length, so a non-empty target is the best safe cache signal in that case.
+        return not expected_size or existing_size == expected_size
+
+    def _build_download_headers(self: Self, url: str, extra_headers: dict[str, str] | None) -> dict[str, str]:
+        """Build request headers for authenticated and binary artifact downloads."""
+        headers: dict[str, str] = {}
+        if self.config.personal_access_token and "github" in url:
+            logger.debug("Using personal access token")
+            headers["Authorization"] = f"token {self.config.personal_access_token}"
+        # GitLab's API uses a different personal-token header than GitHub's download endpoints.
+        if self.config.personal_access_token and "gitlab" in url:
+            logger.debug("Using personal access token")
+            headers["PRIVATE-TOKEN"] = self.config.personal_access_token
+        if urlparse(url).path.lower().endswith((".rvp", ".mpp")):
+            # Patch bundle endpoints can use content negotiation, so direct downloads request raw binary bytes.
+            headers["Accept"] = "application/octet-stream"
+        # Caller-supplied headers, such as APKMirror Referer, intentionally override the generic defaults.
+        if extra_headers:
+            headers.update(extra_headers)
+        return headers
 
     def _download(
         self: Self,
@@ -56,37 +93,45 @@ class Downloader(object):
         if not url:
             msg = "No url provided to download"
             raise DownloadError(msg)
-        if self.config.dry_run or self.config.temp_folder.joinpath(file_name).exists():
-            logger.debug(f"Skipping download of {file_name} from {url}. File already exists or dry running.")
+        # Resolve the final target once so existence, size checks, and atomic publishing all reference the same path.
+        file_path = self.config.temp_folder.joinpath(file_name)
+        if self.config.dry_run:
+            logger.debug(f"Skipping download of {file_name} from {url}. Dry run is enabled.")
             return
-        logger.info(f"Trying to download {file_name} from {url}")
-        self._QUEUE_LENGTH += 1
-        start = perf_counter()
 
         # Use the caller-supplied session (e.g. cloudscraper for APKMirror) or
         # fall back to the module-level plain requests session.
         effective_session = http_session if http_session is not None else session
 
-        headers: dict[str, str] = {}
-        if self.config.personal_access_token and "github" in url:
-            logger.debug("Using personal access token")
-            headers["Authorization"] = f"token {self.config.personal_access_token}"
-        # GitLab's API uses a different personal-token header than GitHub's download endpoints.
-        if self.config.personal_access_token and "gitlab" in url:
-            logger.debug("Using personal access token")
-            headers["PRIVATE-TOKEN"] = self.config.personal_access_token
-        if urlparse(url).path.lower().endswith((".rvp", ".mpp")):
-            # Patch bundle endpoints such as ReVanced API can use content negotiation, so direct downloads ask for
-            # raw bytes instead of accepting any JSON or HTML representation a service may otherwise choose.
-            headers["Accept"] = "application/octet-stream"
-
-        # Merge any caller-supplied extra headers (e.g. Referer for APKMirror)
-        if extra_headers:
-            headers.update(extra_headers)
-
-        response = effective_session.get(url, headers=headers, stream=True)
+        response = effective_session.get(
+            url,
+            stream=True,
+            headers=self._build_download_headers(url, extra_headers),
+            # External artifact hosts occasionally hang; bounded requests let CI fail and retry instead of timing out.
+            timeout=request_timeout,
+        )
         handle_request_response(response, url)
         total = int(response.headers.get("content-length", 0))
+
+        if not self.config.disable_caching:
+            # An interrupted parallel worker can leave a partial artifact, so size must match before reuse.
+            existing_size = self._existing_file_size(file_path)
+            if self._existing_download_is_complete(existing_size, total):
+                logger.debug(f"Skipping download of {file_name} from {url}. File already exists with expected size.")
+                response.close()
+                return
+            if existing_size is not None:
+                logger.warning(
+                    f"Re-downloading {file_name} from {url}; "
+                    f"existing size {existing_size} differs from expected {total}.",
+                )
+        elif file_path.exists():
+            # DISABLE_CACHING means the caller wants a fresh artifact even when a same-sized file is already present.
+            logger.debug(f"Ignoring cached {file_name} because caching is disabled.")
+
+        logger.info(f"Trying to download {file_name} from {url}")
+        self._QUEUE_LENGTH += 1
+        start = perf_counter()
         bar = tqdm(
             desc=file_name,
             total=total,
@@ -95,10 +140,22 @@ class Downloader(object):
             unit_divisor=1024,
             colour="green",
         )
-        with self.config.temp_folder.joinpath(file_name).open("wb") as dl_file, bar:
-            for chunk in response.iter_content(self._CHUNK_SIZE):
-                size = dl_file.write(chunk)
-                bar.update(size)
+        # Each worker writes to a unique temp file so another thread can never observe a half-written final artifact.
+        partial_file_path = file_path.with_name(f".{file_path.name}.{uuid4().hex}.part")
+        try:
+            with partial_file_path.open("wb") as dl_file, bar:
+                for chunk in response.iter_content(self._CHUNK_SIZE):
+                    size = dl_file.write(chunk)
+                    bar.update(size)
+            # Atomic replace publishes the completed download only after all bytes are written.
+            partial_file_path.replace(file_path)
+        except Exception:
+            # Failed downloads should not poison the cache path for the next retry.
+            partial_file_path.unlink(missing_ok=True)
+            raise
+        finally:
+            # Closing the streamed response releases the connection after body copy or write failure.
+            response.close()
         self._QUEUE.put((perf_counter() - start, file_name))
         logger.debug(f"Downloaded {file_name}")
 
@@ -125,24 +182,25 @@ class Downloader(object):
 
     def convert_to_apk(self: Self, file_name: str) -> str:
         """Convert apks to apk."""
-        if file_name.endswith(".apk"):
+        file_path = self.config.temp_folder.joinpath(file_name)
+        if file_name.endswith(".apk") and self._looks_like_patchable_apk(file_path):
             return file_name
-
-        input_zip_path = self.config.temp_folder / file_name
 
         # Repack apks based on device-spec.json
         if self.config.repack_split_apks and self.config.device_spec.exists():
+            input_zip_path = self.config.temp_folder / file_name
             output_zip_name = self.replace_file_extension(file_name, "-repack.zip")
             output_zip_path = self.config.temp_folder / output_zip_name
             if repack_apks(input_zip_path, output_zip_path, self.config.device_spec):
                 Path(input_zip_path).unlink()
                 input_zip_path = output_zip_path
+                file_name = output_zip_name
             else:
                 logger.error(f"Failed to repack apk: {input_zip_path}")
         elif self.config.repack_split_apks:
             logger.warning(f"device-spec.json file not found at {self.config.device_spec}")
 
-        output_apk_file = self.replace_file_extension(file_name, ".apk")
+        input_file_name, output_apk_file = self._prepare_merge_input(file_name)
         output_path = f"{self.config.temp_folder}/{output_apk_file}"
         Path(output_path).unlink(missing_ok=True)
         subprocess.run(
@@ -152,7 +210,7 @@ class Downloader(object):
                 f"{self.config.temp_folder}/{self.config.apk_editor}",
                 "m",
                 "-i",
-                f"{input_zip_path}",
+                f"{self.config.temp_folder}/{input_file_name}",
                 "-o",
                 output_path,
             ],
@@ -163,10 +221,41 @@ class Downloader(object):
         return output_apk_file
 
     @staticmethod
+    def _looks_like_patchable_apk(file_path: Path) -> bool:
+        """Return whether an `.apk` has the root files that patchers require."""
+        try:
+            with zipfile.ZipFile(file_path) as apk_zip:
+                names = set(apk_zip.namelist())
+        except zipfile.BadZipFile:
+            # A non-zip `.apk` cannot be merged as an XAPK archive, so let the patcher report the bad input directly.
+            return True
+        # Split APK/XAPK archives can be misnamed `.apk`; missing root files means APKEditor must merge first.
+        return {"AndroidManifest.xml", "resources.arsc"}.issubset(names)
+
+    def _prepare_merge_input(self: Self, file_name: str) -> tuple[str, str]:
+        """Return the archive input and merged APK output names for APKEditor."""
+        output_apk_file = self.replace_file_extension(file_name, ".apk")
+        if not file_name.endswith(".apk"):
+            return file_name, output_apk_file
+
+        # Misnamed XAPK archives need a separate input path so APKEditor can write the real APK to the original name.
+        archive_file_name = self.replace_file_extension(file_name, ".xapk")
+        archive_path = self.config.temp_folder.joinpath(archive_file_name)
+        archive_path.unlink(missing_ok=True)
+        self.config.temp_folder.joinpath(file_name).replace(archive_path)
+        return archive_file_name, output_apk_file
+
+    @staticmethod
     def replace_file_extension(filename: str, new_extension: str) -> str:
         """Replace the extension of a file."""
         base_name, _ = os.path.splitext(filename)
         return base_name + new_extension
+
+    @staticmethod
+    def _should_patch_download_directly(file_name: str, app: APP) -> bool:
+        """Return whether the downloaded file should be passed to the patcher without APKEditor conversion."""
+        # Only Morphe accepts APKM safely; every other profile keeps the established APKEditor merge path.
+        return file_name.endswith(".apkm") and app.effective_cli_argsf == "morphe-cli"
 
     def download(self: Self, version: str, app: APP, **kwargs: Any) -> tuple[str, str]:
         """Public function to download apk to patch.
@@ -183,6 +272,9 @@ class Downloader(object):
             file_name, app_dl = self.specific_version(app, version)
         else:
             file_name, app_dl = self.latest_version(app, **kwargs)
+        if self._should_patch_download_directly(file_name, app):
+            # The patcher can consume this input as-is, so conversion would remove the split-package shape it needs.
+            return file_name, app_dl
         return self.convert_to_apk(file_name), app_dl
 
     def direct_download(self: Self, dl: str, file_name: str) -> None:

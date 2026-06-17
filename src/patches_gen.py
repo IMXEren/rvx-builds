@@ -1,7 +1,6 @@
 """Generate patches using cli."""
 
 import json
-import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -10,102 +9,372 @@ from loguru import logger
 
 from src.cli_args import DEFAULT_LIST_PATCHES_ARGS, append_cli_argument, fill_in_default_args
 
+# Patch fields are only section delimiters when they are emitted at column zero.
+PATCH_DESCRIPTION_STOP_LABELS = ("Enabled:", "Options:", "Compatible packages:")
+
+# Option fields are indented by the CLIs, so option parsing intentionally ignores indentation.
+OPTION_TITLE_LABELS = ("Title:", "Name:")
+OPTION_FIELD_LABELS = (
+    *OPTION_TITLE_LABELS,
+    "Description:",
+    "Required:",
+    "Key:",
+    "Default:",
+    "Possible values:",
+    "Type:",
+)
+
+# Java logging can prefix the first data line, but the actual patch payload remains unchanged.
+LOG_PREFIXES = ("INFO: ",)
+
+
+def _normalise_cli_line(line: str) -> str:
+    """Remove wrapper logging noise while preserving indentation that signals parser scope."""
+    stripped = line.lstrip()
+    for prefix in LOG_PREFIXES:
+        if stripped.startswith(prefix):
+            return stripped.removeprefix(prefix).rstrip()
+    return line.rstrip()
+
+
+def _has_label(line: str, label: str, *, top_level_only: bool) -> bool:
+    """Check field labels with scope awareness so option labels do not split patches."""
+    candidate = line if top_level_only else line.lstrip()
+    return candidate.startswith(label)
+
+
+def _field_value(line: str, label: str) -> str:
+    """Extract a field value after the CLI label without preserving formatting indentation."""
+    return line.lstrip().removeprefix(label).strip()
+
+
+def _has_any_label(line: str, labels: tuple[str, ...], *, top_level_only: bool) -> bool:
+    """Share label-boundary checks between patch fields and option fields."""
+    return any(_has_label(line, label, top_level_only=top_level_only) for label in labels)
+
+
+def _section_lines(section: str) -> list[str]:
+    """Normalise each line once per section to keep parsing decisions consistent."""
+    return [_normalise_cli_line(line) for line in section.splitlines()]
+
+
+def _collect_multiline_field(
+    lines: list[str],
+    start_index: int,
+    label: str,
+    stop_labels: tuple[str, ...],
+    *,
+    stop_at_top_level: bool,
+) -> tuple[str, int]:
+    """Collect CLI field continuations until the next scoped field boundary."""
+    values = [_field_value(lines[start_index], label)]
+    index = start_index + 1
+
+    while index < len(lines):
+        line = lines[index]
+        if _has_any_label(line, stop_labels, top_level_only=stop_at_top_level):
+            break
+
+        # Continuation lines are stored without CLI indentation but keep intentional blank lines.
+        values.append(line.strip())
+        index += 1
+
+    return "\n".join(values).strip(), index
+
+
+def _split_patch_sections(text: str) -> list[str]:
+    """Split only on top-level patch names so indented option names remain inside a patch."""
+    sections: list[str] = []
+    current_section: list[str] = []
+
+    for raw_line in text.splitlines():
+        line = _normalise_cli_line(raw_line)
+        if _has_label(line, "Name:", top_level_only=True):
+            if current_section:
+                sections.append("\n".join(current_section))
+            current_section = [line]
+            continue
+
+        # Lines before the first patch are command noise and should not become empty patches.
+        if current_section:
+            current_section.append(line)
+
+    if current_section:
+        sections.append("\n".join(current_section))
+
+    return sections
+
+
+def _starts_option_block(line: str) -> bool:
+    """Recognise both Morphe/Anddea option titles and ReVanced v6 option names."""
+    return _has_any_label(line, OPTION_TITLE_LABELS, top_level_only=False)
+
+
+def _split_option_blocks(option_lines: list[str]) -> list[list[str]]:
+    """Split options by their first title/name field while keeping multiline bodies attached."""
+    option_blocks: list[list[str]] = []
+    current_block: list[str] = []
+
+    for line in option_lines:
+        if _starts_option_block(line):
+            if current_block:
+                option_blocks.append(current_block)
+            current_block = [line]
+            continue
+
+        # Ignore leading spacer lines, but keep spacers once an option block has started.
+        if current_block:
+            current_block.append(line)
+
+    if current_block:
+        option_blocks.append(current_block)
+
+    return option_blocks
+
 
 def extract_name_from_section(section: str) -> str | None:
-    """Extract the name from a section."""
-    name_match = re.search(r"Name: (.*?)\n", section)
-    return name_match.group(1).strip() if name_match else None
+    """Extract the patch name from a top-level section header."""
+    for line in _section_lines(section):
+        if _has_label(line, "Name:", top_level_only=True):
+            return _field_value(line, "Name:")
+    return None
 
 
 def extract_description_from_section(section: str) -> str:
-    """Extract the description from a section."""
-    description_match = re.search(r"Description: (.*?)\n", section)
-    return description_match.group(1).strip() if description_match else ""
+    """Extract the patch description without consuming later patch fields."""
+    lines = _section_lines(section)
+    for index, line in enumerate(lines):
+        if _has_label(line, "Description:", top_level_only=True):
+            description, _ = _collect_multiline_field(
+                lines,
+                index,
+                "Description:",
+                PATCH_DESCRIPTION_STOP_LABELS,
+                stop_at_top_level=True,
+            )
+            return description
+    return ""
 
 
 def extract_enabled_state_from_section(section: str) -> bool:
-    """Extract the enabled state from a section."""
-    enabled_match = re.search(r"Enabled: (true|false)", section, re.IGNORECASE)
-    return enabled_match.group(1).lower() == "true" if enabled_match else False
+    """Extract the patch enabled flag from the top-level metadata."""
+    for line in _section_lines(section):
+        if _has_label(line, "Enabled:", top_level_only=True):
+            return _field_value(line, "Enabled:").lower() == "true"
+    return False
 
 
 def extract_package_info(package_section: str) -> dict[str, Any]:
-    """Extract package name and versions from a package section."""
-    package_name = package_section.split("\n", maxsplit=1)[0].strip()
-    versions_match = re.search(r"Compatible versions:\s*((?:\n\s+.+)+)", package_section)
-    versions = re.split(r"\n\s+", versions_match.group(1).strip()) if versions_match else []
+    """Extract one compatible package entry from CLI package text."""
+    lines = [line for line in _section_lines(package_section) if line.strip()]
+    if not lines:
+        return {"name": "", "versions": None}
+
+    # The helper accepts both raw split text and a full `Package name:` line for compatibility.
+    first_line = lines[0]
+    package_name = (
+        _field_value(first_line, "Package name:")
+        if _has_label(first_line, "Package name:", top_level_only=False)
+        else first_line.strip()
+    )
+    versions: list[str] = []
+    collecting_versions = False
+
+    for line in lines[1:]:
+        if _has_label(line, "Compatible versions:", top_level_only=False):
+            inline_versions = _field_value(line, "Compatible versions:")
+            if inline_versions:
+                versions.extend(inline_versions.split())
+            collecting_versions = True
+            continue
+
+        if collecting_versions:
+            versions.extend(line.strip().split())
+
     return {"name": package_name, "versions": versions or None}
 
 
 def extract_compatible_packages_from_section(section: str) -> list[dict[str, Any]]:
-    """Extract compatible packages from a section."""
-    if "Compatible packages:" not in section:
+    """Extract all compatible packages from a patch section."""
+    lines = _section_lines(section)
+    compatible_index = next(
+        (index for index, line in enumerate(lines) if _has_label(line, "Compatible packages:", top_level_only=True)),
+        None,
+    )
+    if compatible_index is None:
         return []
 
-    package_sections = re.split(r"\s*Package name: ", section.split("Compatible packages:")[1])
-    return [extract_package_info(package_section) for package_section in package_sections[1:]]
+    packages: list[dict[str, Any]] = []
+    current_name: str | None = None
+    current_versions: list[str] = []
+    collecting_versions = False
+
+    def flush_package() -> None:
+        """Commit the current package once its following package or section boundary appears."""
+        if current_name is not None:
+            packages.append({"name": current_name, "versions": current_versions or None})
+
+    for line in lines[compatible_index + 1 :]:
+        if _has_label(line, "Package name:", top_level_only=False):
+            flush_package()
+            current_name = _field_value(line, "Package name:")
+            current_versions = []
+            collecting_versions = False
+            continue
+
+        if current_name is None:
+            continue
+
+        if _has_label(line, "Compatible versions:", top_level_only=False):
+            inline_versions = _field_value(line, "Compatible versions:")
+            if inline_versions:
+                current_versions.extend(inline_versions.split())
+            collecting_versions = True
+            continue
+
+        if collecting_versions and line.strip():
+            current_versions.extend(line.strip().split())
+
+    flush_package()
+    return packages
 
 
-def parse_option_match(option_dict: dict[str, Any]) -> dict[str, Any]:
-    """Parse a single option match into a dictionary."""
-    name = option_dict.get("name", "").strip()
-    key = option_dict.get("key", "")
-    # Use the name as the key if absent
-    key = key.strip() if key else name
-
+def parse_option_match(option_lines: list[str]) -> dict[str, Any]:
+    """Parse one option block across ReVanced, Morphe, and Anddea CLI dialects."""
+    # The public helper accepts raw blocks, while extractor callers already pass normalised lines.
+    normalised_option_lines = [_normalise_cli_line(line) for line in option_lines]
+    name = ""
+    description = ""
+    required = False
+    key = ""
+    default = ""
     possible_values: list[str] = []
-    if option_dict.get("possible_values"):
-        raw_values = option_dict["possible_values"].strip().split("\n")
-        possible_values = [val.strip() for val in raw_values]
+    option_type = ""
+    index = 0
 
+    while index < len(normalised_option_lines):
+        line = normalised_option_lines[index]
+
+        if _has_label(line, "Title:", top_level_only=False):
+            name, index = _collect_multiline_field(
+                normalised_option_lines,
+                index,
+                "Title:",
+                OPTION_FIELD_LABELS,
+                stop_at_top_level=False,
+            )
+            continue
+
+        if _has_label(line, "Name:", top_level_only=False):
+            name, index = _collect_multiline_field(
+                normalised_option_lines,
+                index,
+                "Name:",
+                OPTION_FIELD_LABELS,
+                stop_at_top_level=False,
+            )
+            continue
+
+        if _has_label(line, "Description:", top_level_only=False):
+            description, index = _collect_multiline_field(
+                normalised_option_lines,
+                index,
+                "Description:",
+                OPTION_FIELD_LABELS,
+                stop_at_top_level=False,
+            )
+            continue
+
+        if _has_label(line, "Required:", top_level_only=False):
+            required = _field_value(line, "Required:").lower() == "true"
+            index += 1
+            continue
+
+        if _has_label(line, "Key:", top_level_only=False):
+            key, index = _collect_multiline_field(
+                normalised_option_lines,
+                index,
+                "Key:",
+                OPTION_FIELD_LABELS,
+                stop_at_top_level=False,
+            )
+            continue
+
+        if _has_label(line, "Default:", top_level_only=False):
+            default, index = _collect_multiline_field(
+                normalised_option_lines,
+                index,
+                "Default:",
+                OPTION_FIELD_LABELS,
+                stop_at_top_level=False,
+            )
+            if not default:
+                default = None
+            continue
+
+        if _has_label(line, "Possible values:", top_level_only=False):
+            raw_values, index = _collect_multiline_field(
+                normalised_option_lines,
+                index,
+                "Possible values:",
+                OPTION_FIELD_LABELS,
+                stop_at_top_level=False,
+            )
+            possible_values = [value.strip() for value in raw_values.splitlines() if value.strip()]
+            continue
+
+        if _has_label(line, "Type:", top_level_only=False):
+            option_type, index = _collect_multiline_field(
+                normalised_option_lines,
+                index,
+                "Type:",
+                OPTION_FIELD_LABELS,
+                stop_at_top_level=False,
+            )
+            continue
+
+        # Unknown spacer or future metadata lines are skipped so one new field does not drop a patch.
+        index += 1
+
+    # ReVanced v6 omits `Key:`, so the option name is the only usable key exposed by list-patches.
+    option_key = key or name
     return {
         "name": name,
-        "description": option_dict.get("description", "").strip(),
-        "required": option_dict.get("required", "").lower() == "true",
-        "key": key,
-        "default": option_dict.get("default", "").strip() if option_dict.get("default") else None,
+        "description": description,
+        "required": required,
+        "key": option_key,
+        "default": default,
         "possible_values": possible_values,
-        "type": option_dict.get("type", "").strip(),
+        "type": option_type,
     }
 
 
-def extract_options_from_section(options_section: str) -> list[dict[str, Any]]:
-    """Extract options from an options section."""
-    regex = re.compile(
-        r"(?:Title|Name):\s*(?P<name>[^\n]+)\n"
-        r"\s*Description:\s*(?P<description>[\s\S]*?)\n"  ## allows multi-line non-greedy matching
-        r"\s*Required:\s*(?P<required>true|false)\n"
-        r"(?:\s*Key:\s*(?P<key>[^\n]+)\n)?"
-        r"(?:\s*Default:\s*(?P<default>[^\n]+)\n)?"
-        r"(?:\s*Possible values:\n(?P<possible_values>[\s\S]*?))?"
-        r"\s*Type:\s*(?P<type>[^\n]+)",
-        re.VERBOSE,
+def extract_options_from_section(section: str) -> list[dict[str, Any]]:
+    """Extract options from a patch section without reading compatible package metadata."""
+    lines = _section_lines(section)
+    options_index = next(
+        (index for index, line in enumerate(lines) if _has_label(line, "Options:", top_level_only=True)),
+        None,
     )
-    return [parse_option_match(match.groupdict()) for match in regex.finditer(options_section)]
+    if options_index is None:
+        return []
 
+    option_lines: list[str] = []
+    for line in lines[options_index + 1 :]:
+        if _has_label(line, "Compatible packages:", top_level_only=True):
+            break
+        option_lines.append(line)
 
-def split_section(section: str) -> tuple[str, str]:
-    """Split a section into patch and options parts."""
-    patch_section = section
-    options_section = ""
-
-    options_section_regex = re.compile(r"^Options:(?:\n(?!\w).*)*", re.MULTILINE)
-    match = options_section_regex.search(section)
-    if match:
-        patch_section = (section[: match.start()] + section[match.end() :]).rstrip() + "\n\n"
-        options_section = match.group(0)
-
-    return patch_section, options_section
+    return [parse_option_match(option_block) for option_block in _split_option_blocks(option_lines)]
 
 
 def parse_single_section(section: str) -> dict[str, Any]:
-    """Parse a single section into a dictionary."""
-    patch_section, options_section = split_section(section)
-    name = extract_name_from_section(patch_section)
-    description = extract_description_from_section(patch_section)
-    enabled = extract_enabled_state_from_section(patch_section)
-    compatible_packages = extract_compatible_packages_from_section(patch_section)
-    options = extract_options_from_section(options_section)
+    """Parse a single patch section into a dictionary."""
+    name = extract_name_from_section(section)
+    description = extract_description_from_section(section)
+    enabled = extract_enabled_state_from_section(section)
+    compatible_packages = extract_compatible_packages_from_section(section)
+    options = extract_options_from_section(section)
 
     return {
         "name": name,
@@ -129,7 +398,7 @@ def run_command_and_capture_output(patches_command: list[str]) -> str:
 
 def parse_text_to_json(text: str) -> list[dict[Any, Any]]:
     """Parse text output into JSON format."""
-    sections = re.split(r"(?=^Name:)", text, flags=re.MULTILINE)
+    sections = _split_patch_sections(text)
     return [parse_single_section(section) for section in sections]
 
 
@@ -137,6 +406,7 @@ def convert_command_output_to_json(
     jar_file_name: str,
     patches_file: str,
     cli_lp_args: dict[str, list[str]] | None = None,
+    temporary_files_path: str | None = None,
 ) -> list[dict[Any, Any]]:
     """
     Runs the ReVanced CLI command, processes the output, and saves it as a sorted JSON file.
@@ -158,6 +428,9 @@ def convert_command_output_to_json(
         append_cli_argument(command, list_patches_args[key])
     # This optional flag slot is preserved for advanced users who embed a fixed filter in the template.
     append_cli_argument(command, list_patches_args["FILTER_PACKAGE_NAME"])
+    # Morphe list-patches accepts a temp path, so parallel app scans should not share its default directory.
+    if temporary_files_path:
+        append_cli_argument(command, list_patches_args["TEMPORARY_FILES_PATH"], [temporary_files_path])
     # Patch bundle argument supports positional, split, or `--flag=value` formatting styles.
     append_cli_argument(command, list_patches_args["PATCHES"], [patches_file])
     # Some CLI families require a companion flag per patches file group (e.g., v6 `-b` bypass verification).

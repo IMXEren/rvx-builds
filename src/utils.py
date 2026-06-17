@@ -1,5 +1,6 @@
 """Utilities."""
 
+import html
 import json
 import re
 import subprocess
@@ -10,6 +11,7 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 import curl_cffi
@@ -26,6 +28,7 @@ from src.browser.site import source as page_source
 
 if TYPE_CHECKING:
     from src.app import APP
+    from src.config import RevancedConfig
 
 
 from src.downloader.sources import APK_MIRROR_APK_CHECK
@@ -39,9 +42,11 @@ default_build = [
     "youtube_music",
 ]
 possible_archs = ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"]
+minimum_java_major_version = 17
+# Use a syntactically valid desktop Chrome identity because APKMirror and artifact hosts may reject impossible browsers.
 request_header = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (HTML, like Gecko)"
+    "AppleWebKit/537.36 (KHTML, like Gecko)"
     " Chrome/96.0.4664.93 Safari/537.36",
     "Authorization": "Basic YXBpLWFwa3VwZGF0ZXI6cm01cmNmcnVVakt5MDRzTXB5TVBKWFc4",
     "Content-Type": "application/json",
@@ -279,9 +284,15 @@ def slugify(string: str) -> str:
 
 def _check_version(output: str) -> None:
     """Check version."""
-    if "Runtime Environment" not in output:
+    # Java version output differs by distribution, so parse the quoted version instead of matching vendor text.
+    version_match = re.search(r'version "(?P<major>\d+)(?:\.(?P<minor>\d+))?', output)
+    if not version_match:
         raise subprocess.CalledProcessError(-1, "java -version")
-    if "17" not in output and "20" not in output:
+    major_version = int(version_match.group("major"))
+    # Old Java reports versions as 1.x, so Java 8 appears as 1.8 and needs minor-version normalization.
+    if major_version == 1 and version_match.group("minor"):
+        major_version = int(version_match.group("minor"))
+    if major_version < minimum_java_major_version:
         raise subprocess.CalledProcessError(-1, "java -version")
 
 
@@ -360,5 +371,68 @@ def save_patch_info(app: "APP", updates_info: dict[str, Any]) -> dict[str, Any]:
         "ms_epoch_since_patched": datetime_to_ms_epoch(datetime.now(ZoneInfo(time_zone))),
         "date_patched": datetime.now(ZoneInfo(time_zone)),
         "app_dump": app.for_dump(),
+        "output_file_name": app.get_output_file_name(),
     }
     return updates_info
+
+
+def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedConfig") -> None:
+    """Generate HTML files for Obtainium."""
+    if not config.obtainium_export:
+        return
+
+    obtainium_sources_path = Path("obtainium_sources")
+    obtainium_sources_path.mkdir(exist_ok=True)
+
+    github_repository = config.env.str("GITHUB_REPOSITORY", "")
+    obtainium_github_tag = config.obtainium_github_tag
+
+    if not github_repository:
+        logger.warning("GITHUB_REPOSITORY not set. Skipping Obtainium export.")
+        return
+
+    for app_name, app_data in updates_info.items():
+        if "output_file_name" not in app_data:
+            continue
+
+        # Release asset names are URL path segments, so encode them without allowing slash traversal.
+        output_file_name = str(app_data["output_file_name"])
+        encoded_output_file_name = quote(output_file_name, safe="")
+        # Tags are also path segments, and custom tags may contain characters that need encoding.
+        encoded_obtainium_github_tag = quote(obtainium_github_tag, safe="")
+
+        # Construct the same public release URL shape GitHub serves for release assets.
+        if obtainium_github_tag == "latest":
+            # Latest release URLs let the generated HTML survive timestamp-based release tags.
+            download_url = f"https://github.com/{github_repository}/releases/latest/download/{encoded_output_file_name}"
+        else:
+            # Fixed tag URLs are available for users who keep a stable release tag outside the default workflow.
+            download_url = (
+                f"https://github.com/{github_repository}/releases/download/"
+                f"{encoded_obtainium_github_tag}/{encoded_output_file_name}"
+            )
+
+        # The HTML source hashes the APK link by default, so this label is informational for users.
+        display_version = html.escape(str(app_data.get(app_version_key, "unknown")))
+        # App names may come from env configuration, so escape text and slug filenames before writing HTML.
+        display_app_name = html.escape(str(app_name))
+        html_file_name = f"{slugify(str(app_name)) or 'app'}.html"
+        html_content = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{display_app_name}</title>
+</head>
+<body>
+    <h1>{display_app_name}</h1>
+    <p>Latest version: {display_version}</p>
+    <a href="{download_url}">Download APK</a>
+</body>
+</html>
+"""
+        # Each app gets one HTML source page so users can subscribe to only the apps they patch.
+        html_file_path = obtainium_sources_path / html_file_name
+        html_file_path.write_text(html_content.strip(), encoding="utf_8")
+        logger.info(f"Generated Obtainium export for {app_name}: {html_file_path}")
