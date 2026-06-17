@@ -53,6 +53,22 @@ def _should_keep(modifier: str, allowed_arch: set[str], allowed_dpi: set[str]) -
     return keep
 
 
+def _get_package_name(zin: zipfile.ZipFile) -> str | None:
+    """Read the package name from any APK's AndroidManifest.xml inside the apks zip."""
+    for item in zin.infolist():
+        if not item.filename.endswith(".apk"):
+            continue
+        try:
+            with zin.open(item.filename) as apk, zipfile.ZipFile(apk) as inner:
+                data = inner.read("AndroidManifest.xml")
+                m = re.search(rb'package="([^"]+)"', data)
+                if m:
+                    return m.group(1).decode()
+        except (KeyError, zipfile.BadZipFile, ValueError):
+            continue
+    return None
+
+
 def repack_apks(input_zip: Path, output_zip: Path, device_spec_path: Path) -> bool:
     """Repack apks to include only necessary archs, density (dpi) and languages (ALL) from the `device-spec.json`."""
     allowed_arch, allowed_dpi = get_filters(device_spec_path)
@@ -71,6 +87,13 @@ def repack_apks(input_zip: Path, output_zip: Path, device_spec_path: Path) -> bo
         zipfile.ZipFile(input_zip, "r") as zin,
         zipfile.ZipFile(output_zip, "w", compression=zipfile.ZIP_DEFLATED) as zout,
     ):
+        # Discover package-name based APK (e.g. com.example.app.apk)
+        base_names = {"base.apk", "base-master.apk"}
+        pkg = _get_package_name(zin)
+        if pkg:
+            base_names.add(f"{pkg}.apk")
+            logger.info(f"[*] Identified package: {pkg}")
+
         for item in zin.infolist():
             filename = item.filename
 
@@ -80,7 +103,7 @@ def repack_apks(input_zip: Path, output_zip: Path, device_spec_path: Path) -> bo
             basename = Path(filename).name
             keep = False
 
-            if basename in ["base.apk", "base-master.apk"]:
+            if basename in base_names:
                 keep = True
             else:
                 match = modifier_pattern.search(basename)
