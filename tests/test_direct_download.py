@@ -52,6 +52,7 @@ def _config(temp_folder: Path) -> RevancedConfig:
             dry_run=False,
             disable_caching=False,
             temp_folder=temp_folder,
+            repack_split_apks=False,
         ),
     )
 

@@ -33,7 +33,10 @@ class AppCachingTests(TestCase):
 
         path = app.get_cli_temporary_files_path(config)
 
-        self.assertEqual("apks/patch-source-temporary-files/morpheapp.morphe.patches.youtube_morphe", path)
+        self.assertEqual(
+            str(Path("apks", "patch-source-temporary-files", "morpheapp.morphe.patches.youtube_morphe")),
+            path,
+        )
 
     def test_disabled_resource_cache_downloads_and_leaves_shared_cache_unchanged(self: Self) -> None:
         """Disabled cache mode should resolve resources freshly without mutating shared cache state."""

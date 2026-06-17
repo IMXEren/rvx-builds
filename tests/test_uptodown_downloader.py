@@ -9,7 +9,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from src.downloader.uptodown import UptoDown
-from src.utils import request_header, request_timeout
+from src.utils import request_header
 
 if TYPE_CHECKING:
     from src.config import RevancedConfig
@@ -51,7 +51,7 @@ class UptodownDownloaderTests(TestCase):
 
         with (
             patch(
-                "src.downloader.uptodown.requests.get",
+                "src.downloader.uptodown.make_request",
                 return_value=_UptodownResponse(text=generic_page),
             ) as request_get,
             patch.object(downloader, "_download") as download,
@@ -71,8 +71,6 @@ class UptodownDownloaderTests(TestCase):
         request_get.assert_called_once_with(
             "https://youtube-music.en.uptodown.com/android/download/1164645913",
             headers=request_header,
-            allow_redirects=True,
-            timeout=request_timeout,
         )
 
     def test_generic_xapk_download_page_without_token_resolves_legacy_variant_file(self: Self) -> None:
@@ -93,7 +91,7 @@ class UptodownDownloaderTests(TestCase):
 
         with (
             patch(
-                "src.downloader.uptodown.requests.get",
+                "src.downloader.uptodown.make_request",
                 side_effect=[_UptodownResponse(text=generic_page), _UptodownResponse(text=variant_page)],
             ) as request_get,
             patch.object(downloader, "_download") as download,
@@ -113,8 +111,6 @@ class UptodownDownloaderTests(TestCase):
         request_get.assert_any_call(
             "https://reddit-official-app.en.uptodown.com/android/download/1174126433-x",
             headers=request_header,
-            allow_redirects=True,
-            timeout=request_timeout,
         )
 
     def test_plain_apk_download_page_keeps_apk_extension(self: Self) -> None:
@@ -128,7 +124,7 @@ class UptodownDownloaderTests(TestCase):
         downloader = UptoDown(_config())
 
         with (
-            patch("src.downloader.uptodown.requests.get", return_value=_UptodownResponse(text=apk_page)),
+            patch("src.downloader.uptodown.make_request", return_value=_UptodownResponse(text=apk_page)),
             patch.object(downloader, "_download") as download,
         ):
             file_name, download_url = downloader.extract_download_link(

@@ -144,7 +144,7 @@ class PatchesGenParserTests(TestCase):
         custom_branding = _patch_by_name(patches, "Custom branding")
         option = custom_branding["options"][0]
 
-        self.assertEqual("Custom icon", option["title"])
+        self.assertEqual("Custom icon", option["name"])
         self.assertEqual("customIcon", option["key"])
         self.assertIn("- mipmap-mdpi", option["description"])
         self.assertEqual(["20.47.62"], custom_branding["compatiblePackages"][0]["versions"])
@@ -155,7 +155,7 @@ class PatchesGenParserTests(TestCase):
         gms_core = _patch_by_name(patches, "GmsCore support")
         option = gms_core["options"][0]
 
-        self.assertEqual("GmsCore vendor group ID", option["title"])
+        self.assertEqual("GmsCore vendor group ID", option["name"])
         self.assertEqual("gmsCoreVendorGroupId", option["key"])
         self.assertEqual(["app.revanced", "com.google", "com.mgoogle"], option["possible_values"])
         self.assertEqual(["20.47.62", "20.48.46"], gms_core["compatiblePackages"][0]["versions"])

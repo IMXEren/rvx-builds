@@ -4,6 +4,7 @@
 # The repo's local test command is unittest, so assertion contexts stay on TestCase instead of pytest.
 # ruff: noqa: PT009, PT027
 
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -73,25 +74,25 @@ def _patch_app() -> APP:
             cli_argsf="revanced-cli",
             effective_cli_argsf="revanced-cli",
             cli_p_args={
-                "APK": "__POSITIONAL__",
-                "CMD": "patch",
-                "CONTINUE_ON_ERROR": "",
-                "DISABLED": "-d",
-                "ENABLED": "-e",
-                "EXCLUSIVE": "--exclusive",
-                "FORCE": "--force",
-                "KEYSTORE": "--keystore",
-                "KEYSTORE_ENTRY_ALIAS": "",
-                "KEYSTORE_ENTRY_PASSWORD": "",
-                "KEYSTORE_PASSWORD": "",
-                "OPTIONS": "-O",
-                "OUTPUT": "-o",
-                "PATCHES": "-p",
-                "PATCHES_POST": "-b",
-                "PURGE": "--purge",
-                "RIP_LIB": "",
-                "STRIPLIBS": "",
-                "TEMPORARY_FILES_PATH": "",
+                "APK": ["__POSITIONAL__"],
+                "CMD": ["patch"],
+                "CONTINUE_ON_ERROR": [""],
+                "DISABLED": ["-d"],
+                "ENABLED": ["-e"],
+                "EXCLUSIVE": ["--exclusive"],
+                "FORCE": ["--force"],
+                "KEYSTORE": ["--keystore"],
+                "KEYSTORE_ENTRY_ALIAS": [""],
+                "KEYSTORE_ENTRY_PASSWORD": [""],
+                "KEYSTORE_PASSWORD": [""],
+                "OPTIONS": ["-O"],
+                "OUTPUT": ["-o"],
+                "PATCHES": ["-p"],
+                "PATCHES_POST": ["-b"],
+                "PURGE": ["--purge"],
+                "RIP_LIB": [""],
+                "STRIPLIBS": [""],
+                "TEMPORARY_FILES_PATH": [""],
             },
             download_file_name="youtube.apk",
             get_cli_temporary_files_path=lambda config: str(
@@ -134,9 +135,9 @@ class BuilderFailureTests(TestCase):
         parser = Parser(cast("Patches", object()), _config())
         app = _patch_app()
         # The test mutates only this app profile so the assertion covers profile-driven command generation.
-        app.cli_p_args["CONTINUE_ON_ERROR"] = "--continue-on-error"
+        app.cli_p_args["CONTINUE_ON_ERROR"] = ["--continue-on-error"]
         # Morphe exposes a temp-path flag, so each app should avoid the shared default Morphe temp directory.
-        app.cli_p_args["TEMPORARY_FILES_PATH"] = "-t"
+        app.cli_p_args["TEMPORARY_FILES_PATH"] = ["-t"]
 
         with patch("src.parser.Popen", return_value=_SuccessfulProcess()) as popen:
             parser.patch_app(app)
@@ -144,7 +145,7 @@ class BuilderFailureTests(TestCase):
         command = popen.call_args.args[0]
         self.assertIn("--continue-on-error", command)
         self.assertIn("-t", command)
-        self.assertIn("apks/patch-source-temporary-files/revanced-patches-youtube", command)
+        self.assertIn(f"apks{os.sep}patch-source-temporary-files{os.sep}revanced-patches-youtube", command)
 
     def test_patch_app_accepts_nonzero_continue_on_error_when_output_exists(self: Self) -> None:
         """A skipped patch should not fail the app when Morphe still wrote the patched APK."""
