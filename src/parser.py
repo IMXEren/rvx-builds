@@ -23,6 +23,7 @@ class Parser(object):
         # list[str] -> list of args for the patch
         # str -> patch name
         self._PATCHES: list[str | list[str]] = []
+        self._BUNDLE_PATCHES: dict[str | None, list[str | list[str]]] = {}
         self._EXCLUDED: list[str] = []
         self.patcher = patcher
         self.config = config
@@ -51,8 +52,7 @@ class Parser(object):
                     fvalue = raw_value
                 else:
                     logger.warning(
-                        f"[OPTIONS] Failed to get option value from env var: '{env_key}'! "
-                        "Maybe it is not set?",
+                        f"[OPTIONS] Failed to get option value from env var: '{env_key}'! " "Maybe it is not set?",
                     )
         else:
             fvalue = "null"
@@ -101,6 +101,10 @@ class Parser(object):
         options_list : list[LoadedPatchOption]
             Then `options_list` parameter is a list of dictionary that represents the options for all patches.
         """
+        bundle_id = patch.get("bundle_file")
+        if bundle_id is not None and bundle_id not in self._BUNDLE_PATCHES:
+            self._BUNDLE_PATCHES[bundle_id] = []
+
         options_dict = self.fetch_patch_options(patch["name"], options_list)
         options = None
         if options_dict:
@@ -115,6 +119,8 @@ class Parser(object):
 
                     pair = self.format_option(opt)
                     self._PATCHES[:0] = [self._options_arg, pair]
+                    if bundle_id is not None:
+                        self._BUNDLE_PATCHES[bundle_id][:0] = [self._options_arg, pair]
                 else:
                     logger.warning(
                         "Failed to find matching patch option for loaded option key "
@@ -122,6 +128,8 @@ class Parser(object):
                         "Maybe the option key is not valid for this patch?",
                     )
         self._PATCHES[:0] = [self._enable_arg, patch["name"]]
+        if bundle_id is not None:
+            self._BUNDLE_PATCHES[bundle_id][:0] = [self._enable_arg, patch["name"]]
 
     def exclude(self: Self, patch: PatchInfo) -> None:
         """The `exclude` function adds a given patch to the list of excluded patches.
@@ -131,7 +139,10 @@ class Parser(object):
         patch : PatchInfo
             The patch dict to be excluded.
         """
+        bundle_id = patch.get("bundle_file")
         self._PATCHES.extend([self._disable_arg, patch["name"]])
+        if bundle_id is not None:
+            self._BUNDLE_PATCHES.setdefault(bundle_id, []).extend([self._disable_arg, patch["name"]])
         self._EXCLUDED.append(patch["name"])
 
     def get_excluded_patches(self: Self) -> list[str]:
@@ -190,6 +201,22 @@ class Parser(object):
                     first_patch = self._PATCHES[idx + 1]
                     # Clear all patches and set only the first one
                     self._PATCHES = [self._enable_arg, first_patch]
+                    # Sync bundle patches: keep only entries for the surviving patch
+                    for bundle_id in list(self._BUNDLE_PATCHES):
+                        bundle_items = self._BUNDLE_PATCHES[bundle_id]
+                        kept: list[str | list[str]] = []
+                        for i in range(0, len(bundle_items), 2):
+                            if (
+                                i + 1 < len(bundle_items)
+                                and bundle_items[i] == self._enable_arg
+                                and bundle_items[i + 1] == first_patch
+                            ):
+                                kept = [self._enable_arg, first_patch]
+                                break
+                        if kept:
+                            self._BUNDLE_PATCHES[bundle_id] = kept
+                        else:
+                            del self._BUNDLE_PATCHES[bundle_id]
                     break
 
     def fetch_patch_options(self: Self, name: str, options_list: list[LoadedPatchOption]) -> LoadedPatchOption | None:
@@ -445,6 +472,8 @@ class Parser(object):
         """The function `include_exclude_patch` includes and excludes patches for a given app."""
         # We configure patch argument templates before include/exclude so generated flags match current CLI profile.
         self._configure_patch_args(app)
+        # Start fresh per-app bundle tracking - repopulated by include()/exclude() during processing below
+        self._BUNDLE_PATCHES.clear()
         options_list = self._load_patch_options(app)
 
         self._process_regular_patches(patches, app, options_list)
@@ -524,6 +553,14 @@ class Parser(object):
             [app.get_cli_temporary_files_path(self.config)],
         )
 
+    def _emit_patches(self: Self, args: list[str], items: list[str | list[str]]) -> None:
+        """Append patch entries (enable/disable/option flags + names) to the arg list."""
+        for item in items:
+            if isinstance(item, list):
+                args.extend(item)
+            else:
+                args.append(item)
+
     # noinspection IncorrectFormatting
     def patch_app(
         self: Self,
@@ -540,19 +577,29 @@ class Parser(object):
         # We refresh app-specific patch argument templates here in case patch_app is used independently.
         self._configure_patch_args(app)
         args = self._build_base_args(app)
-        self._add_patch_bundles(args, app)
-        self._add_output_and_keystore_args(args, app)
-
-        self._add_keystore_flags(args, app)
 
         if self.config.ci_test:
             self.enable_exclusive_mode()
-        if self._PATCHES:
-            for item in self._PATCHES:
-                if isinstance(item, list):
-                    args.extend(item)
-                else:
-                    args.append(item)
+
+        has_multiple_bundles = hasattr(app, "patch_bundles") and len(app.patch_bundles) > 1
+
+        if has_multiple_bundles and self._BUNDLE_PATCHES:
+            # Emit interleaved: -p bundle1 -e p1 -e p2 ... -p bundle2 -e p3 -e p4 ...
+            # so the Morphe CLI (which scopes -e/-d to the preceding -p) receives correct grouping.
+            for bundle in app.patch_bundles:
+                bundle_path = str(self.config.temp_folder.joinpath(bundle["file_name"]))
+                append_cli_argument(args, self._patch_args["PATCHES"], [bundle_path])
+                append_cli_argument(args, self._patch_args["PATCHES_POST"])
+                self._emit_patches(args, self._BUNDLE_PATCHES.get(bundle["file_name"], []))
+        else:
+            # Single bundle or no per-bundle tracking - original behavior
+            self._add_patch_bundles(args, app)
+            if self._PATCHES:
+                self._emit_patches(args, self._PATCHES)
+
+        self._add_output_and_keystore_args(args, app)
+
+        self._add_keystore_flags(args, app)
 
         self._add_architecture_args(args, app)
         self._add_temporary_files_args(args, app)

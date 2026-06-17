@@ -23,6 +23,7 @@ class PatchInfo(TypedDict):
     app: str  ## package name
     version: str  ## preferred version
     options: list[OptionInfo]
+    bundle_file: str | None  ## source patch bundle filename
 
 
 type LoadedOptionValue = str | bool | int | float | list[Any] | None

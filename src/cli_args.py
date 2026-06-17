@@ -307,10 +307,8 @@ def append_cli_argument(args: list[str], arg_templates: list[str], values: list[
     # We strip whitespace so values from env files with extra spaces behave predictably.
     normalized_templates = [t.strip() for t in arg_templates if t.strip()]
 
-    # Handle completely empty templates
+    # Handle completely empty templates - disabled keys must not leak values as positional arguments.
     if not normalized_templates:
-        if values:
-            args.extend(values)
         return
 
     # Handle completely empty values

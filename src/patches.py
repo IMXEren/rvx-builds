@@ -157,6 +157,9 @@ class Patches(object):
                     app.cli_lp_args,
                     app.get_cli_temporary_files_path(config),
                 )
+                # Tag patches with their source bundle so CLI args can be grouped correctly
+                for p in patches:
+                    p["bundle_file"] = bundle["file_name"]
                 self._process_patches(patches, app)
         elif "patches" in app.resource:
             # Fallback to single bundle for backward compatibility
@@ -254,6 +257,7 @@ class Patches(object):
             app=app_name,
             version=preferred_version,
             options=options,
+            bundle_file=patch.get("bundle_file"),
         )
 
     @staticmethod
