@@ -53,7 +53,7 @@ class AppCachingTests(TestCase):
         cached_resources = {"https://example.test/resource.jar": ("cached-tag", "cached.jar")}
 
         with patch("src.app.APP.download", return_value=("v1.0.0", "resource.jar")) as download:
-            app.download_patch_resources(config, cached_resources, Lock())
+            app.download_patch_resources(config, cached_resources, Lock(), {}, Lock())
 
         download.assert_called_once_with("https://example.test/resource.jar", config, ".*jar")
         expected_cache = {"https://example.test/resource.jar": ("cached-tag", "cached.jar")}

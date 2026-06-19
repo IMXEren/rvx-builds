@@ -29,6 +29,8 @@ AppCaches = tuple[
     dict[str, tuple[str, str]],
     Lock,
     Lock,
+    dict[str, Lock],
+    Lock,
 ]
 
 
@@ -45,13 +47,19 @@ def process_single_app(
     caches: AppCaches,
 ) -> dict[str, Any]:
     """Process a single app and return its update info."""
-    download_cache, resource_cache, download_lock, resource_lock = caches
+    download_cache, resource_cache, download_lock, resource_lock, resource_dl_locks, resource_dl_locks_lock = caches
     logger.info(f"Trying to build {app_name}")
     try:
         app = get_app(config, app_name)
 
         # Resource downloads use shared in-run caches unless the operator disables caching in config.
-        app.download_patch_resources(config, resource_cache, resource_lock)
+        app.download_patch_resources(
+            config,
+            resource_cache,
+            resource_lock,
+            resource_dl_locks,
+            resource_dl_locks_lock,
+        )
 
         patcher = Patches(config, app)
         parser = Parser(patcher, config)
@@ -84,7 +92,7 @@ def process_single_app(
 def _build_caches() -> AppCaches:
     """Create cache containers and locks shared across app workers."""
     # Cache policy is enforced by callers, but the tuple shape stays stable for app-processing helpers.
-    return {}, {}, Lock(), Lock()
+    return {}, {}, Lock(), Lock(), {}, Lock()
 
 
 def _record_failed_app(app_name: str, error: Exception, failed_apps: list[str]) -> None:

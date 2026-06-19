@@ -6,7 +6,7 @@ import pathlib
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from threading import Lock
-from typing import Any, Self
+from typing import Any, NamedTuple, Self
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
@@ -17,6 +17,15 @@ from src.config import RevancedConfig
 from src.downloader.sources import APKEEP, apk_sources
 from src.exceptions import BuilderError, DownloadError, PatchingFailedError
 from src.utils import slugify, time_zone
+
+
+class _DownloadLockState(NamedTuple):
+    """Shared state for per-URL download deduplication."""
+
+    resource_cache: dict[str, tuple[str, str]]
+    resource_lock: Lock
+    resource_dl_locks: dict[str, Lock]
+    resource_dl_locks_lock: Lock
 
 
 class APP(object):
@@ -349,28 +358,64 @@ class APP(object):
 
         return resources_to_download
 
+    def _download_with_dedup(
+        self: Self,
+        url: str,
+        cfg: RevancedConfig,
+        assets_filter: str,
+        *,
+        disable_caching: bool,
+        locks: _DownloadLockState,
+    ) -> tuple[str, str]:
+        """Download a resource with per-URL deduplication.
+
+        A per-URL lock ensures only one thread ever downloads a given resource URL.
+        The lock is held for the entire download duration so concurrent workers from
+        other app threads wait and then reuse the cached result.
+
+        When *disable_caching* is True the cache check is skipped — the caller wants
+        a fresh download regardless of what's already stored.
+        """
+        # Per-URL lock prevents N workers from downloading the same resource N times.
+        with locks.resource_dl_locks_lock:
+            url_lock = locks.resource_dl_locks.setdefault(url, Lock())
+        with url_lock:
+            # Only re-use cached bytes when caching is active; disabled mode always re-downloads.
+            if not disable_caching:
+                with locks.resource_lock:
+                    if url in locks.resource_cache:
+                        return locks.resource_cache[url]
+            return self.download(url, cfg, assets_filter)
+
     def _download_and_cache_resources(
         self: Self,
         resources_to_download: list[tuple[str, str, RevancedConfig, str]],
         download_tasks: list[tuple[str, str, RevancedConfig, str]],
         config: RevancedConfig,
-        resource_cache: dict[str, tuple[str, str]],
-        resource_lock: Lock,
+        locks: _DownloadLockState,
     ) -> None:
         """Download resources in parallel and update cache thread-safely."""
+        disable_caching = self._config_disables_caching(resources_to_download)
         with ThreadPoolExecutor(config.max_resource_workers) as executor:
             futures: dict[str, concurrent.futures.Future[tuple[str, str]]] = {}
 
             for resource_name, url, cfg, assets_filter in resources_to_download:
-                futures[resource_name] = executor.submit(self.download, url, cfg, assets_filter)
+                futures[resource_name] = executor.submit(
+                    self._download_with_dedup,
+                    url,
+                    cfg,
+                    assets_filter,
+                    disable_caching=disable_caching,
+                    locks=locks,
+                )
 
             concurrent.futures.wait(futures.values())
             self._update_resource_cache(
                 futures,
                 resources_to_download,
                 download_tasks,
-                resource_cache,
-                resource_lock,
+                locks.resource_cache,
+                locks.resource_lock,
             )
 
     def _update_resource_cache(
@@ -423,6 +468,8 @@ class APP(object):
         config: RevancedConfig,
         resource_cache: dict[str, tuple[str, str]],
         resource_lock: Lock,
+        resource_dl_locks: dict[str, Lock],
+        resource_dl_locks_lock: Lock,
     ) -> None:
         """Download various resources required for patching.
 
@@ -432,8 +479,12 @@ class APP(object):
             Configuration settings for the resource download tasks.
         resource_cache: dict[str, tuple[str, str]]
             Cache of previously downloaded resources.
-        resource_lock: Lock
+        resource_lock : Lock
             Thread lock for safe access to resource_cache.
+        resource_dl_locks : dict[str, Lock]
+            Per-URL download locks to prevent duplicate simultaneous downloads.
+        resource_dl_locks_lock : Lock
+            Thread lock for safe access to resource_dl_locks.
         """
         logger.info("Downloading resources for patching.")
 
@@ -441,12 +492,12 @@ class APP(object):
         resources_to_download = self._filter_cached_resources(download_tasks, resource_cache, resource_lock)
 
         if resources_to_download:
+            locks = _DownloadLockState(resource_cache, resource_lock, resource_dl_locks, resource_dl_locks_lock)
             self._download_and_cache_resources(
                 resources_to_download,
                 download_tasks,
                 config,
-                resource_cache,
-                resource_lock,
+                locks,
             )
 
     @staticmethod

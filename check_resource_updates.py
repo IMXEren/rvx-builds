@@ -155,7 +155,7 @@ def check_if_build_is_required() -> bool:
         if isinstance(old_patches_sources, str):
             old_patches_sources = [old_patches_sources]
 
-        app_obj.download_patch_resources(config, resource_cache, resource_lock)
+        app_obj.download_patch_resources(config, resource_cache, resource_lock, {}, Lock())
 
         new_patches_versions = app_obj.get_patch_bundles_versions()
         new_patches_sources = app_obj.patches_dl_list
