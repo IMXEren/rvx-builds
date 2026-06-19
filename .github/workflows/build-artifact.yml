@@ -50,6 +50,7 @@ jobs:
           echo "GITHUB_REPOSITORY=${{ github.repository }}" >> .env
           echo "${{ secrets.DOCKER_PY_REVANCED_SECRETS }}" >> .env
           echo "$ALL_SECRETS" | jq -r 'to_entries | .[] | select(.key | startswith("SECRET_")) | "\(.key | sub("^SECRET_"; ""))=\(.value)"' >> .env
+          [ -n "${{ vars.OBTAINIUM_GH_PRIVATE_EXPORT }}" ] && echo "OBTAINIUM_GH_PRIVATE_EXPORT=${{ vars.OBTAINIUM_GH_PRIVATE_EXPORT }}" >> .env
           echo "Injected custom secrets into .env file"
 
       - name: Setup python
@@ -131,6 +132,90 @@ jobs:
             apks/*-output.apk
             apks/VancedMicroG.apk
           if-no-files-found: error
+
+      - name: Push Obtainium Export to Private Repo
+        if: ${{ inputs.COMMIT_CHANGELOG && !inputs.CI_TEST}}
+        env:
+          PAT: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Read target repo from the .env file injected earlier in the workflow.
+          TARGET_REPO="$(grep -m1 '^OBTAINIUM_GH_PRIVATE_EXPORT=' .env 2>/dev/null | cut -d= -f2- | sed "s/^['\"]//; s/['\"]$//")"
+
+          if [ -z "$TARGET_REPO" ]; then
+            echo "OBTAINIUM_GH_PRIVATE_EXPORT not set. Skipping private repo push."
+            exit 0
+          fi
+
+          # Validate user/repo format.
+          if ! echo "$TARGET_REPO" | grep -qE '^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$'; then
+            echo "::warning title=Invalid repo format::OBTAINIUM_GH_PRIVATE_EXPORT should be in 'user/repo' format, got '$TARGET_REPO'"
+            exit 0
+          fi
+
+          # Check obtainium sources were generated.
+          if [ ! -d obtainium_sources ] || [ -z "$(ls -A obtainium_sources 2>/dev/null)" ]; then
+            echo "No Obtainium sources found. Skipping private repo push."
+            exit 0
+          fi
+
+          # Verify PAT is available.
+          if [ -z "$PAT" ]; then
+            echo "::warning title=PAT not set::PERSONAL_ACCESS_TOKEN is required to push to private repo. Skipping."
+            exit 0
+          fi
+
+          # Check repo visibility and warn if not private.
+          API_RESPONSE=$(curl -s -H "Authorization: token $PAT" "https://api.github.com/repos/$TARGET_REPO" 2>/dev/null)
+          VISIBILITY=$(echo "$API_RESPONSE" | jq -r '.visibility // empty' 2>/dev/null)
+          REPO_EXISTS=$(echo "$API_RESPONSE" | jq -r '.id // empty' 2>/dev/null)
+
+          if [ -z "$REPO_EXISTS" ]; then
+            echo "::warning title=Repo not found::Target repository $TARGET_REPO does not exist or PAT lacks access. Skipping."
+            exit 0
+          fi
+
+          if [ "$VISIBILITY" != "private" ]; then
+            echo "::warning title=Repo not private::Target repository $TARGET_REPO is $VISIBILITY. Consider making it private for security."
+          fi
+
+          # Clone (or init if empty), copy obtainium_sources/, commit, force-push to 'repo' branch.
+          echo "Pushing Obtainium sources to $TARGET_REPO (branch: repo)..."
+          GH_URL="https://x-access-token:${PAT}@github.com/${TARGET_REPO}.git"
+
+          if ! git clone --depth 1 "$GH_URL" /tmp/private-obtainium 2>/dev/null; then
+            # Empty repo — init fresh on 'repo' branch.
+            mkdir -p /tmp/private-obtainium
+            cd /tmp/private-obtainium || exit 1
+            git init -b repo
+            git remote add origin "$GH_URL"
+          else
+            cd /tmp/private-obtainium || exit 1
+            # Switch to 'repo' branch; create from main if it doesn't exist yet
+            git fetch origin repo 2>/dev/null || true
+            if ! git checkout repo 2>/dev/null; then
+              git checkout -b repo
+            fi
+          fi
+
+          mkdir -p obtainium_sources
+          cp "$GITHUB_WORKSPACE/obtainium_sources"/*.html obtainium_sources/
+          git add obtainium_sources
+          git -c user.name="github-actions[bot]" -c user.email="github-actions[bot]@users.noreply.github.com" \
+            commit --allow-empty -m "chore: Update Obtainium sources"
+          git push --force origin HEAD:repo
+          echo "✅ Pushed Obtainium sources to $TARGET_REPO (branch: repo)"
+
+      - name: Cleanup Obtainium Sources
+        if: ${{ inputs.COMMIT_CHANGELOG && !inputs.CI_TEST}}
+        run: |
+          # Remove obtainium_sources/ when OBTAINIUM_EXPORT is not enabled, so they
+          # don't get committed to the changelogs branch. This runs after the private
+          # repo push (or after it was skipped), so the files have already been consumed.
+          OBTAINIUM_EXPORT=$(grep -m1 '^OBTAINIUM_EXPORT=' .env 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" | tr '[:upper:]' '[:lower:]')
+          if [ "$OBTAINIUM_EXPORT" != "true" ] && [ -d obtainium_sources ]; then
+            echo "OBTAINIUM_EXPORT is not enabled. Removing obtainium_sources/."
+            rm -rf obtainium_sources
+          fi
 
       - name: Commit Update file
         if: ${{ inputs.COMMIT_CHANGELOG && !inputs.CI_TEST}}
