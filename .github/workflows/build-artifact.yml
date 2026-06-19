@@ -182,19 +182,14 @@ jobs:
           echo "Pushing Obtainium sources to $TARGET_REPO (branch: repo)..."
           GH_URL="https://x-access-token:${PAT}@github.com/${TARGET_REPO}.git"
 
-          if ! git clone --depth 1 "$GH_URL" /tmp/private-obtainium 2>/dev/null; then
-            # Empty repo — init fresh on 'repo' branch.
+          # Clone 'repo' branch directly so old HTMLs are preserved; fall back to fresh init on first run.
+          if git clone --branch repo --single-branch --depth 1 "$GH_URL" /tmp/private-obtainium 2>/dev/null; then
+            cd /tmp/private-obtainium || exit 1
+          else
             mkdir -p /tmp/private-obtainium
             cd /tmp/private-obtainium || exit 1
             git init -b repo
             git remote add origin "$GH_URL"
-          else
-            cd /tmp/private-obtainium || exit 1
-            # Switch to 'repo' branch; create from main if it doesn't exist yet
-            git fetch origin repo 2>/dev/null || true
-            if ! git checkout repo 2>/dev/null; then
-              git checkout -b repo
-            fi
           fi
 
           mkdir -p obtainium_sources
