@@ -378,7 +378,7 @@ def save_patch_info(app: "APP", updates_info: dict[str, Any]) -> dict[str, Any]:
 
 def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedConfig") -> None:
     """Generate HTML files for Obtainium."""
-    if not config.obtainium_export:
+    if not config.obtainium_export and not config.obtainium_gh_private_export:
         return
 
     obtainium_sources_path = Path("obtainium_sources")
