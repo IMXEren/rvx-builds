@@ -49,8 +49,9 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | MAX_RESOURCE_WORKERS                                      |     Maximum workers for downloading resources     | 3                                                                                                        |
 | MAX_PARALLEL_APPS                                         |   Maximum number of apps to process in parallel   | 4                                                                                                        |
 | DISABLE_CACHING                                           |       Disable download and resource caching       | False                                                                                                    |
-| OBTAINIUM_EXPORT                                          |   Export html of apk sources pointing to GitHub   | False                                                                                                    |
-| OBTAINIUM_GITHUB_TAG                                      |   The release tag to be pointed to on export      | latest                                                                                                   |
+| [OBTAINIUM_EXPORT](#obtainium)                            |   Export html of apk sources pointing to GitHub   | False                                                                                                    |
+| [OBTAINIUM_GITHUB_TAG](#obtainium)                        |   The release tag to be pointed to on export      | latest                                                                                                   |
+| [OBTAINIUM_GH_PRIVATE_EXPORT](#obtainium)                 |   Push Obtainium sources to a private repo        | None                                                                                                     |
 
 `*` - Can be overridden for individual app.
 
@@ -489,3 +490,25 @@ secrets` in the format -
     ```
     By default, links point to the `latest` release. If you want to link to a specific tag, set this variable.
     > **Warning**: Ensure your CI workflow is configured to release with the exact tag you specify. The default CI uses dynamic timestamp-based tags.
+
+    **Private Export** — Instead of (or in addition to) exporting to the `changelogs` branch, you can push the
+    Obtainium HTML sources to a private GitHub repository for secure app distribution:
+    ```ini
+    OBTAINIUM_GH_PRIVATE_EXPORT=<owner>/<private-repo>
+    ```
+    > **Setup**: This must be configured as a [**repository variable**](https://github.com/USER/REPO/settings/variables/new)
+    > (not a secret, not an environment variable) under *Settings → Variables and secrets → Actions → Repository Variables*.
+    > The CI reads it via `vars.OBTAINIUM_GH_PRIVATE_EXPORT`, which is only available at the repository level.
+    > Set the name to `OBTAINIUM_GH_PRIVATE_EXPORT` and the value to `owner/private-repo-name`.
+
+    This requires:
+    - A `PERSONAL_ACCESS_TOKEN` secret with `repo` scope for authentication.
+    - The target repository to have a `repo` branch where sources are pushed.
+    - A workflow in the target repository to resolve `/latest/download/` URLs to specific release tags
+      upon receiving a `repository_dispatch` event.
+
+    On each build, the CI will:
+    1. Push the generated HTML sources to the `repo` branch of the target repository (merge-copies, preserving older sources).
+    2. Send a `resolve-obtainium-tags` dispatch event so the target repo resolves `/latest/download/` → `/download/Build-{tag}/`.
+    3. Generate a sorted README table listing all apps with their raw GitHub URLs.
+    4. Clean up the local `obtainium_sources/` folder if `OBTAINIUM_EXPORT` is not enabled, preventing them from leaking into the public changelogs branch.
