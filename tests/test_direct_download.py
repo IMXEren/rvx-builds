@@ -53,6 +53,7 @@ def _config(temp_folder: Path) -> RevancedConfig:
             disable_caching=False,
             temp_folder=temp_folder,
             repack_split_apks=False,
+            device_spec=temp_folder / "device-spec.json",
         ),
     )
 

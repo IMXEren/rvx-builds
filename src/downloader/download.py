@@ -20,6 +20,9 @@ from src.exceptions import DownloadError
 from src.repack import repack_apks
 from src.utils import handle_request_response, implement_method, request_timeout, session
 
+# Extensions that are always treated as split APK bundles and repacked when a device spec is available.
+SPLIT_APK_EXTENSIONS = {".apkm", ".apks", ".xapk", ".zip"}
+
 
 class Downloader(object):
     """Files downloader."""
@@ -180,25 +183,59 @@ class Downloader(object):
         """
         raise NotImplementedError(implement_method)
 
+    @staticmethod
+    def _has_split_apk_content(file_path: Path) -> bool:
+        """Peek inside a zip to check if it contains any ``.apk`` entries.
+
+        Used for ``.zip`` extensions that could be anything from a split APK
+        bundle to a compressed patch archive.  ``.apkm`` and ``.xapk`` always
+        skip this check because they are unambiguously split APK containers.
+        """
+        try:
+            with zipfile.ZipFile(file_path) as z:
+                return any(name.endswith(".apk") for name in z.namelist())
+        except zipfile.BadZipFile:
+            return False
+
+    def _repack_if_needed(self: Self, file_name: str) -> str:
+        """Always repack split APK bundle extensions when a device spec is available.
+
+        Builds a device-spec-filtered archive from the original file so that
+        oversized APKs (unnecessary archs/densities) are never passed to the
+        patcher.  Preserves the original suffix (``.apkm`` → ``-repack.apkm``,
+        ``.zip`` → ``-repack.zip``) so downstream tools can still recognise
+        the output as the same bundle shape.
+        """
+        if not self.config.repack_split_apks:
+            return file_name
+        _, ext = os.path.splitext(file_name)
+        if ext.lower() not in SPLIT_APK_EXTENSIONS:
+            return file_name
+        if not self.config.device_spec.exists():
+            logger.warning(f"device-spec.json file not found at {self.config.device_spec}")
+            return file_name
+
+        file_path = self.config.temp_folder / file_name
+        if not file_path.exists():
+            return file_name
+        # ``.zip`` can be any archive; only repack if it actually contains split APKs.
+        if ext.lower() == ".zip" and not self._has_split_apk_content(file_path):
+            return file_name
+
+        base, ext = os.path.splitext(file_name)
+        output_zip_name = f"{base}-repack{ext}"
+        output_zip_path = self.config.temp_folder / output_zip_name
+        if repack_apks(file_path, output_zip_path, self.config.device_spec):
+            file_path.unlink()
+            return output_zip_name
+        logger.error(f"Failed to repack {file_name}")
+        return file_name
+
     def convert_to_apk(self: Self, file_name: str) -> str:
         """Convert apks to apk."""
         file_path = self.config.temp_folder.joinpath(file_name)
         if file_name.endswith(".apk") and self._looks_like_patchable_apk(file_path):
             return file_name
-
-        # Repack apks based on device-spec.json
-        if self.config.repack_split_apks and self.config.device_spec.exists():
-            input_zip_path = self.config.temp_folder / file_name
-            output_zip_name = self.replace_file_extension(file_name, "-repack.zip")
-            output_zip_path = self.config.temp_folder / output_zip_name
-            if repack_apks(input_zip_path, output_zip_path, self.config.device_spec):
-                Path(input_zip_path).unlink()
-                input_zip_path = output_zip_path
-                file_name = output_zip_name
-            else:
-                logger.error(f"Failed to repack apk: {input_zip_path}")
-        elif self.config.repack_split_apks:
-            logger.warning(f"device-spec.json file not found at {self.config.device_spec}")
 
         input_file_name, output_apk_file = self._prepare_merge_input(file_name)
         output_path = f"{self.config.temp_folder}/{output_apk_file}"
@@ -272,6 +309,10 @@ class Downloader(object):
             file_name, app_dl = self.specific_version(app, version)
         else:
             file_name, app_dl = self.latest_version(app, **kwargs)
+
+        # Repack before the short-circuit so morphe-cli APKMs also get filtered.
+        file_name = self._repack_if_needed(file_name)
+
         if self._should_patch_download_directly(file_name, app):
             # The patcher can consume this input as-is, so conversion would remove the split-package shape it needs.
             return file_name, app_dl
