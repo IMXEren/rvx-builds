@@ -192,7 +192,10 @@ def main() -> None:
     finally:
         # Always write partial metadata for successful apps before surfacing the aggregate failure.
         write_changelog_to_file(updates_info)
-        generate_obtainium_export(updates_info, config)
+        # Only generate export for apps that were successfully processed, not stale entries from past builds.
+        successful_apps = set(config.apps) - set(failed_apps)
+        export_info = {k: v for k, v in updates_info.items() if k in successful_apps}
+        generate_obtainium_export(export_info, config)
 
     _raise_if_no_apps_succeeded(failed_apps, updates_info)
 
