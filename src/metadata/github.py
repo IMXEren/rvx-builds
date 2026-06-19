@@ -40,7 +40,7 @@ class GithubSourceMetadata:
         tag = response["tag_name"]
         body = response["body"]
         html_url = response["html_url"]
-        published_at = datetime.strptime(response["published_at"], "%Y-%m-%dT%H:%M:%SZ").astimezone(UTC)
+        published_at = datetime.fromisoformat(response["published_at"]).astimezone(UTC)
         return cls(name, tag, body, html_url, published_at)
 
     def get_release_date(self) -> str:
