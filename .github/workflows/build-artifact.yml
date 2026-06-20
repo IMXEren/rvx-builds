@@ -12,6 +12,8 @@ on:
         required: false
       SECRET_REDDIT_CLIENT_ID:
         required: false
+      SECRET_OBTAINIUM_GH_PAT:
+        required: false
     inputs:
       CI_TEST:
         required: false
