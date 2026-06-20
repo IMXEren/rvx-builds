@@ -6,7 +6,7 @@ Here's the [sample env](#sample-env) to help you. Reminder to check if you have 
 
 ## Default
 
-If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these configurations will be used:
+If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these configurations will be used:
 
 - YouTube & YouTube Music apps will be patched
 - With latest versions recommended by ReVanced
@@ -117,7 +117,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    4. APKEEP - Supports downloading any available version using [APKEEP](https://github.com/EFForg/apkeep)
        1. Link Format - `apkeep`
        2. Example Link - `apkeep`
-       3. You need to provide `APKEEP_EMAIL` and `APKEEP_TOKEN` in `GitHub secrets` for authentication.
+       3. You need to provide `APKEEP_EMAIL` and `APKEEP_TOKEN` in `[custom GitHub secrets](extras.md#custom-secrets)` for authentication.
 
    <br>Please verify the source of original APKs yourself with links provided. I'm not responsible for any damage
    caused.If you know any better/safe source to download clean. Open a discussion.
@@ -146,7 +146,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
    If you add above. Script will not download the `YouTube` & `YouTube Music` apks from internet and expects an apk in
    `/apks` folder with names `youtube.apk` & `youtube_music.apk` (apk naming format - `<APP_NAME>.apk`) respectively.
 6. <a id="personal-access-token"></a>If you run script again & again. You might hit GitHub/GitLab API limits.
-   In that case you can provide your Personal Access Token by adding a secret `PERSONAL_ACCESS_TOKEN` in `GitHub secrets`.
+   In that case you can provide your Personal Access Token by adding a secret `PERSONAL_ACCESS_TOKEN` in `[custom GitHub secrets](extras.md#custom-secrets)`.
 7. <a id="global-resources"></a>You can provide Direct download to the resource to used for patching apps `.env` file
    or in `ENVS` in `GitHub secrets` in the format -
 
@@ -281,7 +281,7 @@ secrets` in the format -
    **Options Merging & Precedence** — Options are resolved at three levels, each overriding the previous:
 
    ```
-   Level 1: INI defaults from env vars / GitHub Secrets
+   Level 1: INI defaults from env vars / [custom GitHub secrets](extras.md#custom-secrets)
    Level 2: YAML file (per-app with merging)
    Level 3: RAW string overrides (highest priority)
    ```
@@ -449,11 +449,11 @@ secrets` in the format -
     once, add it in `GitHub secrets`.<br>
     Or you can ignore what I wrote in above configs and always use `GitHub secrets`.<br><br>
     **Note - If you want to use or will be using `Automated` method to patch, please do not define anything inside `ENVS`.**
-18. <a id="virus-total"></a>You can scan your built apks files with VirusTotal. For that, Add `VT_API_KEY` in `GitHub secrets`.
+18. <a id="virus-total"></a>You can scan your built apks files with VirusTotal. For that, Add `VT_API_KEY` in `[custom GitHub secrets](extras.md#custom-secrets)`.
 19. <a id="reddit-client"></a>If you want to patch reddit apps using your own Client ID. You can provide your Client ID
-    as secret `REDDIT_CLIENT_ID` in `GitHub secrets`.
+    as secret `REDDIT_CLIENT_ID` in `[custom GitHub secrets](extras.md#custom-secrets)`.
 20. <a id="apprise"></a>[Apprise](https://github.com/caronc/apprise)<br>
-    We also have apprise support to upload built apk anywhere. To use apprise, add below envs in `GitHub secrets`.
+    We also have apprise support to upload built apk anywhere. To use apprise, add below envs in `[custom GitHub secrets](extras.md#custom-secrets)`.
     ```ini
     APPRISE_URL=tgram://bot-token/chat-id
     APPRISE_NOTIFICATION_BODY=What a great Body
@@ -516,12 +516,17 @@ secrets` in the format -
 
      **JSON Configs** — When `OBTAINIUM_GH_PRIVATE_EXPORT` is set, each app also gets a JSON config in
      `obtainium_sources/json/` (e.g., `youtube.json`) alongside its HTML source. These JSONs follow
-     Obtainium's import schema and can be imported directly:
+     Obtainium's import schema and can be imported directly.
+
+     To auto-populate the `Authorization` header in the generated JSONs, add a [custom GitHub secret](extras.md#custom-secrets)
+     named `SECRET_OBTAINIUM_GH_PAT` with your Personal Access Token as the value.
+     The `SECRET_` prefix is stripped when writing to `.env`, so the config reads it as `OBTAINIUM_GH_PAT`.
      ```ini
-     OBTAINIUM_GH_PAT=ghp_xxxxxxxxxxxx
+     SECRET_OBTAINIUM_GH_PAT=ghp_xxxxxxxxxxxx
      ```
-     If set, the PAT is embedded in the `requestHeader` of the generated JSONs as a Bearer token,
-     so Obtainium can authenticate when fetching the private repo's raw HTML sources.
+     If set, the PAT is embedded in every app's `requestHeader` as a Bearer token, so Obtainium
+     can authenticate when fetching from the private repo. If not set, the header is left empty
+     and you must configure it manually in Obtainium after importing.
 
      A `combined.json` aggregates all apps into one file for bulk import. Both per-app and combined
      JSONs are listed in the private repo's README table for easy access.

@@ -457,7 +457,7 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
                 change_log_url = f"https://github.com/{github_repository}/releases/tag/{encoded_tag}"
 
             # Load the PAT from config so users can set a real token without editing generated files.
-            request_headers = []
+            request_headers = [{"requestHeader": ""}]
             if config.obtainium_gh_pat:
                 request_headers = [{"requestHeader": f"Authorization: Bearer {config.obtainium_gh_pat}"}]
 
