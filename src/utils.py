@@ -444,12 +444,23 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
             json_dir.mkdir(exist_ok=True)
 
             app_dump = app_data.get("app_dump", {})
-            package_name = app_dump.get("package_name", app_name)
+            output_file_name = str(app_data.get("output_file_name", ""))
+            patched_apk = Path("apks") / output_file_name
+
+            try:
+                from pyaxmlparser import APK  # noqa: PLC0415
+
+                _apk = APK(patched_apk)
+                app_label = _apk.application or app_name
+                package_name = _apk.packagename or app_dump["package_name"]
+            except Exception:  # noqa: BLE001  # pyaxmlparser raises generic errors
+                app_label = app_name
+                package_name = app_dump["package_name"]
 
             # Raw HTML URL pointing to the private repo's 'repo' branch.
             raw_html_url = f"https://raw.githubusercontent.com/{private_repo}/repo/obtainium_sources/{html_file_name}"
 
-            # ChangeLog URL — use the configured Obtainium tag so it points to the right release.
+            # ChangeLog URL - use the configured Obtainium tag so it points to the right release.
             if obtainium_github_tag == "latest":
                 change_log_url = f"https://github.com/{github_repository}/releases/latest"
             else:
@@ -499,7 +510,7 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
                 "apps": [
                     {
                         "id": package_name,
-                        "name": app_name,
+                        "name": app_label,
                         "url": raw_html_url,
                         "author": "Morphe",
                         "preferredApkIndex": 0,
@@ -507,7 +518,7 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
                         "categories": ["RVX-Builds"],
                         "changeLog": change_log_url,
                         "overrideSource": "HTML",
-                    }
+                    },
                 ],
             }
 

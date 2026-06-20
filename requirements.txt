@@ -13,3 +13,4 @@ pydoll-python==2.23.0
 curl_cffi==0.15.0
 ruamel.yaml==0.19.1
 semver==3.0.4
+pyaxmlparser==0.3.31

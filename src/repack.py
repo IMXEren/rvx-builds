@@ -2,10 +2,12 @@
 
 import json
 import re
+import tempfile
 import zipfile
 from pathlib import Path
 
 from loguru import logger
+from pyaxmlparser import APK
 
 # All standard Android architectures and screen densities
 STANDARD_ARCHS = {"armeabi", "armeabi_v7a", "arm64_v8a", "x86", "x86_64", "mips", "mips64"}
@@ -54,17 +56,19 @@ def _should_keep(modifier: str, allowed_arch: set[str], allowed_dpi: set[str]) -
 
 
 def _get_package_name(zin: zipfile.ZipFile) -> str | None:
-    """Read the package name from any APK's AndroidManifest.xml inside the apks zip."""
+    """Read the package name from any APK inside a bundle zip."""
     for item in zin.infolist():
         if not item.filename.endswith(".apk"):
             continue
         try:
-            with zin.open(item.filename) as apk, zipfile.ZipFile(apk) as inner:
-                data = inner.read("AndroidManifest.xml")
-                m = re.search(rb'package="([^"]+)"', data)
-                if m:
-                    return m.group(1).decode()
-        except (KeyError, zipfile.BadZipFile, ValueError):
+            with zin.open(item.filename) as apk_data, tempfile.NamedTemporaryFile(suffix=".apk") as tmp:
+                tmp.write(apk_data.read())
+                tmp.flush()
+                apk_obj = APK(tmp.name)
+                if apk_obj.package:
+                    return apk_obj.package
+        except Exception:  # noqa: BLE001  # pyaxmlparser raises generic errors
+            logger.warning("Failed to read package name from inner APK: {}", item.filename)
             continue
     return None
 
