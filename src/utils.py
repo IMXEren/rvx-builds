@@ -499,6 +499,7 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
                 "apps": [
                     {
                         "id": package_name,
+                        "name": app_name,
                         "url": raw_html_url,
                         "author": "Morphe",
                         "preferredApkIndex": 0,
