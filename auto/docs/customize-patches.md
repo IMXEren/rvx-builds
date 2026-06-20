@@ -52,6 +52,7 @@ If you don't define anything in `.env` file or `ENVS` in `GitHub Secrets`, these
 | [OBTAINIUM_EXPORT](#obtainium)                            |   Export html of apk sources pointing to GitHub   | False                                                                                                    |
 | [OBTAINIUM_GITHUB_TAG](#obtainium)                        |   The release tag to be pointed to on export      | latest                                                                                                   |
 | [OBTAINIUM_GH_PRIVATE_EXPORT](#obtainium)                 |   Push Obtainium sources to a private repo        | None                                                                                                     |
+| [OBTAINIUM_GH_PAT](#obtainium)                             |   GitHub PAT for private repo access in JSONs     | None                                                                                                     |
 
 `*` - Can be overridden for individual app.
 
@@ -501,14 +502,26 @@ secrets` in the format -
     > The CI reads it via `vars.OBTAINIUM_GH_PRIVATE_EXPORT`, which is only available at the repository level.
     > Set the name to `OBTAINIUM_GH_PRIVATE_EXPORT` and the value to `owner/private-repo-name`.
 
-    This requires:
-    - A `PERSONAL_ACCESS_TOKEN` secret with `repo` scope for authentication.
-    - The target repository to have a `repo` branch where sources are pushed.
-    - A workflow in the target repository to resolve `/latest/download/` URLs to specific release tags
-      upon receiving a `repository_dispatch` event.
+     This requires:
+     - A `PERSONAL_ACCESS_TOKEN` secret with `repo` scope for authentication.
+     - The target repository to have a `repo` branch where sources are pushed.
+     - A workflow in the target repository to resolve `/latest/download/` URLs to specific release tags
+       upon receiving a `repository_dispatch` event.
 
-    On each build, the CI will:
-    1. Push the generated HTML sources to the `repo` branch of the target repository (merge-copies, preserving older sources).
-    2. Send a `resolve-obtainium-tags` dispatch event so the target repo resolves `/latest/download/` → `/download/Build-{tag}/`.
-    3. Generate a sorted README table listing all apps with their raw GitHub URLs.
-    4. Clean up the local `obtainium_sources/` folder if `OBTAINIUM_EXPORT` is not enabled, preventing them from leaking into the public changelogs branch.
+     On each build, the CI will:
+     1. Push the generated HTML sources to the `repo` branch of the target repository (merge-copies, preserving older sources).
+     2. Send a `resolve-obtainium-tags` dispatch event so the target repo resolves `/latest/download/` → `/download/Build-{tag}/`.
+     3. Generate a sorted README table listing all apps with their raw GitHub URLs and JSON config links.
+     4. Clean up the local `obtainium_sources/` folder if `OBTAINIUM_EXPORT` is not enabled, preventing them from leaking into the public changelogs branch.
+
+     **JSON Configs** — When `OBTAINIUM_GH_PRIVATE_EXPORT` is set, each app also gets a JSON config in
+     `obtainium_sources/json/` (e.g., `youtube.json`) alongside its HTML source. These JSONs follow
+     Obtainium's import schema and can be imported directly:
+     ```ini
+     OBTAINIUM_GH_PAT=ghp_xxxxxxxxxxxx
+     ```
+     If set, the PAT is embedded in the `requestHeader` of the generated JSONs as a Bearer token,
+     so Obtainium can authenticate when fetching the private repo's raw HTML sources.
+
+     A `combined.json` aggregates all apps into one file for bulk import. Both per-app and combined
+     JSONs are listed in the private repo's README table for easy access.

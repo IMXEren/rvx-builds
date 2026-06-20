@@ -194,6 +194,9 @@ jobs:
 
           mkdir -p obtainium_sources
           cp "$GITHUB_WORKSPACE/obtainium_sources"/*.html obtainium_sources/
+          if [ -d "$GITHUB_WORKSPACE/obtainium_sources/json" ]; then
+            cp -r "$GITHUB_WORKSPACE/obtainium_sources/json" obtainium_sources/
+          fi
           git add obtainium_sources
           git -c user.name="github-actions[bot]" -c user.email="github-actions[bot]@users.noreply.github.com" \
             commit --allow-empty -m "chore: Update Obtainium sources"

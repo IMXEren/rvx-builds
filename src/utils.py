@@ -436,3 +436,95 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
         html_file_path = obtainium_sources_path / html_file_name
         html_file_path.write_text(html_content.strip(), encoding="utf_8")
         logger.info(f"Generated Obtainium export for {app_name}: {html_file_path}")
+
+        # Generate Obtainium JSON config alongside the HTML source.
+        private_repo = getattr(config, "obtainium_gh_private_export", None)
+        if private_repo:
+            json_dir = obtainium_sources_path / "json"
+            json_dir.mkdir(exist_ok=True)
+
+            app_dump = app_data.get("app_dump", {})
+            package_name = app_dump.get("package_name", app_name)
+
+            # Raw HTML URL pointing to the private repo's 'repo' branch.
+            raw_html_url = f"https://raw.githubusercontent.com/{private_repo}/repo/obtainium_sources/{html_file_name}"
+
+            # ChangeLog URL — use the configured Obtainium tag so it points to the right release.
+            if obtainium_github_tag == "latest":
+                change_log_url = f"https://github.com/{github_repository}/releases/latest"
+            else:
+                encoded_tag = quote(obtainium_github_tag, safe="")
+                change_log_url = f"https://github.com/{github_repository}/releases/tag/{encoded_tag}"
+
+            # Load the PAT from config so users can set a real token without editing generated files.
+            request_headers = []
+            if config.obtainium_gh_pat:
+                request_headers = [{"requestHeader": f"Authorization: Bearer {config.obtainium_gh_pat}"}]
+
+            additional_settings = {
+                "intermediateLink": [],
+                "customLinkFilterRegex": "",
+                "filterByLinkText": False,
+                "matchLinksOutsideATags": False,
+                "skipSort": True,
+                "reverseSort": True,
+                "sortByLastLinkSegment": False,
+                "versionExtractWholePage": False,
+                "requestHeader": request_headers,
+                "defaultPseudoVersioningMethod": "APKLinkHash",
+                "trackOnly": False,
+                "onDemandOnly": False,
+                "exemptFromBackgroundUpdates": False,
+                "skipUpdateNotifications": False,
+                "versionExtractionRegEx": r"Latest version: (\S+)",
+                "matchGroupToUse": "",
+                "useVersionCodeAsOSVersion": False,
+                "versionDetection": "auto",
+                "apkFilterRegEx": "",
+                "invertAPKFilter": False,
+                "autoApkFilterByArch": False,
+                "shizukuPretendToBeGooglePlay": False,
+                "allowInsecure": False,
+                "refreshBeforeDownload": False,
+                "versionStringSource": "default",
+                "releaseDateAsVersion": False,
+                "releaseTitleAsVersion": False,
+                "extractVersionFromAssetName": False,
+                "releaseCommitShaAsVersion": False,
+                "trackOnlyTemporaryPackageId": True,
+                "trackOnlyUndeterminedInstalledVersion": True,
+            }
+
+            app_json = {
+                "apps": [
+                    {
+                        "id": package_name,
+                        "url": raw_html_url,
+                        "author": "Morphe",
+                        "preferredApkIndex": 0,
+                        "additionalSettings": json.dumps(additional_settings),
+                        "categories": ["RVX-Builds"],
+                        "changeLog": change_log_url,
+                        "overrideSource": "HTML",
+                    }
+                ],
+            }
+
+            json_file_name = f"{slugify(str(app_name)) or 'app'}.json"
+            json_file_path = json_dir / json_file_name
+            json_file_path.write_text(json.dumps(app_json, indent=2), encoding="utf_8")
+            logger.info(f"Generated Obtainium JSON config for {app_name}: {json_file_path}")
+
+    # Generate combined.json with all apps.
+    if private_repo:
+        combined = []
+        json_dir = obtainium_sources_path / "json"
+        if json_dir.is_dir():
+            for json_path in sorted(json_dir.glob("*.json")):
+                if json_path.name == "combined.json":
+                    continue
+                app_data = json.loads(json_path.read_text(encoding="utf_8"))
+                combined.extend(app_data.get("apps", []))
+        combined_path = json_dir / "combined.json"
+        combined_path.write_text(json.dumps({"apps": combined}, indent=2), encoding="utf_8")
+        logger.info(f"Generated combined Obtainium JSON config: {combined_path}")
