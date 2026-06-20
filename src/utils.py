@@ -476,7 +476,7 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
                 "onDemandOnly": False,
                 "exemptFromBackgroundUpdates": False,
                 "skipUpdateNotifications": False,
-                "versionExtractionRegEx": r"Latest version: (\S+)",
+                "versionExtractionRegEx": "",
                 "matchGroupToUse": "",
                 "useVersionCodeAsOSVersion": False,
                 "versionDetection": "auto",
