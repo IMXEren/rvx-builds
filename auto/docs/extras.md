@@ -19,12 +19,16 @@ Secrets are variables that you create in an organization, repository, or reposit
 
 When creating [custom secrets](#custom-secrets) for environment variables used by the build scripts, prefix the secret name with `SECRET_`. The CI workflow strips the prefix automatically, so the Python config sees the unprefixed name.
 
+The same applies to **repository variables**: prefix them with `VAR_` to have them auto-injected into `.env`.
+
 **Exceptions** — the following secrets do NOT require the `SECRET_` prefix because they are referenced directly in workflows:
 - `ENVS`
 - `JOIN_API_KEY` / `JOIN_DEVICE_ID`
 - `PERSONAL_ACCESS_TOKEN`
 
-**Example**: To expose `REDDIT_CLIENT_ID` to the build, create a [custom GitHub secret](#custom-secrets) named `SECRET_REDDIT_CLIENT_ID`. The workflow writes it to `.env` as `REDDIT_CLIENT_ID`.
+**Example**: To expose `OBTAINIUM_GH_PRIVATE_EXPORT` as a repository variable, create a variable named `VAR_OBTAINIUM_GH_PRIVATE_EXPORT`. The workflow writes it to `.env` as `OBTAINIUM_GH_PRIVATE_EXPORT`.
+
+Similarly, to expose `OBTAINIUM_GH_PAT` as a secret, create a secret named `SECRET_OBTAINIUM_GH_PAT`, and the workflow writes it to `.env` as `OBTAINIUM_GH_PAT`.
 
 ## Join API
 

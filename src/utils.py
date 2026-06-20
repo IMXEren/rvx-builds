@@ -526,17 +526,3 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
             json_file_path = json_dir / json_file_name
             json_file_path.write_text(json.dumps(app_json, indent=2), encoding="utf_8")
             logger.info(f"Generated Obtainium JSON config for {app_name}: {json_file_path}")
-
-    # Generate combined.json with all apps.
-    if private_repo:
-        combined = []
-        json_dir = obtainium_sources_path / "json"
-        if json_dir.is_dir():
-            for json_path in sorted(json_dir.glob("*.json")):
-                if json_path.name == "combined.json":
-                    continue
-                app_data = json.loads(json_path.read_text(encoding="utf_8"))
-                combined.extend(app_data.get("apps", []))
-        combined_path = json_dir / "combined.json"
-        combined_path.write_text(json.dumps({"apps": combined}, indent=2), encoding="utf_8")
-        logger.info(f"Generated combined Obtainium JSON config: {combined_path}")

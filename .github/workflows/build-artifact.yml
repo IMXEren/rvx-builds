@@ -47,12 +47,13 @@ jobs:
       - name: Inject custom secrets into .env file
         env:
           ALL_SECRETS: ${{ toJson(secrets) }}
+          ALL_VARS: ${{ toJson(vars) }}
         run: |
           echo "${{ secrets.ENVS }}" >> .env
           echo "GITHUB_REPOSITORY=${{ github.repository }}" >> .env
           echo "${{ secrets.DOCKER_PY_REVANCED_SECRETS }}" >> .env
           echo "$ALL_SECRETS" | jq -r 'to_entries | .[] | select(.key | startswith("SECRET_")) | "\(.key | sub("^SECRET_"; ""))=\(.value)"' >> .env
-          [ -n "${{ vars.OBTAINIUM_GH_PRIVATE_EXPORT }}" ] && echo "OBTAINIUM_GH_PRIVATE_EXPORT=${{ vars.OBTAINIUM_GH_PRIVATE_EXPORT }}" >> .env
+          echo "$ALL_VARS" | jq -r 'to_entries | .[] | select(.key | startswith("VAR_")) | "\(.key | sub("^VAR_"; ""))=\(.value)"' >> .env
           echo "Injected custom secrets into .env file"
 
       - name: Setup python

@@ -497,10 +497,9 @@ secrets` in the format -
     ```ini
     OBTAINIUM_GH_PRIVATE_EXPORT=<owner>/<private-repo>
     ```
-    > **Setup**: This must be configured as a [**repository variable**](https://github.com/USER/REPO/settings/variables/new)
-    > (not a secret, not an environment variable) under *Settings → Variables and secrets → Actions → Repository Variables*.
-    > The CI reads it via `vars.OBTAINIUM_GH_PRIVATE_EXPORT`, which is only available at the repository level.
-    > Set the name to `OBTAINIUM_GH_PRIVATE_EXPORT` and the value to `owner/private-repo-name`.
+    > **Setup**: Create a [**repository variable**](https://github.com/USER/REPO/settings/variables/new)
+    > named `VAR_OBTAINIUM_GH_PRIVATE_EXPORT` (not a secret) with the value `owner/private-repo-name`.
+    > The CI strips the `VAR_` prefix and writes `OBTAINIUM_GH_PRIVATE_EXPORT` to `.env`.
 
      This requires:
      - A `PERSONAL_ACCESS_TOKEN` secret with `repo` scope for authentication.
@@ -514,7 +513,7 @@ secrets` in the format -
      3. Generate a sorted README table listing all apps with their raw GitHub URLs and JSON config links.
      4. Clean up the local `obtainium_sources/` folder if `OBTAINIUM_EXPORT` is not enabled, preventing them from leaking into the public changelogs branch.
 
-     **JSON Configs** — When `OBTAINIUM_GH_PRIVATE_EXPORT` is set, each app also gets a JSON config in
+     **JSON Configs** — When `VAR_OBTAINIUM_GH_PRIVATE_EXPORT` is set (as a repository variable),
      `obtainium_sources/json/` (e.g., `youtube.json`) alongside its HTML source. These JSONs follow
      Obtainium's import schema and can be imported directly.
 
