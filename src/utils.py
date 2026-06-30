@@ -242,7 +242,7 @@ def handle_request_response(response: ResponseType, url: str) -> None:
     Parameters
     ----------
     response : ResponseType
-        The parameter `response` is of type `ResponseType`, which is a union of `Response`, `CurlResponse`, and `Source`.
+        The parameter `response` is of type `ResponseType`, which is a union of `Response`, `CurlResponse` and `Source`.
         This object typically contains information about the response received from the server,
         such as the status code, headers, and response body.
     url: str
@@ -376,6 +376,109 @@ def save_patch_info(app: "APP", updates_info: dict[str, Any]) -> dict[str, Any]:
     return updates_info
 
 
+def _write_obtainium_json_config(
+    app_data: dict[str, Any],
+    app_info: tuple[str, str],
+    sources_path: Path,
+    repo_info: tuple[str, str],
+    config: "RevancedConfig",
+) -> None:
+    """Write an Obtainium JSON app config next to its companion HTML source page."""
+    app_name, html_file_name = app_info
+    github_repository, obtainium_github_tag = repo_info
+
+    private_repo = getattr(config, "obtainium_gh_private_export", None)
+    if not private_repo:
+        return
+
+    json_dir = sources_path / "json"
+    json_dir.mkdir(exist_ok=True)
+
+    app_dump = app_data.get("app_dump", {})
+    output_file_name = str(app_data.get("output_file_name", ""))
+    patched_apk = Path("apks") / output_file_name
+
+    try:
+        from pyaxmlparser import APK  # noqa: PLC0415
+
+        _apk = APK(patched_apk)
+        app_label = _apk.application or app_name
+        package_name = _apk.packagename or app_dump["package_name"]
+    except Exception:  # noqa: BLE001  # pyaxmlparser raises generic errors
+        app_label = app_name
+        package_name = app_dump["package_name"]
+
+    # Raw HTML URL pointing to the private repo's 'repo' branch.
+    raw_html_url = f"https://raw.githubusercontent.com/{private_repo}/repo/obtainium_sources/{html_file_name}"
+
+    # ChangeLog URL - use the configured Obtainium tag so it points to the right release.
+    if obtainium_github_tag == "latest":
+        change_log_url = f"https://github.com/{github_repository}/releases/latest"
+    else:
+        encoded_tag = quote(obtainium_github_tag, safe="")
+        change_log_url = f"https://github.com/{github_repository}/releases/tag/{encoded_tag}"
+
+    # Load the PAT from config so users can set a real token without editing generated files.
+    request_headers = [{"requestHeader": ""}]
+    if config.obtainium_gh_pat:
+        request_headers = [{"requestHeader": f"Authorization: Bearer {config.obtainium_gh_pat}"}]
+
+    additional_settings = {
+        "intermediateLink": [],
+        "customLinkFilterRegex": "",
+        "filterByLinkText": False,
+        "matchLinksOutsideATags": False,
+        "skipSort": True,
+        "reverseSort": True,
+        "sortByLastLinkSegment": False,
+        "versionExtractWholePage": False,
+        "requestHeader": request_headers,
+        "defaultPseudoVersioningMethod": "APKLinkHash",
+        "trackOnly": False,
+        "onDemandOnly": False,
+        "exemptFromBackgroundUpdates": False,
+        "skipUpdateNotifications": False,
+        "versionExtractionRegEx": "",
+        "matchGroupToUse": "",
+        "useVersionCodeAsOSVersion": False,
+        "versionDetection": "auto",
+        "apkFilterRegEx": "",
+        "invertAPKFilter": False,
+        "autoApkFilterByArch": False,
+        "shizukuPretendToBeGooglePlay": False,
+        "allowInsecure": False,
+        "refreshBeforeDownload": False,
+        "versionStringSource": "default",
+        "releaseDateAsVersion": False,
+        "releaseTitleAsVersion": False,
+        "extractVersionFromAssetName": False,
+        "releaseCommitShaAsVersion": False,
+        "trackOnlyTemporaryPackageId": True,
+        "trackOnlyUndeterminedInstalledVersion": True,
+    }
+
+    app_json = {
+        "apps": [
+            {
+                "id": package_name,
+                "name": app_label,
+                "url": raw_html_url,
+                "author": "Morphe",
+                "preferredApkIndex": 0,
+                "additionalSettings": json.dumps(additional_settings),
+                "categories": ["RVX-Builds"],
+                "changeLog": change_log_url,
+                "overrideSource": "HTML",
+            },
+        ],
+    }
+
+    json_file_name = f"{slugify(str(app_name)) or 'app'}.json"
+    json_file_path = json_dir / json_file_name
+    json_file_path.write_text(json.dumps(app_json, indent=2), encoding="utf_8")
+    logger.info(f"Generated Obtainium JSON config for {app_name}: {json_file_path}")
+
+
 def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedConfig") -> None:
     """Generate HTML files for Obtainium."""
     if not config.obtainium_export and not config.obtainium_gh_private_export:
@@ -438,91 +541,10 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
         logger.info(f"Generated Obtainium export for {app_name}: {html_file_path}")
 
         # Generate Obtainium JSON config alongside the HTML source.
-        private_repo = getattr(config, "obtainium_gh_private_export", None)
-        if private_repo:
-            json_dir = obtainium_sources_path / "json"
-            json_dir.mkdir(exist_ok=True)
-
-            app_dump = app_data.get("app_dump", {})
-            output_file_name = str(app_data.get("output_file_name", ""))
-            patched_apk = Path("apks") / output_file_name
-
-            try:
-                from pyaxmlparser import APK  # noqa: PLC0415
-
-                _apk = APK(patched_apk)
-                app_label = _apk.application or app_name
-                package_name = _apk.packagename or app_dump["package_name"]
-            except Exception:  # noqa: BLE001  # pyaxmlparser raises generic errors
-                app_label = app_name
-                package_name = app_dump["package_name"]
-
-            # Raw HTML URL pointing to the private repo's 'repo' branch.
-            raw_html_url = f"https://raw.githubusercontent.com/{private_repo}/repo/obtainium_sources/{html_file_name}"
-
-            # ChangeLog URL - use the configured Obtainium tag so it points to the right release.
-            if obtainium_github_tag == "latest":
-                change_log_url = f"https://github.com/{github_repository}/releases/latest"
-            else:
-                encoded_tag = quote(obtainium_github_tag, safe="")
-                change_log_url = f"https://github.com/{github_repository}/releases/tag/{encoded_tag}"
-
-            # Load the PAT from config so users can set a real token without editing generated files.
-            request_headers = [{"requestHeader": ""}]
-            if config.obtainium_gh_pat:
-                request_headers = [{"requestHeader": f"Authorization: Bearer {config.obtainium_gh_pat}"}]
-
-            additional_settings = {
-                "intermediateLink": [],
-                "customLinkFilterRegex": "",
-                "filterByLinkText": False,
-                "matchLinksOutsideATags": False,
-                "skipSort": True,
-                "reverseSort": True,
-                "sortByLastLinkSegment": False,
-                "versionExtractWholePage": False,
-                "requestHeader": request_headers,
-                "defaultPseudoVersioningMethod": "APKLinkHash",
-                "trackOnly": False,
-                "onDemandOnly": False,
-                "exemptFromBackgroundUpdates": False,
-                "skipUpdateNotifications": False,
-                "versionExtractionRegEx": "",
-                "matchGroupToUse": "",
-                "useVersionCodeAsOSVersion": False,
-                "versionDetection": "auto",
-                "apkFilterRegEx": "",
-                "invertAPKFilter": False,
-                "autoApkFilterByArch": False,
-                "shizukuPretendToBeGooglePlay": False,
-                "allowInsecure": False,
-                "refreshBeforeDownload": False,
-                "versionStringSource": "default",
-                "releaseDateAsVersion": False,
-                "releaseTitleAsVersion": False,
-                "extractVersionFromAssetName": False,
-                "releaseCommitShaAsVersion": False,
-                "trackOnlyTemporaryPackageId": True,
-                "trackOnlyUndeterminedInstalledVersion": True,
-            }
-
-            app_json = {
-                "apps": [
-                    {
-                        "id": package_name,
-                        "name": app_label,
-                        "url": raw_html_url,
-                        "author": "Morphe",
-                        "preferredApkIndex": 0,
-                        "additionalSettings": json.dumps(additional_settings),
-                        "categories": ["RVX-Builds"],
-                        "changeLog": change_log_url,
-                        "overrideSource": "HTML",
-                    },
-                ],
-            }
-
-            json_file_name = f"{slugify(str(app_name)) or 'app'}.json"
-            json_file_path = json_dir / json_file_name
-            json_file_path.write_text(json.dumps(app_json, indent=2), encoding="utf_8")
-            logger.info(f"Generated Obtainium JSON config for {app_name}: {json_file_path}")
+        _write_obtainium_json_config(
+            app_data,
+            (app_name, html_file_name),
+            obtainium_sources_path,
+            (github_repository, obtainium_github_tag),
+            config,
+        )
