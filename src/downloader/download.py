@@ -226,7 +226,8 @@ class Downloader(object):
         output_zip_name = f"{base}-repack{ext}"
         output_zip_path = self.config.temp_folder / output_zip_name
         if repack_apks(file_path, output_zip_path, self.config.device_spec):
-            file_path.unlink()
+            # don't delete the original file
+            # because it'll cause cache miss
             return output_zip_name
         logger.error(f"Failed to repack {file_name}")
         return file_name
