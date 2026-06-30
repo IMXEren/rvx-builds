@@ -7,7 +7,7 @@ from loguru import logger
 
 from src.app import APP
 from src.downloader.download import Downloader
-from src.exceptions import UptoDownAPKDownloadError
+from src.exceptions import UptoDownAPKDownloadError, VersionNotFoundError
 from src.utils import bs4_parser, handle_request_response, make_request, request_header
 
 
@@ -119,7 +119,7 @@ class UptoDown(Downloader):
 
         if download_url is None:
             msg = f"Unable to download {app.app_name} from uptodown."
-            raise UptoDownAPKDownloadError(msg, url=url)
+            raise VersionNotFoundError(msg, url=url)
 
         return self.extract_download_link(download_url, app.app_name)
 

@@ -11,7 +11,7 @@ from loguru import logger
 
 from src.app import APP
 from src.downloader.download import Downloader
-from src.exceptions import APKPureAPKDownloadError
+from src.exceptions import APKPureAPKDownloadError, VersionNotFoundError
 from src.utils import bs4_parser, handle_request_response, make_request, request_header, slugify
 
 
@@ -154,7 +154,7 @@ class ApkPure(Downloader):
                 self._download(download_source, file_name)
                 return file_name, download_source
         msg = f"Unable to find specific version '{version}' for {app} from version list"
-        raise APKPureAPKDownloadError(msg, url=version_page)
+        raise VersionNotFoundError(msg, url=version_page)
 
     def latest_version(self: Self, app: APP, **kwargs: Any) -> tuple[str, str]:
         """Function to download whatever the latest version of app from apkpure.

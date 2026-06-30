@@ -113,6 +113,21 @@ class APP(object):
                 msg = f"App {self.app_name} not supported officially yet. Please provide download source in env."
                 raise DownloadError(msg) from key
 
+            # Version fallback: when env is unset and the patch bundle advertised
+            # compatible versions, try them in descending order if the first attempt 404s.
+            if not self._env_version_set and self.compatible_versions:
+                from src.apks.version_fallback import VersionFallback  # noqa: PLC0415
+                from src.patches import Patches  # noqa: PLC0415
+
+                downloader = DownloaderFactory.create_downloader(config=config, apk_source=self.download_source)
+                candidates = Patches.get_compatible_versions(self)
+                self.download_file_name, self.download_dl = VersionFallback.run(
+                    self,
+                    downloader,
+                    candidates,
+                )
+                return
+
             # Get unique cache key for this app
             cache_key = self.get_download_cache_key()
 

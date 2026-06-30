@@ -9,7 +9,7 @@ from src.apks.variant_sorter import VariantSorter
 from src.app import APP
 from src.downloader.download import Downloader
 from src.downloader.sources import APK_MIRROR_BASE_URL
-from src.exceptions import APKMirrorAPKDownloadError, ScrapingError
+from src.exceptions import APKMirrorAPKDownloadError, ScrapingError, VersionNotFoundError
 from src.utils import (
     bs4_parser,
     handle_request_response,
@@ -126,7 +126,7 @@ class ApkMirror(Downloader):
         if list_widget is None:
             # APKMirror can return a normal 404 page for a guessed release URL, so fail before parsing variant rows.
             msg = "Unable to find APKMirror variants table on release page"
-            raise APKMirrorAPKDownloadError(msg, url=main_page)
+            raise VersionNotFoundError(msg, url=main_page)
         table_rows = list_widget.find_all(class_="table-row headerFont")
         apk_variants: list[dict[str, Any]] = []
         bundle_variants: list[dict[str, Any]] = []
@@ -241,7 +241,7 @@ class ApkMirror(Downloader):
                 return f"{APK_MIRROR_BASE_URL}{download_link['href']}"
 
         msg = f"Unable to find {app.app_name} version {version} on APKMirror"
-        raise APKMirrorAPKDownloadError(msg, url=app.download_source)
+        raise VersionNotFoundError(msg, url=app.download_source)
 
     @staticmethod
     def _extract_source(url: str) -> str:
