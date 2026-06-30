@@ -4,10 +4,10 @@ import contextlib
 import re
 from typing import Any, ClassVar, Self
 
-import packaging.version
-import semver
 from loguru import logger
 from packaging.version import InvalidVersion, Version
+
+from src.apks.version_sorter import VersionSorter
 
 from src.app import APP
 from src.config import RevancedConfig
@@ -194,33 +194,7 @@ class Patches(object):
         Currently, it returns the latest version (for list of versions).
         """
         if isinstance(version, list) and version:
-
-            def _version_key(v: str) -> semver.Version:
-                min_components = 3
-                try:
-                    ver = packaging.version.parse(v)
-                    components = list(ver.release[:3])
-                    while len(components) < min_components:
-                        components.append(0)
-                    major, minor, patch = components
-                    pre = "".join([str(i) for i in ver.pre]) if ver.pre else None
-                    extra_digits = ".".join(map(str, ver.release[3:])) if len(ver.release) > min_components else None
-                    build_components = []
-                    if extra_digits:
-                        build_components.append(extra_digits)
-                    if ver.dev:
-                        build_components.append(str(ver.dev))
-                    build_meta = ".".join(build_components) if build_components else None
-                    return semver.Version(major, minor, patch, prerelease=pre, build=build_meta)
-                except (packaging.version.InvalidVersion, ValueError):
-                    pass
-
-                try:
-                    return semver.Version.parse(v)
-                except ValueError:
-                    return semver.Version(0, 0, 0)
-
-            version.sort(key=_version_key)
+            version.sort(key=VersionSorter.sorting_key)
             return version[-1]
         if isinstance(version, str) and version:
             return version
