@@ -6,6 +6,7 @@ import base64
 import json
 import time
 from typing import Any, Self, cast
+from urllib.parse import parse_qsl, urlparse
 
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -308,14 +309,40 @@ class Site:
         return False
 
 
-def _are_urls_equal(url1: str | None, url2: str | None) -> bool:
-    if url1 is None or url2 is None:
+def _are_urls_equal(current_url: str | None, target_url: str | None) -> bool:
+    """Compare a current URL against a target URL configuration.
+
+    Matches if the current_url contains all query parameters specified in target_url,
+    allowing current_url to have additional parameters.
+    """
+    if current_url is None or target_url is None:
         return False
-    if not url1.endswith("/"):
-        url1 += "/"
-    if not url2.endswith("/"):
-        url2 += "/"
-    return url1 == url2
+
+    try:
+        current = urlparse(current_url)
+        target = urlparse(target_url)
+
+        if current.scheme.lower() != target.scheme.lower():
+            return False
+        if current.netloc.lower() != target.netloc.lower():
+            return False
+
+        current_path = current.path if current.path.endswith("/") else current.path + "/"
+        target_path = target.path if target.path.endswith("/") else target.path + "/"
+        if current_path != target_path:
+            return False
+
+        if not target.query:
+            return True
+
+        current_params = set(parse_qsl(current.query))
+        target_params = set(parse_qsl(target.query))
+
+        return target_params.issubset(current_params)
+
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error comparing URLs: {current_url} vs {target_url}. Error: {e}")
+        return False
 
 
 def _generate_headers(headers: list[dict[str, str]]) -> CaseInsensitiveDict:
