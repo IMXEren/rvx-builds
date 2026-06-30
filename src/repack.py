@@ -2,12 +2,12 @@
 
 import json
 import re
-import tempfile
 import zipfile
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 from loguru import logger
-from pyaxmlparser import APK
+from pyaxmlparser.axmlprinter import AXMLPrinter
 
 # All standard Android architectures and screen densities
 STANDARD_ARCHS = {"armeabi", "armeabi_v7a", "arm64_v8a", "x86", "x86_64", "mips", "mips64"}
@@ -61,14 +61,15 @@ def _get_package_name(zin: zipfile.ZipFile) -> str | None:
         if not item.filename.endswith(".apk"):
             continue
         try:
-            with zin.open(item.filename) as apk_data, tempfile.NamedTemporaryFile(suffix=".apk") as tmp:
-                tmp.write(apk_data.read())
-                tmp.flush()
-                apk_obj = APK(tmp.name)
-                if apk_obj.package:
-                    return apk_obj.package
-        except Exception:  # noqa: BLE001  # pyaxmlparser raises generic errors
-            logger.warning("Failed to read package name from inner APK: {}", item.filename)
+            with zin.open(item.filename) as apk_file, zipfile.ZipFile(apk_file) as inner_zip:
+                manifest_bytes = inner_zip.read("AndroidManifest.xml")
+            axml = AXMLPrinter(manifest_bytes)
+            manifest_xml = ET.fromstring(axml.get_xml())  # noqa: S314
+            package_name = manifest_xml.attrib.get("package")
+            if package_name:
+                return package_name
+        except Exception as e:  # noqa: BLE001  # pyaxmlparser raises generic errors
+            logger.warning("Failed to read package name from inner APK: {}, Error: {}", item.filename, e)
             continue
     return None
 
