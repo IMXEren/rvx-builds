@@ -1,5 +1,7 @@
 """APK Pure Downloader Class."""
 
+# TODO(IMXEren): Rewrite the download implementation — the current approach is out of date.  # noqa: FIX002, TD003
+
 from functools import cmp_to_key
 from typing import Any, Self
 from urllib.parse import parse_qs, urlparse

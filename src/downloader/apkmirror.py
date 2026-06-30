@@ -5,13 +5,13 @@ from typing import Any, Self, cast
 from bs4 import BeautifulSoup, Tag
 from loguru import logger
 
+from src.apks.variant_sorter import VariantSorter
 from src.app import APP
 from src.downloader.download import Downloader
 from src.downloader.sources import APK_MIRROR_BASE_URL
 from src.exceptions import APKMirrorAPKDownloadError, ScrapingError
 from src.utils import (
     bs4_parser,
-    contains_any_word,
     handle_request_response,
     make_request,
     request_header,
@@ -128,27 +128,57 @@ class ApkMirror(Downloader):
             msg = "Unable to find APKMirror variants table on release page"
             raise APKMirrorAPKDownloadError(msg, url=main_page)
         table_rows = list_widget.find_all(class_="table-row headerFont")
-        links: dict[str, str] = {}
-        apk_archs = ["arm64-v8a", "universal", "noarch"]
+        apk_variants: list[dict[str, Any]] = []
+        bundle_variants: list[dict[str, Any]] = []
+
         for row in table_rows:
-            if accent := row.find(class_="accent_color"):
-                badge = row.find(class_="apkm-badge")
-                if not badge:
-                    continue
-                apk_type = badge.get_text()
-                sub_url = accent["href"]
-                text = row.text.strip()
-                if apk_type == "APK" and (not contains_any_word(text, apk_archs)):
-                    continue
-                links[apk_type] = f"{APK_MIRROR_BASE_URL}{sub_url}"
-        if preferred_link := links.get("APK"):
-            self.apk_type = "APK"
-            return preferred_link
-        if preferred_link := links.get("BUNDLE"):
-            self.apk_type = "BUNDLE"
-            return preferred_link
-        msg = "Unable to extract download page"
-        raise APKMirrorAPKDownloadError(msg, url=main_page)
+            accent = row.find(class_="accent_color")
+            if not accent:
+                continue
+            badge = row.find(class_="apkm-badge")
+            if not badge:
+                continue
+            apk_type = badge.get_text()
+            sub_url = accent["href"]
+            text = row.text.strip()
+
+            archs = VariantSorter.parse_archs(text, delimiter=None)
+            density = VariantSorter.parse_density(text)
+
+            variant = {
+                "type": apk_type,
+                "url": f"{APK_MIRROR_BASE_URL}{sub_url}",
+                "archs": archs,
+                "density": density,
+            }
+
+            if apk_type == "BUNDLE":
+                bundle_variants.append(variant)
+            else:
+                apk_variants.append(variant)
+
+        # Sort best-first within each type
+        apk_variants.sort(
+            key=lambda v: VariantSorter.sorting_key(v["archs"], v["density"]),
+            reverse=True,
+        )
+        bundle_variants.sort(
+            key=lambda v: VariantSorter.sorting_key(v["archs"], v["density"]),
+            reverse=True,
+        )
+
+        # Prefer APK, fall back to BUNDLE
+        if apk_variants:
+            selected = apk_variants[0]
+        elif bundle_variants:
+            selected = bundle_variants[0]
+        else:
+            msg = "Unable to extract download page"
+            raise APKMirrorAPKDownloadError(msg, url=main_page)
+
+        self.apk_type = selected["type"]
+        selected_url: str = selected["url"]
+        return selected_url
 
     @staticmethod
     def _version_matches_title(version: str, title: str) -> bool:
@@ -218,8 +248,7 @@ class ApkMirror(Downloader):
         """Extracts the source from the url incase of reuse."""
         response = make_request(url, headers=request_header)
         handle_request_response(response, url)
-        # cloudscraper's .text is typed as Any; cast to str to satisfy mypy
-        return cast("str", response.text)
+        return response.text
 
     @staticmethod
     def _extracted_search_source_div(source: str, search_class: str) -> Tag:

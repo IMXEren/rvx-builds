@@ -157,6 +157,56 @@ class APKMirrorDownloaderTests(TestCase):
             ):
                 downloader.get_download_page("https://www.apkmirror.com/apk/x-corp/twitter/missing/")
 
+    def test_get_download_page_prefers_arm64_nodpi_apk_over_arm64_480dpi_apk(self: Self) -> None:
+        """When multiple APK variants exist, the one with arm64-v8a+nodpi sorts higher than arm64-v8a+480dpi."""
+        variant_page = """
+            <div class="tab-pane noPadding">
+                <div class="table-row headerFont">
+                    <span class="apkm-badge">APK</span>
+                    <a class="accent_color" href="/download/narrow/">Download</a>
+                    Variant 1 APK arm64-v8a 480dpi Android 5.0+
+                </div>
+                <div class="table-row headerFont">
+                    <span class="apkm-badge">APK</span>
+                    <a class="accent_color" href="/download/best/">Download</a>
+                    Variant 2 APK arm64-v8a nodpi Android 5.0+
+                </div>
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with patch.object(downloader, "_extract_source", return_value=variant_page):
+                result = downloader.get_download_page("https://www.apkmirror.com/apk/google-inc/youtube/")
+
+        self.assertEqual(f"{APK_MIRROR_BASE_URL}/download/best/", result)
+        self.assertEqual(downloader.apk_type, "APK")
+
+    def test_get_download_page_falls_back_to_best_bundle_when_no_apk_variants(self: Self) -> None:
+        """When no APK variants are present, the best BUNDLE variant (noarch) is selected."""
+        variant_page = """
+            <div class="tab-pane noPadding">
+                <div class="table-row headerFont">
+                    <span class="apkm-badge">BUNDLE</span>
+                    <a class="accent_color" href="/download/bundle-noarch/">Download</a>
+                    Variant 1 BUNDLE noarch Android 5.0+
+                </div>
+                <div class="table-row headerFont">
+                    <span class="apkm-badge">BUNDLE</span>
+                    <a class="accent_color" href="/download/bundle-x86/">Download</a>
+                    Variant 2 BUNDLE x86 Android 5.0+
+                </div>
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with patch.object(downloader, "_extract_source", return_value=variant_page):
+                result = downloader.get_download_page("https://www.apkmirror.com/apk/google-inc/youtube/")
+
+        self.assertEqual(f"{APK_MIRROR_BASE_URL}/download/bundle-noarch/", result)
+        self.assertEqual(downloader.apk_type, "BUNDLE")
+
     def test_force_download_preserves_bundle_as_apkm_when_requested(self: Self) -> None:
         """Morphe patch sources need APKMirror bundles preserved as APKM instead of merged through APKEditor."""
         force_download_page = """
@@ -227,7 +277,7 @@ class APKMirrorDownloaderTests(TestCase):
                     return_value=("TEST.apkm", f"{APK_MIRROR_BASE_URL}/download.php?id=1"),
                 ) as force_download,
             ):
-                file_name, download_url = downloader._extract_download_link(
+                file_name, _download_url = downloader._extract_download_link(
                     "https://www.apkmirror.com/apk/example/app/download/",
                     "TEST",
                     preserve_bundle=True,
@@ -260,7 +310,7 @@ class APKMirrorDownloaderTests(TestCase):
                     return_value=("TEST.apk", f"{APK_MIRROR_BASE_URL}/download.php?id=2"),
                 ) as force_download,
             ):
-                file_name, download_url = downloader._extract_download_link(
+                file_name, _download_url = downloader._extract_download_link(
                     "https://www.apkmirror.com/apk/example/app/download/",
                     "TEST",
                     preserve_bundle=False,
