@@ -41,6 +41,8 @@ class APP(object):
         """
         self.app_name = app_name
         self.app_version = config.env.str(f"{app_name}_VERSION".upper(), None)
+        # Capture whether the env explicitly set a version, BEFORE patches overwrites it.
+        self._env_version_set: bool = self.app_version is not None
         self.experiment = False
         self.cli_dl = config.env.str(f"{app_name}_CLI_DL".upper(), config.global_cli_dl)
 
@@ -65,6 +67,7 @@ class APP(object):
         self.package_name = package_name
         self.old_key = config.env.bool(f"{app_name}_OLD_KEY".upper(), config.global_old_key)
         self.patches: list[dict[Any, Any]] = []
+        self.compatible_versions: set[str] = set()
         self.normalize_patch_names = config.env.bool(
             f"{app_name}_NORMALIZE_PATCH_NAMES".upper(),
             config.global_normalize_patch_names,

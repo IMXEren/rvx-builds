@@ -76,6 +76,10 @@ class APKMirrorAPKNotFoundError(APKDownloadError):
     """Exception raised when apk doesn't exist on APKMirror."""
 
 
+class VersionNotFoundError(APKDownloadError):
+    """Exception raised when the requested version is not found at the source."""
+
+
 class UptoDownAPKDownloadError(APKDownloadError):
     """Exception raised when downloading an APK from uptodown failed."""
 

@@ -272,6 +272,21 @@ class Patches(object):
         # If every version is unorderable, keep the first advertised version rather than silently picking oldest.
         return versions[0]
 
+    @staticmethod
+    def get_compatible_versions(app: "APP") -> list[str]:
+        """Return the union of patch-compatible versions, sorted descending.
+
+        Empty list means no compatible versions are known (e.g., no patches loaded).
+        Unparseable versions are still included -- ``VersionSorter.sorting_key`` falls
+        back to ``semver.Version(0, 0, 0)`` for them, so they appear at the end
+        of the descending order.
+        """
+        return sorted(
+            app.compatible_versions,
+            key=VersionSorter.sorting_key,
+            reverse=True,
+        )
+
     def _is_duplicate_patch(self: Self, patch_name: str, app_name: str) -> bool:
         """Check if patch already exists to avoid duplicates.
 
@@ -315,6 +330,8 @@ class Patches(object):
             versions = compatible_package["versions"]
 
             if app.package_name == package_name:
+                # Capture the union of compatible versions for the version-fallback system.
+                app.compatible_versions.update(compatible_package.get("versions") or [])
                 patch_dict = self._create_patch_dict(patch, package_name, versions)
                 # Do NOT deduplicate by name here.  Bundle-scoped exclude selectors
                 # (e.g. ``2:some-patch``) rely on each bundle retaining its own copy
