@@ -22,6 +22,8 @@ from src.utils import (
 class ApkMirror(Downloader):
     """Files downloader."""
 
+    apk_type: str = "APK"
+
     @staticmethod
     def _select_download_extension(apk_type: str, *, preserve_bundle: bool) -> str:
         """Choose the local extension that preserves the patcher's expected input shape."""
@@ -50,8 +52,7 @@ class ApkMirror(Downloader):
         """
         link_page_source = self._extract_source(link)
         notes_divs = self._extracted_search_source_div(link_page_source, "tab-pane")
-        apk_type = self._extracted_search_source_div(link_page_source, "apkm-badge").get_text()
-        extension = self._select_download_extension(apk_type, preserve_bundle=preserve_bundle)
+        extension = self._select_download_extension(self.apk_type, preserve_bundle=preserve_bundle)
         possible_links = notes_divs.find_all("a")
         for possible_link in possible_links:
             if possible_link.get("href") and "download.php?id=" in cast("str", possible_link.get("href")):
@@ -76,16 +77,24 @@ class ApkMirror(Downloader):
         logger.debug(f"Extracting download link from\n{page}")
         download_button = self._extracted_search_div(page, "center")
         download_links = download_button.find_all("a")
-        if final_download_link := next(
+        if matched_link := next(
             (
-                download_link["href"]
+                download_link
                 for download_link in download_links
                 if download_link.get("href") and "download/?key=" in cast("str", download_link.get("href"))
             ),
             None,
         ):
+            # When apk_type is BUNDLE, the download links can either be
+            # a simple APK or an APKM bundle. The text inside the box (<a> tag)
+            # determines which one it is.
+            if self.apk_type == "BUNDLE":
+                link_text = matched_link.get_text().lower()
+                self.apk_type = "BUNDLE" if "apk bundle" in link_text else "APK"
+
+            final_download_link = cast("str", matched_link["href"])
             return self._extract_force_download_link(
-                APK_MIRROR_BASE_URL + cast("str", final_download_link),
+                APK_MIRROR_BASE_URL + final_download_link,
                 app,
                 preserve_bundle=preserve_bundle,
             )
@@ -132,7 +141,11 @@ class ApkMirror(Downloader):
                 if apk_type == "APK" and (not contains_any_word(text, apk_archs)):
                     continue
                 links[apk_type] = f"{APK_MIRROR_BASE_URL}{sub_url}"
-        if preferred_link := links.get("APK", links.get("BUNDLE")):
+        if preferred_link := links.get("APK"):
+            self.apk_type = "APK"
+            return preferred_link
+        if preferred_link := links.get("BUNDLE"):
+            self.apk_type = "BUNDLE"
             return preferred_link
         msg = "Unable to extract download page"
         raise APKMirrorAPKDownloadError(msg, url=main_page)
@@ -256,7 +269,7 @@ class ApkMirror(Downloader):
             msg = f"Unable to find APKMirror version list for {app.app_name}"
             raise APKMirrorAPKDownloadError(msg, url=app_main_page)
         app_rows = versions_div.find_all(class_="appRow")
-        version_urls: list[str] = [
+        version_urls = [
             cast("str", href)
             for app_row in app_rows
             if (dl := app_row.find(class_="downloadLink")) and (href := dl.get("href"))

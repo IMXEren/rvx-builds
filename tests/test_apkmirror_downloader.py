@@ -162,12 +162,13 @@ class APKMirrorDownloaderTests(TestCase):
         force_download_page = """
             <span class="apkm-badge">BUNDLE</span>
             <div class="tab-pane">
-                <a href="/download.php?id=67890">Download APKM</a>
+                <a href="/download.php?id=67890">Download APK Bundle</a>
             </div>
         """
 
         with TemporaryDirectory() as tmp_dir:
             downloader = ApkMirror(_config(Path(tmp_dir)))
+            downloader.apk_type = "BUNDLE"
             with (
                 patch.object(downloader, "_extract_source", return_value=force_download_page),
                 patch.object(downloader, "_download") as download,
@@ -181,3 +182,94 @@ class APKMirrorDownloaderTests(TestCase):
         self.assertEqual("PIKO_TWITTER.apkm", file_name)
         self.assertEqual(f"{APK_MIRROR_BASE_URL}/download.php?id=67890", download_url)
         download.assert_called_once()
+
+    def test_force_download_uses_link_text_over_badge(self: Self) -> None:
+        """When the badge says BUNDLE but the link says 'Download APK', the file extension must be .apk."""
+        force_download_page = """
+            <span class="apkm-badge">BUNDLE</span>
+            <div class="tab-pane">
+                <a href="/download.php?id=12345">Download APK</a>
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with (
+                patch.object(downloader, "_extract_source", return_value=force_download_page),
+                patch.object(downloader, "_download") as download,
+            ):
+                file_name, download_url = downloader._extract_force_download_link(
+                    "https://www.apkmirror.com/apk/example/app/download/",
+                    "YOUTUBE",
+                )
+
+        self.assertEqual("YOUTUBE.apk", file_name)
+        self.assertEqual(f"{APK_MIRROR_BASE_URL}/download.php?id=12345", download_url)
+        download.assert_called_once()
+
+    def test_extract_download_link_forwards_apkm_for_bundle_text(self: Self) -> None:
+        """When listing-page link text says 'Download APK Bundle', extension forwarded must be 'apkm'."""
+        listing_page = """
+            <div class="center">
+                <a href="/download/?key=abc123">Download APK Bundle</a>
+                <a href="/other-link">Other</a>
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            downloader.apk_type = "BUNDLE"
+            with (
+                patch.object(downloader, "_extract_source", return_value=listing_page),
+                patch.object(
+                    downloader,
+                    "_extract_force_download_link",
+                    return_value=("TEST.apkm", f"{APK_MIRROR_BASE_URL}/download.php?id=1"),
+                ) as force_download,
+            ):
+                file_name, download_url = downloader._extract_download_link(
+                    "https://www.apkmirror.com/apk/example/app/download/",
+                    "TEST",
+                    preserve_bundle=True,
+                )
+
+        force_download.assert_called_once_with(
+            f"{APK_MIRROR_BASE_URL}/download/?key=abc123",
+            "TEST",
+            preserve_bundle=True,
+        )
+        self.assertEqual(downloader.apk_type, "BUNDLE")
+        self.assertEqual("TEST.apkm", file_name)
+
+    def test_extract_download_link_forwards_apk_for_apk_text(self: Self) -> None:
+        """When listing-page link text says 'Download APK', extension forwarded must be 'apk'."""
+        listing_page = """
+            <div class="center">
+                <a href="/download/?key=def456">Download APK</a>
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            downloader.apk_type = "BUNDLE"
+            with (
+                patch.object(downloader, "_extract_source", return_value=listing_page),
+                patch.object(
+                    downloader,
+                    "_extract_force_download_link",
+                    return_value=("TEST.apk", f"{APK_MIRROR_BASE_URL}/download.php?id=2"),
+                ) as force_download,
+            ):
+                file_name, download_url = downloader._extract_download_link(
+                    "https://www.apkmirror.com/apk/example/app/download/",
+                    "TEST",
+                    preserve_bundle=False,
+                )
+
+        force_download.assert_called_once_with(
+            f"{APK_MIRROR_BASE_URL}/download/?key=def456",
+            "TEST",
+            preserve_bundle=False,
+        )
+        self.assertEqual(downloader.apk_type, "APK")
+        self.assertEqual("TEST.apk", file_name)
