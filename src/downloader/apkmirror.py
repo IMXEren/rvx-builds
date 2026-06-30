@@ -125,16 +125,18 @@ class ApkMirror(Downloader):
         try:
             list_widget = self._extracted_search_div(main_page, "tab-pane noPadding")
         except ScrapingError as exc:
-            # True HTTP 404 on a specific version's release page — let the
-            # version-fallback system try a different version.
+            if not exc.is_not_found():
+                # Non-404 scraping errors (5xx, etc.) should propagate, not trigger fallback.
+                raise
+            # let the version-fallback system try a different version.
+            msg = f"APKMirror release page not found: {main_page}"
             raise VersionNotFoundError(
-                f"APKMirror release page not found: {main_page}",
+                msg,
                 url=main_page,
             ) from exc
         if list_widget is None:
-            # APKMirror can return a normal 404 page for a guessed release URL, so fail before parsing variant rows.
             msg = "Unable to find APKMirror variants table on release page"
-            raise VersionNotFoundError(msg, url=main_page)
+            raise APKMirrorAPKDownloadError(msg, url=main_page)
         table_rows = list_widget.find_all(class_="table-row headerFont")
         apk_variants: list[dict[str, Any]] = []
         bundle_variants: list[dict[str, Any]] = []

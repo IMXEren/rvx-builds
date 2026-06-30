@@ -124,10 +124,12 @@ class UptoDown(Downloader):
         try:
             return self.extract_download_link(download_url, app.app_name)
         except ScrapingError as exc:
-            # True HTTP 404 on a specific version's download page — let the
-            # version-fallback system try a different version.
+            if not exc.is_not_found():
+                raise
+            # let the version-fallback system try a different version.
+            msg = f"UptoDown version download page not found: {download_url}"
             raise VersionNotFoundError(
-                f"UptoDown version download page not found: {download_url}",
+                msg,
                 url=download_url,
             ) from exc
 

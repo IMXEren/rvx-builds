@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from loguru import logger
 
@@ -24,10 +24,10 @@ class VersionFallback:
 
     @staticmethod
     def run(
-        app: "APP",
-        downloader: "Downloader",
+        app: APP,
+        downloader: Downloader,
         versions: list[str],
-        **kwargs,
+        **kwargs: dict[str, Any],
     ) -> tuple[str, str]:
         """Try downloading each version in descending semver order.
 
@@ -56,10 +56,7 @@ class VersionFallback:
                 )
                 last_error = exc
                 continue
-            # Success — record the version that worked and return.
             app.app_version = version
             logger.info(f"Fell back to version {version} for {app.app_name}")
             return result
-        # All attempts failed with VersionNotFoundError — surface the last one.
-        assert last_error is not None
-        raise last_error
+        raise cast("VersionNotFoundError", last_error)

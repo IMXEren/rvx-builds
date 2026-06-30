@@ -14,7 +14,7 @@ from unittest.mock import patch
 from src.config import RevancedConfig
 from src.downloader.apkmirror import ApkMirror
 from src.downloader.sources import APK_MIRROR_BASE_URL
-from src.exceptions import APKMirrorAPKDownloadError, ScrapingError, VersionNotFoundError
+from src.exceptions import ScrapingError, VersionNotFoundError
 from src.utils import request_header
 
 if TYPE_CHECKING:
@@ -126,7 +126,10 @@ class APKMirrorDownloaderTests(TestCase):
                 patch.object(
                     downloader,
                     "_extract_source",
-                    side_effect=[ScrapingError("404 not found"), listing_page],
+                    side_effect=[
+                        ScrapingError("404 not found", response=_APKMirrorResponse(status_code=404, text="<html><h1>404</h1></html>")),
+                        listing_page,
+                    ],
                 ),
                 patch.object(
                     downloader,

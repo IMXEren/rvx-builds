@@ -149,10 +149,12 @@ class ApkPure(Downloader):
                         app.app_name,
                     )
                 except ScrapingError as exc:
-                    # True HTTP 404 on a specific version's download page — let the
-                    # version-fallback system try a different version.
+                    if not exc.is_not_found():
+                        raise
+                    # let the version-fallback system try a different version.
+                    msg = f"APKPure version download page not found: {download_page}"
                     raise VersionNotFoundError(
-                        f"APKPure version download page not found: {download_page}",
+                        msg,
                         url=str(download_page),
                     ) from exc
 

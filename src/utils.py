@@ -251,7 +251,7 @@ def handle_request_response(response: ResponseType, url: str) -> None:
     response_code = response.status_code
     if response_code != status_code_200:
         msg = f"Unable to downloaded assets. Reason - {response.text}"
-        raise ScrapingError(msg, url=url)
+        raise ScrapingError(msg, url=url, response=response)
 
 
 def slugify(string: str) -> str:
