@@ -122,9 +122,12 @@ class ApkMirror(Downloader):
         links: dict[str, str] = {}
         apk_archs = ["arm64-v8a", "universal", "noarch"]
         for row in table_rows:
-            if row.find(class_="accent_color"):
-                apk_type = row.find(class_="apkm-badge").get_text()
-                sub_url = row.find(class_="accent_color")["href"]
+            if accent := row.find(class_="accent_color"):
+                badge = row.find(class_="apkm-badge")
+                if not badge:
+                    continue
+                apk_type = badge.get_text()
+                sub_url = accent["href"]
                 text = row.text.strip()
                 if apk_type == "APK" and (not contains_any_word(text, apk_archs)):
                     continue
@@ -231,7 +234,7 @@ class ApkMirror(Downloader):
             try:
                 logger.info(f"Trying to guess {app.app_name} version.")
                 appsec_val = self._extracted_search_div(download_page, "appspec-value")
-                appsec_version = str(appsec_val.find(text=lambda text: "Version" in text))
+                appsec_version = str(appsec_val.find(text=lambda text: "Version" in text if text else False))
                 appsec_version = appsec_version.rsplit(":", maxsplit=1)[-1].strip()
                 appsec_version = appsec_version.split(maxsplit=1)[0]
                 app.app_version = slugify(appsec_version)
@@ -253,10 +256,15 @@ class ApkMirror(Downloader):
             msg = f"Unable to find APKMirror version list for {app.app_name}"
             raise APKMirrorAPKDownloadError(msg, url=app_main_page)
         app_rows = versions_div.find_all(class_="appRow")
-        version_urls = [
-            app_row.find(class_="downloadLink")["href"]
+        version_urls: list[str] = [
+            cast("str", href)
             for app_row in app_rows
-            if "beta" not in app_row.find(class_="appRowTitle").get_text().lower()
-            and "alpha" not in app_row.find(class_="appRowTitle").get_text().lower()
+            if (dl := app_row.find(class_="downloadLink")) and (href := dl.get("href"))
+            if (title := app_row.find(class_="appRowTitle"))
+            and "beta" not in title.get_text().lower()
+            and "alpha" not in title.get_text().lower()
         ]
+        if not version_urls:
+            msg = f"No stable APKMirror release found for {app.app_name}"
+            raise APKMirrorAPKDownloadError(msg, url=app_main_page)
         return self.specific_version(app, "latest", APK_MIRROR_BASE_URL + max(version_urls))
