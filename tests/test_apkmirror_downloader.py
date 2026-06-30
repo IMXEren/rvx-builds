@@ -14,7 +14,7 @@ from unittest.mock import patch
 from src.config import RevancedConfig
 from src.downloader.apkmirror import ApkMirror
 from src.downloader.sources import APK_MIRROR_BASE_URL
-from src.exceptions import APKMirrorAPKDownloadError, ScrapingError
+from src.exceptions import APKMirrorAPKDownloadError, ScrapingError, VersionNotFoundError
 from src.utils import request_header
 
 if TYPE_CHECKING:
@@ -153,7 +153,7 @@ class APKMirrorDownloaderTests(TestCase):
             downloader = ApkMirror(_config(Path(tmp_dir)))
             with (
                 patch.object(downloader, "_extract_source", return_value="<html><h1>404</h1></html>"),
-                self.assertRaisesRegex(APKMirrorAPKDownloadError, "variants table"),
+                self.assertRaisesRegex(VersionNotFoundError, "variants table"),
             ):
                 downloader.get_download_page("https://www.apkmirror.com/apk/x-corp/twitter/missing/")
 
