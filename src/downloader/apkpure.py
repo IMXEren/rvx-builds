@@ -11,7 +11,7 @@ from loguru import logger
 
 from src.app import APP
 from src.downloader.download import Downloader
-from src.exceptions import APKPureAPKDownloadError, VersionNotFoundError
+from src.exceptions import APKPureAPKDownloadError, ScrapingError, VersionNotFoundError
 from src.utils import bs4_parser, handle_request_response, make_request, request_header, slugify
 
 
@@ -143,10 +143,18 @@ class ApkPure(Downloader):
             found_version = download_link.get("data-dt-version")
             if found_version == version:
                 download_page = download_link.get("href")
-                file_name, download_source = self.extract_download_link(
-                    str(download_page),
-                    app.app_name,
-                )
+                try:
+                    file_name, download_source = self.extract_download_link(
+                        str(download_page),
+                        app.app_name,
+                    )
+                except ScrapingError as exc:
+                    # True HTTP 404 on a specific version's download page — let the
+                    # version-fallback system try a different version.
+                    raise VersionNotFoundError(
+                        f"APKPure version download page not found: {download_page}",
+                        url=str(download_page),
+                    ) from exc
 
                 app.app_version = self.app_version
                 logger.info(f"Guessed {app.app_version} for {app.app_name}")

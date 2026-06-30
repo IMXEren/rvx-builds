@@ -122,7 +122,15 @@ class ApkMirror(Downloader):
         :param main_page: Main Download Page in APK mirror(Index)
         :return:
         """
-        list_widget = self._extracted_search_div(main_page, "tab-pane noPadding")
+        try:
+            list_widget = self._extracted_search_div(main_page, "tab-pane noPadding")
+        except ScrapingError as exc:
+            # True HTTP 404 on a specific version's release page — let the
+            # version-fallback system try a different version.
+            raise VersionNotFoundError(
+                f"APKMirror release page not found: {main_page}",
+                url=main_page,
+            ) from exc
         if list_widget is None:
             # APKMirror can return a normal 404 page for a guessed release URL, so fail before parsing variant rows.
             msg = "Unable to find APKMirror variants table on release page"

@@ -7,7 +7,7 @@ from loguru import logger
 
 from src.app import APP
 from src.downloader.download import Downloader
-from src.exceptions import UptoDownAPKDownloadError, VersionNotFoundError
+from src.exceptions import ScrapingError, UptoDownAPKDownloadError, VersionNotFoundError
 from src.utils import bs4_parser, handle_request_response, make_request, request_header
 
 
@@ -121,7 +121,15 @@ class UptoDown(Downloader):
             msg = f"Unable to download {app.app_name} from uptodown."
             raise VersionNotFoundError(msg, url=url)
 
-        return self.extract_download_link(download_url, app.app_name)
+        try:
+            return self.extract_download_link(download_url, app.app_name)
+        except ScrapingError as exc:
+            # True HTTP 404 on a specific version's download page — let the
+            # version-fallback system try a different version.
+            raise VersionNotFoundError(
+                f"UptoDown version download page not found: {download_url}",
+                url=download_url,
+            ) from exc
 
     def latest_version(self: Self, app: APP, **kwargs: Any) -> tuple[str, str]:
         """Function to download the latest version of app from uptodown."""
