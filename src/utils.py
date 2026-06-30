@@ -1,9 +1,7 @@
 """Utilities."""
 
-import contextlib
 import html
 import json
-import logging
 import re
 import subprocess
 import sys
@@ -38,24 +36,6 @@ from src.exceptions import ScrapingError
 from src.metadata.github import GithubSourceMetadata
 
 type ResponseType = Response | CurlResponse | Source
-
-
-@contextlib.contextmanager
-def _silence_pyaxmlparser_logging() -> object:
-    """Temporarily raise the pyaxmlparser logger level to ERROR.
-
-    The library emits harmless decode warnings on every APK that has
-    non-standard string-table bytes, which clutters CI logs without
-    indicating any actual failure (the decoder uses 'replace' mode).
-    """
-    logger = logging.getLogger("pyaxmlparser")
-    prior_level = logger.level
-    logger.setLevel(logging.ERROR)
-    try:
-        yield
-    finally:
-        logger.setLevel(prior_level)
-
 default_build = [
     "youtube",
     "youtube_music",
@@ -420,16 +400,18 @@ def _write_obtainium_json_config(
     try:
         from pyaxmlparser import APK  # noqa: PLC0415
 
-        with _silence_pyaxmlparser_logging():
+        from src.apks.silence import silence_pyaxmlparser  # noqa: PLC0415
+
+        with silence_pyaxmlparser():
             _apk = APK(patched_apk)
-        app_label = _apk.application or app_name
-        package_name = _apk.packagename or app_dump["package_name"]
+            app_label = _apk.application or app_name
+            package_name = _apk.packagename or app_dump["package_name"]
     except Exception:  # noqa: BLE001  # pyaxmlparser raises generic errors
         app_label = app_name
         package_name = app_dump["package_name"]
 
     # Raw HTML URL pointing to the private repo's 'repo' branch.
-    raw_html_url = f"https://raw.githubusercontent.com/{private_repo}/repo/obtainium_sources/{html_file_name}"
+    raw_html_url = f"https://github.com/{private_repo}/raw/repo/obtainium_sources/{html_file_name}"
 
     # ChangeLog URL - use the configured Obtainium tag so it points to the right release.
     if obtainium_github_tag == "latest":
