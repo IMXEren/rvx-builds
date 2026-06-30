@@ -1,7 +1,9 @@
 """Utilities."""
 
+import contextlib
 import html
 import json
+import logging
 import re
 import subprocess
 import sys
@@ -36,6 +38,23 @@ from src.exceptions import ScrapingError
 from src.metadata.github import GithubSourceMetadata
 
 type ResponseType = Response | CurlResponse | Source
+
+
+@contextlib.contextmanager
+def _silence_pyaxmlparser_logging() -> object:
+    """Temporarily raise the pyaxmlparser logger level to ERROR.
+
+    The library emits harmless decode warnings on every APK that has
+    non-standard string-table bytes, which clutters CI logs without
+    indicating any actual failure (the decoder uses 'replace' mode).
+    """
+    logger = logging.getLogger("pyaxmlparser")
+    prior_level = logger.level
+    logger.setLevel(logging.ERROR)
+    try:
+        yield
+    finally:
+        logger.setLevel(prior_level)
 
 default_build = [
     "youtube",
@@ -401,7 +420,8 @@ def _write_obtainium_json_config(
     try:
         from pyaxmlparser import APK  # noqa: PLC0415
 
-        _apk = APK(patched_apk)
+        with _silence_pyaxmlparser_logging():
+            _apk = APK(patched_apk)
         app_label = _apk.application or app_name
         package_name = _apk.packagename or app_dump["package_name"]
     except Exception:  # noqa: BLE001  # pyaxmlparser raises generic errors

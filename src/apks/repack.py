@@ -9,6 +9,8 @@ from xml.etree import ElementTree as ET
 from loguru import logger
 from pyaxmlparser.axmlprinter import AXMLPrinter
 
+from src.utils import _silence_pyaxmlparser_logging
+
 # All standard Android architectures and screen densities
 STANDARD_ARCHS = {"armeabi", "armeabi_v7a", "arm64_v8a", "x86", "x86_64", "mips", "mips64"}
 STANDARD_DPIS = {"ldpi", "mdpi", "tvdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi", "anydpi", "nodpi"}
@@ -63,7 +65,8 @@ def _get_package_name(zin: zipfile.ZipFile) -> str | None:
         try:
             with zin.open(item.filename) as apk_file, zipfile.ZipFile(apk_file) as inner_zip:
                 manifest_bytes = inner_zip.read("AndroidManifest.xml")
-            axml = AXMLPrinter(manifest_bytes)
+            with _silence_pyaxmlparser_logging():
+                axml = AXMLPrinter(manifest_bytes)
             manifest_xml = ET.fromstring(axml.get_xml())  # noqa: S314
             package_name = manifest_xml.attrib.get("package")
             if package_name:
