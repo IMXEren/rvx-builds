@@ -5,6 +5,8 @@
 from typing import Self
 from unittest import TestCase
 
+import pytest
+
 from src.apks.variant_sorter import Arch, Density, VariantSorter
 
 
@@ -78,7 +80,7 @@ class DensityTests(TestCase):
 
     def test_frozen_dataclass(self: Self) -> None:
         d = Density.exact(480)
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             d._min_dpi = 640  # type: ignore[misc]
 
 

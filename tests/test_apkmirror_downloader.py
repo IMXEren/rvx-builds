@@ -127,7 +127,10 @@ class APKMirrorDownloaderTests(TestCase):
                     downloader,
                     "_extract_source",
                     side_effect=[
-                        ScrapingError("404 not found", response=_APKMirrorResponse(status_code=404, text="<html><h1>404</h1></html>")),
+                        ScrapingError(
+                            "404 not found",
+                            response=_APKMirrorResponse(status_code=404, text="<html><h1>404</h1></html>"),
+                        ),
                         listing_page,
                     ],
                 ),

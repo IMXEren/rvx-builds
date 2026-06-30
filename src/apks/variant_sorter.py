@@ -87,11 +87,7 @@ class VariantSorter:
         whitespace. Matches tokens against ``Arch`` enum values (case-insensitive),
         longest-match-first to avoid ``x86`` swallowing ``x86_64``.
         """
-        tokens = (
-            [t.strip() for t in source.split(delimiter) if t.strip()]
-            if delimiter is not None
-            else source.split()
-        )
+        tokens = [t.strip() for t in source.split(delimiter) if t.strip()] if delimiter is not None else source.split()
 
         # Arch values sorted by length descending for longest-match-first
         arch_values: list[str] = sorted([m.value for m in Arch], key=len, reverse=True)

@@ -51,8 +51,7 @@ class VersionFallback:
                 result = downloader.download(version, app, **kwargs)
             except VersionNotFoundError as exc:
                 logger.info(
-                    f"Version {version} not found for {app.app_name}; "
-                    f"stepping down to next candidate",
+                    f"Version {version} not found for {app.app_name}; stepping down to next candidate",
                 )
                 last_error = exc
                 continue

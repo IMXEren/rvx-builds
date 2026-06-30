@@ -14,10 +14,10 @@ from curl_cffi import Session
 from loguru import logger
 from tqdm import tqdm
 
+from src.apks.repack import repack_apks
 from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import DownloadError
-from src.apks.repack import repack_apks
 from src.utils import handle_request_response, implement_method, request_timeout, session
 
 # Extensions that are always treated as split APK bundles and repacked when a device spec is available.

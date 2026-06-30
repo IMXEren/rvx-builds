@@ -8,7 +8,6 @@ from loguru import logger
 from packaging.version import InvalidVersion, Version
 
 from src.apks.version_sorter import VersionSorter
-
 from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import AppNotFoundError
