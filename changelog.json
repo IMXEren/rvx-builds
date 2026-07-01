@@ -1,0 +1,37 @@
+{
+    "MorpheApp/MicroG-RE": {
+        "name": "MorpheApp/MicroG-RE",
+        "tag": "6.1.4",
+        "body": "### Bug Fixes\r\n\r\n- Prevent crash on sign-in due to missing user avatar (815b9711af43ad79f9c460f4942eafc3a210ba62)\r\n\r\n**Full Changelog**: https://github.com/MorpheApp/MicroG-RE/compare/6.1.3...6.1.4",
+        "html_url": "https://github.com/MorpheApp/MicroG-RE/releases/tag/6.1.4",
+        "published_at": "2026-04-28T17:13:14+00:00"
+    },
+    "REAndroid/APKEditor": {
+        "name": "REAndroid/APKEditor",
+        "tag": "V1.4.9",
+        "body": "## What's Changed\r\n* Fix: Merging issue #228 \r\n* Fix: Smali wide register handling #229 \r\n\r\n\r\n**Full Changelog**: https://github.com/REAndroid/APKEditor/compare/V1.4.8...V1.4.9",
+        "html_url": "https://github.com/REAndroid/APKEditor/releases/tag/V1.4.9",
+        "published_at": "2026-05-19T11:25:01+00:00"
+    },
+    "MorpheApp/morphe-cli": {
+        "name": "MorpheApp/morphe-cli",
+        "tag": "v1.9.1",
+        "body": "## [1.9.1](https://github.com/MorpheApp/morphe-cli/compare/v1.9.0...v1.9.1) (2026-06-08)\n\n\n### Bug Fixes\n\n* signing improvements ([#160](https://github.com/MorpheApp/morphe-cli/issues/160)) ([166f940](https://github.com/MorpheApp/morphe-cli/commit/166f9409b1cbe00af7663545c41548ead2c189c5))\n* Update dependencies ([83d3969](https://github.com/MorpheApp/morphe-cli/commit/83d39692541ca81b7bb555dfd60a001fbb97b3f1))\n* Update to latest ARSCLib ([f62a179](https://github.com/MorpheApp/morphe-cli/commit/f62a1793601fcfc489f54c558265115530ab6b8d))\n",
+        "html_url": "https://github.com/MorpheApp/morphe-cli/releases/tag/v1.9.1",
+        "published_at": "2026-06-08T12:19:18+00:00"
+    },
+    "gitlab.com/inotia00/x-shim": {
+        "name": "inotia00/x-shim",
+        "tag": "v1.6.5",
+        "body": "## [1.6.5](https://gitlab.com/inotia00/x-shim/compare/v1.6.4...v1.6.5) (2026-07-01)\n\n\n### Bug Fixes\n\n* Exception thrown in 12.4.1-release.0 ([e3097e5](https://gitlab.com/inotia00/x-shim/commit/e3097e57c3497454a5b4915c718a418038705ecf))\n",
+        "html_url": "https://gitlab.com/inotia00/x-shim/-/releases/v1.6.5",
+        "published_at": "2026-07-01T05:56:09.483000+00:00"
+    },
+    "crimera/piko": {
+        "name": "crimera/piko",
+        "tag": "v3.8.0-dev.2",
+        "body": "## [3.8.0-dev.2](https://github.com/crimera/piko/compare/v3.8.0-dev.1...v3.8.0-dev.2) (2026-06-28)\n\n### \ud83d\udc1b Bug Fixes\n\n* **Twitter:** Tweet link pattern ([d2500ea](https://github.com/crimera/piko/commit/d2500ead98dd5bd77ba97f1ef2ac8388f7b559f0))\n",
+        "html_url": "https://github.com/crimera/piko/releases/tag/v3.8.0-dev.2",
+        "published_at": "2026-06-28T13:21:07+00:00"
+    }
+}
