@@ -159,15 +159,6 @@ jobs:
         run: |
           sleep 10
 
-      - name: Trigger Obtainium tag resolution in private repo
-        if: ${{ vars.VAR_OBTAINIUM_GH_PRIVATE_EXPORT != '' }}
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          repository: ${{ vars.VAR_OBTAINIUM_GH_PRIVATE_EXPORT }}
-          event-type: resolve-obtainium-tags
-          client-payload: '{"release_tag": "Build-${{ steps.get-date.outputs.date }}"}'
-
   upload-to-telegram:
     needs: [upload-to-github]
     uses: nikhilbadyal/ghactions/.github/workflows/telegram-uploader.yml@main

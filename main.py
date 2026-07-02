@@ -21,6 +21,7 @@ from src.utils import (
     load_older_updates,
     save_patch_info,
     write_changelog_to_file,
+    write_per_app_changelogs,
 )
 
 # Shared cache tuple keeps app-processing helpers explicit without repeating the full nested type.
@@ -196,6 +197,7 @@ def main() -> None:
         successful_apps = set(config.apps) - set(failed_apps)
         export_info = {k: v for k, v in updates_info.items() if k in successful_apps}
         generate_obtainium_export(export_info, config)
+        write_per_app_changelogs(export_info)
 
     _raise_if_no_apps_succeeded(failed_apps, updates_info)
 

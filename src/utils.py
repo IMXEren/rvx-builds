@@ -112,20 +112,23 @@ def update_changelog(name: str, response: dict[str, str]) -> None:
     changelogs[name] = source_metadata
 
 
-def format_changelog(metadata: GithubSourceMetadata) -> str:
+def format_changelog(metadata: GithubSourceMetadata, heading_level: str = "#") -> str:
     """The `format_changelog` returns formatted changelog string.
 
     Parameters
     ----------
     metadata : GithubSourceMetadata
         Represents the release metadata with sufficient info.
+    heading_level : str
+        The Markdown heading level (default ``"#"``). Use ``"##"`` for
+        sub-sections in per-app changelogs.
 
     Returns
     -------
         a formatted changelog as str
     """
     content = (
-        f"# {metadata.name}\n\n"
+        f"{heading_level} {metadata.name}\n\n"
         f"***Release Version: [{metadata.tag}]({metadata.html_url})***  \n"
         f"***Release Date: {metadata.get_release_date()}***  \n"
         f"<details>\n<summary><b><i>Changelog:</i></b></summary>\n\n{metadata.body}</details>\n\n"
@@ -413,8 +416,11 @@ def _write_obtainium_json_config(
     # Raw HTML URL pointing to the private repo's 'repo' branch.
     raw_html_url = f"https://github.com/{private_repo}/raw/repo/obtainium_sources/{html_file_name}"
 
-    # ChangeLog URL - use the configured Obtainium tag so it points to the right release.
-    if obtainium_github_tag == "latest":
+    # ChangeLog URL - point to per-app release in index repo when available.
+    if private_repo:
+        encoded_app_name = quote(str(app_name), safe="")
+        change_log_url = f"https://github.com/{private_repo}/releases/tag/{encoded_app_name}"
+    elif obtainium_github_tag == "latest":
         change_log_url = f"https://github.com/{github_repository}/releases/latest"
     else:
         encoded_tag = quote(obtainium_github_tag, safe="")
@@ -481,6 +487,72 @@ def _write_obtainium_json_config(
     logger.info(f"Generated Obtainium JSON config for {app_name}: {json_file_path}")
 
 
+def generate_per_app_changelog(app_data: dict[str, Any]) -> str:
+    """Generate a per-app Markdown changelog.
+
+    Uses the module-level ``changelogs`` dict directly. Only matched entries
+    are rendered, sorted by release date (latest first).
+
+    Parameters
+    ----------
+    app_data : dict[str, Any]
+        The app data entry from ``updates_info``.
+
+    Returns
+    -------
+    str
+        The formatted Markdown changelog.
+    """
+    app_dump = app_data.get("app_dump", {})
+    app_name = app_dump.get("app_name", "")
+    app_version = str(app_data.get("app_version", ""))
+
+    lines: list[str] = [f"# {app_name}", "", f"**App Version:** {app_version}", ""]
+
+    # Collect all tool URLs (CLI + patches) into a flat list
+    cli_url = app_dump.get("cli_dl", "")
+    patches_urls: list[str] = app_dump.get("patches_dl_list", [])
+    all_urls = [url for url in [*patches_urls, cli_url] if url]
+
+    # Match URLs to changelog entries using metadata.name substring
+    # Copy the global dict so we don't mutate it while iterating
+    remaining = dict(changelogs)
+    matched: list[GithubSourceMetadata] = []
+
+    for url in all_urls:
+        for key, meta in list(remaining.items()):
+            if meta.name in url:
+                matched.append(meta)
+                del remaining[key]
+                break
+
+    # Sort by release date (latest first)
+    matched.sort(key=lambda m: m.published_at, reverse=True)
+
+    lines.extend(format_changelog(meta, heading_level="##") for meta in matched)
+
+    return "\n".join(lines)
+
+
+def write_per_app_changelogs(updates_info: dict[str, Any]) -> None:
+    """Write per-app changelog files to the ``app_changelogs/`` directory.
+
+    Parameters
+    ----------
+    updates_info : dict[str, Any]
+        The updates info dict keyed by app name.
+    """
+    output_dir = Path("app_changelogs")
+    output_dir.mkdir(exist_ok=True)
+
+    for app_name, app_data in updates_info.items():
+        if "output_file_name" not in app_data:
+            continue
+        changelog = generate_per_app_changelog(app_data)
+        file_path = output_dir / f"{app_name}.md"
+        file_path.write_text(changelog, encoding="utf_8")
+
+
 def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedConfig") -> None:
     """Generate HTML files for Obtainium."""
     if not config.obtainium_export and not config.obtainium_gh_private_export:
@@ -503,19 +575,31 @@ def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedCon
         # Release asset names are URL path segments, so encode them without allowing slash traversal.
         output_file_name = str(app_data["output_file_name"])
         encoded_output_file_name = quote(output_file_name, safe="")
-        # Tags are also path segments, and custom tags may contain characters that need encoding.
-        encoded_obtainium_github_tag = quote(obtainium_github_tag, safe="")
 
-        # Construct the same public release URL shape GitHub serves for release assets.
-        if obtainium_github_tag == "latest":
-            # Latest release URLs let the generated HTML survive timestamp-based release tags.
-            download_url = f"https://github.com/{github_repository}/releases/latest/download/{encoded_output_file_name}"
-        else:
-            # Fixed tag URLs are available for users who keep a stable release tag outside the default workflow.
+        private_repo = getattr(config, "obtainium_gh_private_export", None)
+        encoded_app_name = quote(str(app_name), safe="")
+
+        # When index repo is configured, use per-app release URL.
+        if private_repo:
             download_url = (
-                f"https://github.com/{github_repository}/releases/download/"
-                f"{encoded_obtainium_github_tag}/{encoded_output_file_name}"
+                f"https://github.com/{private_repo}/releases/download/{encoded_app_name}/{encoded_output_file_name}"
             )
+        else:
+            # Tags are also path segments, and custom tags may contain characters that need encoding.
+            encoded_obtainium_github_tag = quote(obtainium_github_tag, safe="")
+
+            # Construct the same public release URL shape GitHub serves for release assets.
+            if obtainium_github_tag == "latest":
+                # Latest release URLs let the generated HTML survive timestamp-based release tags.
+                download_url = (
+                    f"https://github.com/{github_repository}/releases/latest/download/{encoded_output_file_name}"
+                )
+            else:
+                # Fixed tag URLs are available for users who keep a stable release tag outside the default workflow.
+                download_url = (
+                    f"https://github.com/{github_repository}/releases/download/"
+                    f"{encoded_obtainium_github_tag}/{encoded_output_file_name}"
+                )
 
         # The HTML source hashes the APK link by default, so this label is informational for users.
         display_version = html.escape(str(app_data.get(app_version_key, "unknown")))

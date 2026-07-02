@@ -134,7 +134,70 @@ jobs:
             updates.json
             apks/*-output.apk
             apks/VancedMicroG.apk
+            app_changelogs/**
           if-no-files-found: error
+
+      - name: Create Per-App Releases in Private Repo
+        if: ${{ inputs.COMMIT_CHANGELOG && !inputs.CI_TEST }}
+        env:
+          GH_TOKEN: ${{ secrets.SECRET_OBTAINIUM_GH_PAT }}
+        run: |
+          TARGET_REPO="$(grep -m1 '^OBTAINIUM_GH_PRIVATE_EXPORT=' .env 2>/dev/null | cut -d= -f2- | sed "s/^['\"]//; s/['\"]$//")"
+
+          if [ -z "$TARGET_REPO" ]; then
+            echo "OBTAINIUM_GH_PRIVATE_EXPORT not set. Skipping per-app releases."
+            exit 0
+          fi
+
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning title=GH_TOKEN not set::SECRET_OBTAINIUM_GH_PAT is required for per-app releases. Skipping."
+            exit 0
+          fi
+
+          RELEASE_COUNT=0
+          for apk in apks/*-output.apk; do
+            [ -f "$apk" ] || continue
+
+            APK_NAME="$(basename "$apk")"
+
+            # Extract bare app_name from filename: Re{app_name}-Version...
+            # Example: "Reyoutube-Version19.16.39-...-output.apk" → "youtube"
+            APP_NAME="$(echo "$APK_NAME" | sed -n 's/^Re\([^-]*\)-.*/\1/p' | tr '[:upper:]' '[:lower:]')"
+            if [ -z "$APP_NAME" ]; then
+              echo "::warning title=Could not extract app name::Skipping $APK_NAME"
+              continue
+            fi
+
+            # Skip apps that don't have a per-app changelog (e.g., extra files like MicroG)
+            if [ ! -f "app_changelogs/${APP_NAME}.md" ]; then
+              echo "  Skipping $APP_NAME — no per-app changelog (extra file, not a patched app)"
+              continue
+            fi
+
+            echo "::group::Releasing $APP_NAME ($APK_NAME)"
+
+            # Delete existing release + tag (force-update pattern)
+            gh release delete "$APP_NAME" --repo "$TARGET_REPO" --yes --cleanup-tag 2>/dev/null || true
+
+            # Create release with APK asset and per-app changelog
+            NOTES_ARGS=(--notes-file "app_changelogs/${APP_NAME}.md")
+
+            # Create release with APK asset
+            if gh release create "$APP_NAME" "$apk" \
+                --repo "$TARGET_REPO" \
+                --title "$APP_NAME" \
+                "${NOTES_ARGS[@]}" \
+                --latest=false 2>&1; then
+              echo "  ✅ Released $APP_NAME"
+              RELEASE_COUNT=$((RELEASE_COUNT + 1))
+            else
+              echo "::warning title=Release failed::$APP_NAME release creation failed, continuing."
+            fi
+
+            echo "::endgroup::"
+          done
+
+          echo "Created $RELEASE_COUNT per-app release(s) in $TARGET_REPO"
 
       - name: Push Obtainium Export to Private Repo
         if: ${{ inputs.COMMIT_CHANGELOG && !inputs.CI_TEST}}
