@@ -2,7 +2,7 @@
 
 import contextlib
 import re
-from typing import Any, ClassVar, Self
+from typing import Any, ClassVar, Self, cast
 
 from loguru import logger
 from packaging.version import InvalidVersion, Version
@@ -185,7 +185,7 @@ class Patches(object):
         list[OptionInfo]
             list of option typed-dicts
         """
-        return [OptionInfo(**opt) for opt in options] if options else []
+        return [OptionInfo(**cast("OptionInfo", opt)) for opt in options] if options else []
 
     def _get_preferred_version(self: Self, version: str | list[str] | None) -> str:
         """Get the preferred version from a list of versions or a single version.

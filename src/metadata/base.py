@@ -95,7 +95,7 @@ class SourceMetadata:
         """
         html_url = response.get("html_url", "")
         for sub in cls.__subclasses__():
-            if hasattr(sub, "_domain") and sub._domain in html_url:  # type: ignore[attr-defined]
+            if hasattr(sub, "_domain") and getattr(sub, "_domain", "") in html_url:
                 return sub.from_json(response)
         msg = f"Unknown source for URL: {html_url}"
         raise ValueError(msg)
@@ -116,8 +116,7 @@ class SourceMetadata:
 
         """
         return any(
-            hasattr(sub, "_domain") and sub._domain in url  # type: ignore[attr-defined]
-            for sub in SourceMetadata.__subclasses__()
+            hasattr(sub, "_domain") and getattr(sub, "_domain", "") in url for sub in SourceMetadata.__subclasses__()
         )
 
     def get_release_date(self) -> str:

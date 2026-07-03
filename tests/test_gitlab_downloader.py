@@ -34,7 +34,8 @@ class _GitlabResponse:
 def _config(token: str | None = None) -> RevancedConfig:
     """Build the narrow config surface needed by the GitLab downloader tests."""
     return cast(
-        "RevancedConfig", SimpleNamespace(gitlab_pat=token, github_pat=None, dry_run=False, temp_folder=Path("apks"))
+        "RevancedConfig",
+        SimpleNamespace(gitlab_pat=token, github_pat=None, dry_run=False, temp_folder=Path("apks")),
     )
 
 
