@@ -136,7 +136,7 @@ jobs:
             updates.json
             apks/*-output.apk
             apks/VancedMicroG.apk
-            app_changelogs/**
+            obtainium_sources/changelogs/**
           if-no-files-found: error
 
       - name: Create Per-App Releases in Private Repo
@@ -171,7 +171,7 @@ jobs:
             fi
 
             # Skip apps that don't have a per-app changelog (e.g., extra files like MicroG)
-            if [ ! -f "app_changelogs/${APP_NAME}.md" ]; then
+            if [ ! -f "obtainium_sources/changelogs/${APP_NAME}.md" ]; then
               echo "  Skipping $APP_NAME — no per-app changelog (extra file, not a patched app)"
               continue
             fi
@@ -188,10 +188,10 @@ jobs:
             if gh release create "$APP_NAME" \
                 --repo "$TARGET_REPO" \
                 --title "$APP_LABEL" \
-                --notes-file "app_changelogs/${APP_NAME}.md" \
-                --latest=false 2>&1; then
+                --notes-file "obtainium_sources/changelogs/${APP_NAME}.md" \
+                --latest=true 2>&1; then
 
-              UPLOAD_ARGS=("$apk" "app_changelogs/${APP_NAME}.md" "obtainium_sources/json/${APP_NAME}.json")
+              UPLOAD_ARGS=("$apk" "obtainium_sources/changelogs/${APP_NAME}.md" "obtainium_sources/json/${APP_NAME}.json")
 
               # Upload the APK to the already-created release
               gh release upload "$APP_NAME" "${UPLOAD_ARGS[@]}" --repo "$TARGET_REPO" 2>&1 && {

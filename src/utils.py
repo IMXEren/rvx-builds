@@ -535,14 +535,14 @@ def generate_per_app_changelog(app_data: dict[str, Any]) -> str:
 
 
 def write_per_app_changelogs(updates_info: dict[str, Any]) -> None:
-    """Write per-app changelog files to the ``app_changelogs/`` directory.
+    """Write per-app changelog files to the ``obtainium_sources/changelogs/`` directory.
 
     Parameters
     ----------
     updates_info : dict[str, Any]
         The updates info dict keyed by app name.
     """
-    output_dir = Path("app_changelogs")
+    output_dir = Path("obtainium_sources/changelogs")
     output_dir.mkdir(exist_ok=True)
 
     for app_name, app_data in updates_info.items():

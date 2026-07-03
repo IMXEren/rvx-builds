@@ -206,7 +206,7 @@ class ChangelogGeneratorTests(TestCase):
         self.assertNotIn("Patches-2", result)
 
     def test_write_per_app_changelogs_creates_files(self: Self) -> None:
-        """write_per_app_changelogs should create app_changelogs/<name>.md per app with output_file_name."""
+        """write_per_app_changelogs should create obtainium_sources/changelogs/<name>.md per app with output_file_name."""
         from datetime import UTC, datetime
 
         with TemporaryDirectory() as temp_dir, chdir(temp_dir):
@@ -237,12 +237,12 @@ class ChangelogGeneratorTests(TestCase):
             with patch.dict("src.utils.changelogs", {"revanced/revanced-cli": meta}, clear=True):
                 write_per_app_changelogs(updates_info)
 
-            output_path = Path(temp_dir, "app_changelogs", "YouTube.md")
+            output_path = Path(temp_dir, "obtainium_sources", "changelogs", "YouTube.md")
             self.assertTrue(output_path.exists())
             content = output_path.read_text(encoding="utf_8")
             self.assertIn("# YouTube", content)
             self.assertIn("**App Version:** 20.47.62", content)
 
             # App without output_file_name should be skipped
-            no_file_path = Path(temp_dir, "app_changelogs", "NoFileApp.md")
+            no_file_path = Path(temp_dir, "obtainium_sources", "changelogs", "NoFileApp.md")
             self.assertFalse(no_file_path.exists())
