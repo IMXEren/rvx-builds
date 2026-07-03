@@ -13,7 +13,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from src.app import APP
-from src.metadata.github import GithubSourceMetadata
+from src.metadata import GithubSourceMetadata, SourceMetadata  # noqa: F401
 from src.utils import (
     generate_obtainium_export,
     generate_per_app_changelog,

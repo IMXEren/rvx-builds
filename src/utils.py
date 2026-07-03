@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 from src.downloader.sources import APK_MIRROR_APK_CHECK
 from src.exceptions import ScrapingError
-from src.metadata.github import GithubSourceMetadata
+from src.metadata import SourceMetadata
 
 type ResponseType = Response | CurlResponse | Source
 default_build = [
@@ -68,7 +68,7 @@ session.headers.update(_headers)
 
 updates_file = "updates.json"
 updates_file_url = "https://raw.githubusercontent.com/{github_repository}/{branch_name}/{updates_file}"
-changelogs: dict[str, GithubSourceMetadata] = {}
+changelogs: dict[str, SourceMetadata] = {}
 time_zone = "Asia/Kolkata"
 app_version_key = "app_version"
 patches_versions_key = "patches_versions"
@@ -108,16 +108,16 @@ def update_changelog(name: str, response: dict[str, str]) -> None:
     in the dictionary represent the type of change (e.g., "bug fix", "feature", "documentation"), and
     the values represent the specific changes made for each type.
     """
-    source_metadata = GithubSourceMetadata.from_json(response)
+    source_metadata = SourceMetadata.for_response(response)
     changelogs[name] = source_metadata
 
 
-def format_changelog(metadata: GithubSourceMetadata, heading_level: str = "#") -> str:
+def format_changelog(metadata: SourceMetadata, heading_level: str = "#") -> str:
     """The `format_changelog` returns formatted changelog string.
 
     Parameters
     ----------
-    metadata : GithubSourceMetadata
+    metadata : SourceMetadata
         Represents the release metadata with sufficient info.
     heading_level : str
         The Markdown heading level (default ``"#"``). Use ``"##"`` for
@@ -139,7 +139,7 @@ def format_changelog(metadata: GithubSourceMetadata, heading_level: str = "#") -
 def write_changelog_to_file(updates_info: dict[str, Any]) -> None:
     """The function `write_changelog_to_file` writes a given changelog json to a file."""
     changelog_doc = ""
-    metadata_list = GithubSourceMetadata.sort_by_latest_release(changelogs.values())
+    metadata_list = SourceMetadata.sort_by_latest_release(changelogs.values())
     for data in metadata_list:
         changelog_doc += format_changelog(data)
     with Path(changelog_file).open("w", encoding="utf_8") as file1:
@@ -148,6 +148,8 @@ def write_changelog_to_file(updates_info: dict[str, Any]) -> None:
     def encoder_default(obj: Any) -> Any:
         if isinstance(obj, datetime):
             return obj.isoformat()
+        if isinstance(obj, SourceMetadata):
+            return obj.to_dict()
         if hasattr(obj, "__dict__"):
             return obj.__dict__
         msg = f"Object of type {type(obj).__name__} is not JSON serializable"
@@ -517,7 +519,7 @@ def generate_per_app_changelog(app_data: dict[str, Any]) -> str:
     # Match URLs to changelog entries using metadata.name substring
     # Copy the global dict so we don't mutate it while iterating
     remaining = dict(changelogs)
-    matched: list[GithubSourceMetadata] = []
+    matched: list[SourceMetadata] = []
 
     for url in all_urls:
         for key, meta in list(remaining.items()):
