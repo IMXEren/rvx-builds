@@ -10,6 +10,10 @@ on:
         required: false
       DOCKER_PY_REVANCED_SECRETS:
         required: false
+      SECRET_GITHUB_PAT:
+        required: false
+      SECRET_GITLAB_PAT:
+        required: false
       SECRET_REDDIT_CLIENT_ID:
         required: false
       SECRET_OBTAINIUM_GH_PAT:
@@ -202,7 +206,7 @@ jobs:
       - name: Push Obtainium Export to Private Repo
         if: ${{ inputs.COMMIT_CHANGELOG && !inputs.CI_TEST}}
         env:
-          PAT: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PAT: ${{ secrets.SECRET_GITHUB_PAT }}
         run: |
           # Read target repo from the .env file injected earlier in the workflow.
           TARGET_REPO="$(grep -m1 '^OBTAINIUM_GH_PRIVATE_EXPORT=' .env 2>/dev/null | cut -d= -f2- | sed "s/^['\"]//; s/['\"]$//")"
@@ -226,7 +230,7 @@ jobs:
 
           # Verify PAT is available.
           if [ -z "$PAT" ]; then
-            echo "::warning title=PAT not set::PERSONAL_ACCESS_TOKEN is required to push to private repo. Skipping."
+            echo "::warning title=PAT not set::SECRET_GITHUB_PAT is required to push to private repo. Skipping."
             exit 0
           fi
 

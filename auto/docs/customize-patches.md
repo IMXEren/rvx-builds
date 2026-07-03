@@ -23,7 +23,8 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
 | :-------------------------------------------------------- | :-----------------------------------------------: | :------------------------------------------------------------------------------------------------------- |
 | [PATCH_APPS](#patch-apps)                                 |                Apps to patch/build                | youtube                                                                                                  |
 | [EXISTING_DOWNLOADED_APKS ](#existing-downloaded-apks)    |           Already downloaded clean apks           | []                                                                                                       |
-| [PERSONAL_ACCESS_TOKEN](#personal-access-token)           |             GitHub/GitLab Token to be used        | None                                                                                                     |
+| [GITHUB_PAT](#personal-access-token)                      |             GitHub Token to be used               | None                                                                                                     |
+| [GITLAB_PAT](#personal-access-token)                      |             GitLab Token to be used               | None                                                                                                     |
 | DRY_RUN                                                   |                   Do a dry run                    | False                                                                                                    |
 | [EXTRA_FILES](#extra-files)                               |    Extra files apk to upload in GitHub upload.    | None                                                                                                     |
 | [GLOBAL_CLI_DL\*](#global-resources)                      |     DL for CLI to be used for patching apps.      | [Revanced CLI](https://github.com/revanced/revanced-cli)                                                                        |
@@ -146,7 +147,7 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    If you add above. Script will not download the `YouTube` & `YouTube Music` apks from internet and expects an apk in
    `/apks` folder with names `youtube.apk` & `youtube_music.apk` (apk naming format - `<APP_NAME>.apk`) respectively.
 6. <a id="personal-access-token"></a>If you run script again & again. You might hit GitHub/GitLab API limits.
-   In that case you can provide your Personal Access Token by adding a secret `PERSONAL_ACCESS_TOKEN` in `[custom GitHub secrets](extras.md#custom-secrets)`.
+    In that case you can provide your Personal Access Tokens by adding secrets `GITHUB_PAT` and `GITLAB_PAT` in `[custom GitHub secrets](extras.md#custom-secrets)`.
 7. <a id="global-resources"></a>You can provide Direct download to the resource to used for patching apps `.env` file
    or in `ENVS` in `GitHub secrets` in the format -
 
@@ -502,7 +503,7 @@ secrets` in the format -
     > The CI strips the `VAR_` prefix and writes `OBTAINIUM_GH_PRIVATE_EXPORT` to `.env`.
 
      This requires:
-     - A `PERSONAL_ACCESS_TOKEN` secret with `repo` scope for authentication.
+     - A `GITHUB_PAT` secret with `repo` scope for authentication.
      - The target repository to have a `repo` branch where sources are pushed.
      - A workflow in the target repository to resolve `/latest/download/` URLs to specific release tags
        upon receiving a `repository_dispatch` event.
@@ -518,7 +519,7 @@ secrets` in the format -
      Obtainium's import schema and can be imported directly.
 
      To auto-populate the `Authorization` header in the generated JSONs, add a [custom GitHub secret](extras.md#custom-secrets)
-     named `SECRET_OBTAINIUM_GH_PAT` with your Personal Access Token as the value.
+     named `SECRET_OBTAINIUM_GH_PAT` with your GitHub Personal Access Token as the value.
      The `SECRET_` prefix is stripped when writing to `.env`, so the config reads it as `OBTAINIUM_GH_PAT`.
      ```ini
      SECRET_OBTAINIUM_GH_PAT=ghp_xxxxxxxxxxxx

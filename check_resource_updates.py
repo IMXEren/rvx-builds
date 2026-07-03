@@ -192,40 +192,42 @@ def check_if_build_is_required() -> bool:
     return False
 
 
-def _fetch_metadata(url: str, access_token: str | None = None) -> SourceMetadata:
+def _fetch_metadata(url: str, config: RevancedConfig) -> SourceMetadata:
     """Fetch release metadata from a GitHub or GitLab tool URL."""
     if Gitlab.is_gitlab_url(url):
-        return _fetch_gitlab_metadata(url, access_token)
-    return _fetch_github_metadata(url, access_token)
+        return _fetch_gitlab_metadata(url, config.gitlab_pat)
+    return _fetch_github_metadata(url, config.github_pat)
 
 
-def _fetch_github_metadata(url: str, access_token: str | None = None) -> SourceMetadata:
+def _fetch_github_metadata(url: str, token: str | None) -> SourceMetadata:
     """Fetch release metadata from a GitHub tool URL."""
     owner, repo_name, release_tag = Github._extract_repo_owner_and_tag(url)  # noqa: SLF001
     repo_url = f"https://api.github.com/repos/{owner}/{repo_name}/releases/{release_tag}"
     headers = {
         "Content-Type": "application/vnd.github.v3+json",
     }
-    if access_token:
-        headers["Authorization"] = f"Bearer {access_token}"
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     logger.debug(f"Fetching metadata from {repo_url}")
     response = requests.get(repo_url, headers=headers, timeout=request_timeout)
     handle_request_response(response, repo_url)
     return SourceMetadata.for_response(response.json())
 
 
-def _fetch_gitlab_metadata(url: str, access_token: str | None = None) -> SourceMetadata:
+def _fetch_gitlab_metadata(url: str, token: str | None) -> SourceMetadata:
     """Fetch release metadata from a GitLab tool URL."""
     base_url, project_path, release_ref = Gitlab._extract_project_and_tag(url)  # noqa: SLF001
     api_url = Gitlab._get_release_api_url(base_url, project_path, release_ref)  # noqa: SLF001
     headers = {"Content-Type": "application/json"}
-    if access_token:
-        headers["PRIVATE-TOKEN"] = access_token
+    if token:
+        headers["PRIVATE-TOKEN"] = token
     logger.debug(f"Fetching metadata from {api_url}")
     response = requests.get(api_url, headers=headers, timeout=request_timeout)
     handle_request_response(response, api_url)
     normalized = Gitlab._normalize_changelog_response(  # noqa: SLF001
-        base_url, project_path, response.json(),
+        base_url,
+        project_path,
+        response.json(),
     )
     return SourceMetadata.for_response(normalized)
 
@@ -240,7 +242,7 @@ def write_patch_updates_changelog(config: RevancedConfig, apps: list[AppBuildInf
 
     metadata_set: set[SourceMetadata] = set()
     for dl in patches_dl_set:
-        metadata_set.add(_fetch_metadata(dl, config.personal_access_token))
+        metadata_set.add(_fetch_metadata(dl, config))
 
     changelog_doc = ""
     changelog_doc_file = "patch-updates.md"

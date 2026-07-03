@@ -94,8 +94,8 @@ class Gitlab(Downloader):
         headers = {
             "Content-Type": "application/json",
         }
-        if config.personal_access_token:
-            headers["PRIVATE-TOKEN"] = config.personal_access_token
+        if config.gitlab_pat:
+            headers["PRIVATE-TOKEN"] = config.gitlab_pat
         return headers
 
     @staticmethod

@@ -48,7 +48,8 @@ def _config(temp_folder: Path) -> RevancedConfig:
         SimpleNamespace(
             apk_editor="apkeditor.jar",
             existing_downloaded_apks=[],
-            personal_access_token=None,
+            github_pat=None,
+            gitlab_pat=None,
             dry_run=False,
             disable_caching=False,
             temp_folder=temp_folder,

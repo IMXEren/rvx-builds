@@ -55,13 +55,13 @@ class Downloader(object):
     def _build_download_headers(self: Self, url: str, extra_headers: dict[str, str] | None) -> dict[str, str]:
         """Build request headers for authenticated and binary artifact downloads."""
         headers: dict[str, str] = {}
-        if self.config.personal_access_token and "github" in url:
-            logger.debug("Using personal access token")
-            headers["Authorization"] = f"token {self.config.personal_access_token}"
+        if self.config.github_pat and "github" in url:
+            logger.debug("Using GitHub personal access token")
+            headers["Authorization"] = f"token {self.config.github_pat}"
         # GitLab's API uses a different personal-token header than GitHub's download endpoints.
-        if self.config.personal_access_token and "gitlab" in url:
-            logger.debug("Using personal access token")
-            headers["PRIVATE-TOKEN"] = self.config.personal_access_token
+        if self.config.gitlab_pat and "gitlab" in url:
+            logger.debug("Using GitLab personal access token")
+            headers["PRIVATE-TOKEN"] = self.config.gitlab_pat
         if urlparse(url).path.lower().endswith((".rvp", ".mpp")):
             # Patch bundle endpoints can use content negotiation, so direct downloads request raw binary bytes.
             headers["Accept"] = "application/octet-stream"

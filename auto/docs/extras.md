@@ -24,7 +24,6 @@ The same applies to **repository variables**: prefix them with `VAR_` to have th
 **Exceptions** — the following secrets do NOT require the `SECRET_` prefix because they are referenced directly in workflows:
 - `ENVS`
 - `JOIN_API_KEY` / `JOIN_DEVICE_ID`
-- `PERSONAL_ACCESS_TOKEN`
 
 **Example**: To expose `OBTAINIUM_GH_PRIVATE_EXPORT` as a repository variable, create a variable named `VAR_OBTAINIUM_GH_PRIVATE_EXPORT`. The workflow writes it to `.env` as `OBTAINIUM_GH_PRIVATE_EXPORT`.
 
@@ -45,7 +44,7 @@ Make your Action has write access. If not click here: https://github.com/OWNER/R
 Some important scheduled workflows are -
 
 - Get Patch Apps Info
-- Update Checker
+- Auto Build &amp; Release
 
 If you've forked the project, make sure that your scheduled workflows are enabled.
 
@@ -56,7 +55,7 @@ If you've forked the project, make sure that your scheduled workflows are enable
 
 **Get Patch Apps Info** is required when you want to automate the building. Therefore, sometimes you'd encounter that your configured `.env` or patch properties wouldn't show as updated in Tasker for a time period (2-5 mins).
 
-**Update Checker** workflow will periodically check for new patch releases and trigger a new Build & Release when necessary. This requires you to set your `PERSONAL_ACCESS_TOKEN` secret to trigger builds.
+**Auto Build & Release** workflow will periodically check for new patch releases and trigger a new Build &amp; Release when necessary.
 
 ## Google Play Protect
 
