@@ -12,8 +12,9 @@ from loguru import logger
 from main import get_app
 from src.config import RevancedConfig
 from src.downloader.github import Github
+from src.downloader.gitlab import Gitlab
 from src.manager.github import GitHubManager
-from src.metadata.github import GithubSourceMetadata
+from src.metadata import SourceMetadata
 from src.utils import (
     default_build,
     format_changelog,
@@ -191,19 +192,42 @@ def check_if_build_is_required() -> bool:
     return False
 
 
-def _fetch_metadata(url: str, access_token: str | None = None) -> GithubSourceMetadata:
+def _fetch_metadata(url: str, access_token: str | None = None) -> SourceMetadata:
+    """Fetch release metadata from a GitHub or GitLab tool URL."""
+    if Gitlab.is_gitlab_url(url):
+        return _fetch_gitlab_metadata(url, access_token)
+    return _fetch_github_metadata(url, access_token)
+
+
+def _fetch_github_metadata(url: str, access_token: str | None = None) -> SourceMetadata:
+    """Fetch release metadata from a GitHub tool URL."""
     owner, repo_name, release_tag = Github._extract_repo_owner_and_tag(url)  # noqa: SLF001
     repo_url = f"https://api.github.com/repos/{owner}/{repo_name}/releases/{release_tag}"
     headers = {
         "Content-Type": "application/vnd.github.v3+json",
     }
     if access_token:
-        logger.debug("Using personal access token")
         headers["Authorization"] = f"Bearer {access_token}"
     logger.debug(f"Fetching metadata from {repo_url}")
     response = requests.get(repo_url, headers=headers, timeout=request_timeout)
     handle_request_response(response, repo_url)
-    return GithubSourceMetadata.from_json(response.json())
+    return SourceMetadata.for_response(response.json())
+
+
+def _fetch_gitlab_metadata(url: str, access_token: str | None = None) -> SourceMetadata:
+    """Fetch release metadata from a GitLab tool URL."""
+    base_url, project_path, release_ref = Gitlab._extract_project_and_tag(url)  # noqa: SLF001
+    api_url = Gitlab._get_release_api_url(base_url, project_path, release_ref)  # noqa: SLF001
+    headers = {"Content-Type": "application/json"}
+    if access_token:
+        headers["PRIVATE-TOKEN"] = access_token
+    logger.debug(f"Fetching metadata from {api_url}")
+    response = requests.get(api_url, headers=headers, timeout=request_timeout)
+    handle_request_response(response, api_url)
+    normalized = Gitlab._normalize_changelog_response(  # noqa: SLF001
+        base_url, project_path, response.json(),
+    )
+    return SourceMetadata.for_response(normalized)
 
 
 def write_patch_updates_changelog(config: RevancedConfig, apps: list[AppBuildInfo]) -> None:
@@ -211,16 +235,16 @@ def write_patch_updates_changelog(config: RevancedConfig, apps: list[AppBuildInf
     patches_dl_set: set[str] = set()
     for app_obj in apps:
         for dl in app_obj.new_sources:
-            if dl.startswith("https://github.com/"):
+            if SourceMetadata.is_valid_source(dl):
                 patches_dl_set.add(dl)
 
-    metadata_set: set[GithubSourceMetadata] = set()
+    metadata_set: set[SourceMetadata] = set()
     for dl in patches_dl_set:
         metadata_set.add(_fetch_metadata(dl, config.personal_access_token))
 
     changelog_doc = ""
     changelog_doc_file = "patch-updates.md"
-    sorted_metadata_list = GithubSourceMetadata.sort_by_latest_release(metadata_set)
+    sorted_metadata_list = SourceMetadata.sort_by_latest_release(metadata_set)
     if sorted_metadata_list:
         logger.info(f"Writing patch updates changelog to {changelog_doc_file}.")
     for app_data in sorted_metadata_list:
