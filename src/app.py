@@ -202,6 +202,68 @@ class APP(object):
             return f"{parsed_url.netloc}-{path_parts[-1]}"
         return str(self.effective_cli_argsf)
 
+    def _build_identity(self: Self) -> str:
+        """Build a stable identity string for fingerprinting the build configuration.
+
+        Captures CLI, patch bundles, include/exclude lists, options,
+        architectures, and CLI argument config so any input change produces
+        a different output filename and Obtainium detects an update.
+
+        Returns
+        -------
+        str
+            A ``|``-delimited identity string for hashing.
+        """
+        parts: list[str] = []
+
+        # App version
+        parts.append(f"app_version:{getattr(self, 'app_version', '') or ''}")
+
+        # CLI
+        resource = getattr(self, "resource", {}) or {}
+        if "cli" in resource:
+            cli = resource["cli"]
+            parts.append(f"cli:{cli['file_name']}@{cli['version']}")
+
+        # Patch bundles
+        parts.append(
+            "|".join(f"{bundle['file_name']}@{bundle['version']}" for bundle in self.patch_bundles),
+        )
+
+        # Patch include / exclude
+        include_request: list[str] = getattr(self, "include_request", []) or []
+        exclude_request: list[str] = getattr(self, "exclude_request", []) or []
+        if include_request:
+            parts.append(f"include:{','.join(sorted(include_request))}")
+        if exclude_request:
+            parts.append(f"exclude:{','.join(sorted(exclude_request))}")
+
+        # Patch options
+        options_raw: str = getattr(self, "options_raw", "") or ""
+        options_file: str = getattr(self, "options_file", "") or ""
+        if options_raw:
+            parts.append(f"options:{options_raw}")
+        if options_file:
+            parts.append(f"options_file:{options_file}")
+
+        # Architectures
+        archs_to_build: list[str] = getattr(self, "archs_to_build", []) or []
+        if archs_to_build:
+            parts.append(f"archs:{','.join(sorted(archs_to_build))}")
+
+        # CLI argument family (v5 vs v6)
+        parts.append(f"cli_argsf:{getattr(self, 'effective_cli_argsf', '') or ''}")
+
+        # CLI argument maps (custom overrides)
+        cli_lp_args: str = getattr(self, "cli_lp_args", "") or ""
+        cli_p_args: str = getattr(self, "cli_p_args", "") or ""
+        if cli_lp_args:
+            parts.append(f"cli_lp_args:{cli_lp_args}")
+        if cli_p_args:
+            parts.append(f"cli_p_args:{cli_p_args}")
+
+        return "|".join(parts)
+
     def get_output_file_name(self: Self) -> str:
         """The function returns a string representing the output file name.
 
@@ -212,10 +274,9 @@ class APP(object):
         if self._cached_output_file_name:
             return self._cached_output_file_name
 
-        # The patch set identity includes every bundle file and version so Obtainium detects patch-only updates.
-        patch_bundle_identity = "|".join(f"{bundle['file_name']}@{bundle['version']}" for bundle in self.patch_bundles)
-        # A short digest keeps the release asset name readable while still changing when any bundle changes.
-        patch_bundle_digest = hashlib.sha256(patch_bundle_identity.encode()).hexdigest()[:12]
+        build_identity = self._build_identity()
+        # A short digest keeps the release asset name readable while still changing when any input changes.
+        build_digest = hashlib.sha256(build_identity.encode()).hexdigest()[:12]
         # The visible version segment remains useful for humans, but includes every bundle version now.
         patch_bundle_versions = "-".join(bundle["version"] for bundle in self.patch_bundles) or "unknown"
         current_date = datetime.now(ZoneInfo(time_zone))
@@ -223,7 +284,7 @@ class APP(object):
         self._cached_output_file_name = (
             f"Re{self.app_name}-Version{slugify(self.app_version)}"
             f"-PatchVersion{slugify(patch_bundle_versions)}"
-            f"-PatchSet{patch_bundle_digest}-{formatted_date}-output.apk"
+            f"-BuildHash{build_digest}-{formatted_date}-output.apk"
         )
         return self._cached_output_file_name
 
