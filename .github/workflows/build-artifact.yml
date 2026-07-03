@@ -12,8 +12,6 @@ on:
         required: false
       SECRET_GITHUB_PAT:
         required: false
-      SECRET_GITLAB_PAT:
-        required: false
       SECRET_REDDIT_CLIENT_ID:
         required: false
     inputs:
