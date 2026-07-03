@@ -1,20 +1,25 @@
 """Github Source Metadata."""
 
-from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Self
 
+from src.metadata.base import SourceMetadata, SourceType
+
 
 @dataclass(unsafe_hash=True)
-class GithubSourceMetadata:
+class GithubSourceMetadata(SourceMetadata):
     """Represents github release tag metadata."""
+
+    _domain: str = field(default="github.com", init=False, repr=False)
+    """Domain used by ``SourceMetadata.for_response`` to dispatch."""
 
     name: str
     tag: str
     body: str
     html_url: str
     published_at: datetime
+    source_type: SourceType = field(default=SourceType.GITHUB)
 
     @classmethod
     def from_json(cls: type[Self], response: dict[str, str]) -> Self:
@@ -42,18 +47,3 @@ class GithubSourceMetadata:
         html_url = response["html_url"]
         published_at = datetime.fromisoformat(response["published_at"]).astimezone(UTC)
         return cls(name, tag, body, html_url, published_at)
-
-    def get_release_date(self) -> str:
-        """Return the release date as a formatted UTC string.
-
-        Returns
-        -------
-        str
-            The published date formatted as "Month DD, YYYY, HH:MM:SS UTC".
-        """
-        return self.published_at.strftime("%B %d, %Y, %H:%M:%S UTC")
-
-    @staticmethod
-    def sort_by_latest_release(items: Iterable["GithubSourceMetadata"]) -> list["GithubSourceMetadata"]:
-        """Sort by latest release first."""
-        return sorted(items, key=lambda m: m.published_at, reverse=True)
