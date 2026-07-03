@@ -178,20 +178,26 @@ jobs:
 
             echo "::group::Releasing $APP_NAME ($APK_NAME)"
 
+            # Read human-readable app label from the generated Obtainium JSON config
+            APP_LABEL="$(jq -r '.apps[0].name // empty' "obtainium_sources/json/${APP_NAME}.json" 2>/dev/null || echo "$APP_NAME")"
+
             # Delete existing release + tag (force-update pattern)
             gh release delete "$APP_NAME" --repo "$TARGET_REPO" --yes --cleanup-tag 2>/dev/null || true
 
-            # Create release with APK asset and per-app changelog
-            NOTES_ARGS=(--notes-file "app_changelogs/${APP_NAME}.md")
-
-            # Create release with APK asset
-            if gh release create "$APP_NAME" "$apk" \
+            # Create the release (non-latest) with changelog body
+            if gh release create "$APP_NAME" \
                 --repo "$TARGET_REPO" \
-                --title "$APP_NAME" \
-                "${NOTES_ARGS[@]}" \
+                --title "$APP_LABEL" \
+                --notes-file "app_changelogs/${APP_NAME}.md" \
                 --latest=false 2>&1; then
-              echo "  ✅ Released $APP_NAME"
-              RELEASE_COUNT=$((RELEASE_COUNT + 1))
+
+              UPLOAD_ARGS=("$apk" "app_changelogs/${APP_NAME}.md" "obtainium_sources/json/${APP_NAME}.json")
+
+              # Upload the APK to the already-created release
+              gh release upload "$APP_NAME" "${UPLOAD_ARGS[@]}" --repo "$TARGET_REPO" 2>&1 && {
+                echo "  ✅ Released $APP_NAME"
+                RELEASE_COUNT=$((RELEASE_COUNT + 1))
+              }
             else
               echo "::warning title=Release failed::$APP_NAME release creation failed, continuing."
             fi
