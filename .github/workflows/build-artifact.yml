@@ -16,8 +16,6 @@ on:
         required: false
       SECRET_REDDIT_CLIENT_ID:
         required: false
-      SECRET_OBTAINIUM_GH_PAT:
-        required: false
     inputs:
       CI_TEST:
         required: false
@@ -144,7 +142,7 @@ jobs:
       - name: Create Per-App Releases in Private Repo
         if: ${{ inputs.COMMIT_CHANGELOG && !inputs.CI_TEST }}
         env:
-          GH_TOKEN: ${{ secrets.SECRET_OBTAINIUM_GH_PAT }}
+          GH_TOKEN: ${{ secrets.SECRET_GITHUB_PAT }}
         run: |
           TARGET_REPO="$(grep -m1 '^OBTAINIUM_GH_PRIVATE_EXPORT=' .env 2>/dev/null | cut -d= -f2- | sed "s/^['\"]//; s/['\"]$//")"
 
@@ -154,7 +152,7 @@ jobs:
           fi
 
           if [ -z "$GH_TOKEN" ]; then
-            echo "::warning title=GH_TOKEN not set::SECRET_OBTAINIUM_GH_PAT is required for per-app releases. Skipping."
+            echo "::warning title=GH_TOKEN not set::SECRET_GITHUB_PAT is required for per-app releases. Skipping."
             exit 0
           fi
 
@@ -252,7 +250,7 @@ jobs:
           echo "Pushing Obtainium sources to $TARGET_REPO (branch: repo)..."
           GH_URL="https://x-access-token:${PAT}@github.com/${TARGET_REPO}.git"
 
-          # Clone 'repo' branch directly so old HTMLs are preserved; fall back to fresh init on first run.
+          # Clone 'repo' branch directly so old configs are preserved; fall back to fresh init on first run.
           if git clone --branch repo --single-branch --depth 1 "$GH_URL" /tmp/private-obtainium 2>/dev/null; then
             cd /tmp/private-obtainium || exit 1
           else
@@ -263,7 +261,6 @@ jobs:
           fi
 
           mkdir -p obtainium_sources
-          cp "$GITHUB_WORKSPACE/obtainium_sources"/*.html obtainium_sources/
           if [ -d "$GITHUB_WORKSPACE/obtainium_sources/json" ]; then
             cp -r "$GITHUB_WORKSPACE/obtainium_sources/json" obtainium_sources/
           fi

@@ -46,6 +46,5 @@ class RevancedConfig(object):
         self.obtainium_export = env.bool("OBTAINIUM_EXPORT", False)
         self.obtainium_github_tag = env.str("OBTAINIUM_GITHUB_TAG", "latest")
         self.obtainium_gh_private_export = env.str("OBTAINIUM_GH_PRIVATE_EXPORT", None)
-        self.obtainium_gh_pat = env.str("OBTAINIUM_GH_PAT", None)
         self.repack_split_apks = env.bool("REPACK_SPLIT_APKS", False)
         self.device_spec = self.temp_folder / "device-spec.json"

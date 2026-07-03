@@ -388,7 +388,7 @@ def _write_obtainium_json_config(
     config: "RevancedConfig",
 ) -> None:
     """Write an Obtainium JSON app config next to its companion HTML source page."""
-    app_name, html_file_name = app_info
+    app_name, _html_file_name = app_info
     github_repository, obtainium_github_tag = repo_info
 
     private_repo = getattr(config, "obtainium_gh_private_export", None)
@@ -415,12 +415,12 @@ def _write_obtainium_json_config(
         app_label = app_name
         package_name = app_dump["package_name"]
 
-    # Raw HTML URL pointing to the private repo's 'repo' branch.
-    raw_html_url = f"https://github.com/{private_repo}/raw/repo/obtainium_sources/{html_file_name}"
+    # URL pointing to the index repo - Obtainium filters releases by tag name
+    resource_url = f"https://github.com/{private_repo}"
+    encoded_app_name = quote(str(app_name), safe="")
 
     # ChangeLog URL - point to per-app release in index repo when available.
     if private_repo:
-        encoded_app_name = quote(str(app_name), safe="")
         change_log_url = f"https://github.com/{private_repo}/releases/tag/{encoded_app_name}"
     elif obtainium_github_tag == "latest":
         change_log_url = f"https://github.com/{github_repository}/releases/latest"
@@ -428,43 +428,39 @@ def _write_obtainium_json_config(
         encoded_tag = quote(obtainium_github_tag, safe="")
         change_log_url = f"https://github.com/{github_repository}/releases/tag/{encoded_tag}"
 
-    # Load the PAT from config so users can set a real token without editing generated files.
-    request_headers = [{"requestHeader": ""}]
-    if config.obtainium_gh_pat:
-        request_headers = [{"requestHeader": f"Authorization: Bearer {config.obtainium_gh_pat}"}]
-
     additional_settings = {
-        "intermediateLink": [],
-        "customLinkFilterRegex": "",
-        "filterByLinkText": False,
-        "matchLinksOutsideATags": False,
-        "skipSort": True,
-        "reverseSort": True,
-        "sortByLastLinkSegment": False,
-        "versionExtractWholePage": False,
-        "requestHeader": request_headers,
-        "defaultPseudoVersioningMethod": "APKLinkHash",
+        "includePrereleases": False,
+        "verifyLatestTag": False,
+        "fallbackToOlderReleases": True,
+        "filterReleaseTitlesByRegEx": encoded_app_name,
+        "filterReleaseNotesByRegEx": "",
+        "githubBuildVerificationMode": "off",
+        "sortMethodChoice": "date",
+        "useLatestAssetDateAsReleaseDate": False,
         "trackOnly": False,
         "onDemandOnly": False,
         "exemptFromBackgroundUpdates": False,
         "skipUpdateNotifications": False,
-        "versionExtractionRegEx": "",
-        "matchGroupToUse": "",
-        "useVersionCodeAsOSVersion": False,
-        "versionDetection": "auto",
-        "apkFilterRegEx": "",
+        "versionStringSource": "assetName",
+        "versionExtractionRegEx": r"BuildHash(.*?)-",
+        "matchGroupToUse": "$1",
+        "versionDetection": "pseudo",
+        "apkFilterRegEx": encoded_app_name,
         "invertAPKFilter": False,
-        "autoApkFilterByArch": False,
+        "autoApkFilterByArch": True,
         "shizukuPretendToBeGooglePlay": False,
         "allowInsecure": False,
         "refreshBeforeDownload": False,
-        "versionStringSource": "default",
+        "includeZips": False,
+        "zippedApkFilterRegEx": "",
+        "includeTarballs": False,
+        "tarballedApkFilterRegEx": "",
+        "enforceGitHubAttestations": False,
         "releaseDateAsVersion": False,
         "releaseTitleAsVersion": False,
-        "extractVersionFromAssetName": False,
+        "extractVersionFromAssetName": True,
         "releaseCommitShaAsVersion": False,
-        "trackOnlyTemporaryPackageId": True,
-        "trackOnlyUndeterminedInstalledVersion": True,
+        "useVersionCodeAsOSVersion": False,
     }
 
     app_json = {
@@ -472,13 +468,13 @@ def _write_obtainium_json_config(
             {
                 "id": package_name,
                 "name": app_label,
-                "url": raw_html_url,
+                "url": resource_url,
                 "author": "Morphe",
                 "preferredApkIndex": 0,
                 "additionalSettings": json.dumps(additional_settings),
                 "categories": ["RVX-Builds"],
                 "changeLog": change_log_url,
-                "overrideSource": "HTML",
+                "overrideSource": None,
             },
         ],
     }

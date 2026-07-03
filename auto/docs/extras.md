@@ -27,7 +27,7 @@ The same applies to **repository variables**: prefix them with `VAR_` to have th
 
 **Example**: To expose `OBTAINIUM_GH_PRIVATE_EXPORT` as a repository variable, create a variable named `VAR_OBTAINIUM_GH_PRIVATE_EXPORT`. The workflow writes it to `.env` as `OBTAINIUM_GH_PRIVATE_EXPORT`.
 
-Similarly, to expose `OBTAINIUM_GH_PAT` as a secret, create a secret named `SECRET_OBTAINIUM_GH_PAT`, and the workflow writes it to `.env` as `OBTAINIUM_GH_PAT`.
+Similarly, to expose `GITHUB_PAT` as a secret, create a secret named `SECRET_GITHUB_PAT`, and the workflow writes it to `.env` as `GITHUB_PAT`.
 
 ## Join API
 
