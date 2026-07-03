@@ -502,10 +502,12 @@ def generate_per_app_changelog(app_data: dict[str, Any]) -> str:
         The formatted Markdown changelog.
     """
     app_dump = app_data.get("app_dump", {})
-    app_name = app_dump.get("app_name", "")
-    app_version = str(app_data.get("app_version", ""))
+    app_version = app_data.get("app_version")
 
-    lines: list[str] = [f"# {app_name}", "", f"**App Version:** {app_version}", ""]
+    lines: list[str] = [f"**App Version:** {app_version}", ""]
+    if build_hash := app_dump.get("build_hash"):
+        lines.pop()
+        lines.extend([f"**Build Hash:** {build_hash}", ""])
 
     # Collect all tool URLs (CLI + patches) into a flat list
     cli_url = app_dump.get("cli_dl", "")

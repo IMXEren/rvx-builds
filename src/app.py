@@ -276,7 +276,7 @@ class APP(object):
 
         build_identity = self._build_identity()
         # A short digest keeps the release asset name readable while still changing when any input changes.
-        build_digest = hashlib.sha256(build_identity.encode()).hexdigest()[:12]
+        self.build_hash = hashlib.sha256(build_identity.encode()).hexdigest()[:12]
         # The visible version segment remains useful for humans, but includes every bundle version now.
         patch_bundle_versions = "-".join(bundle["version"] for bundle in self.patch_bundles) or "unknown"
         current_date = datetime.now(ZoneInfo(time_zone))
@@ -284,7 +284,7 @@ class APP(object):
         self._cached_output_file_name = (
             f"Re{self.app_name}-Version{slugify(self.app_version)}"
             f"-PatchVersion{slugify(patch_bundle_versions)}"
-            f"-BuildHash{build_digest}-{formatted_date}-output.apk"
+            f"-BuildHash{self.build_hash}-{formatted_date}-output.apk"
         )
         return self._cached_output_file_name
 
