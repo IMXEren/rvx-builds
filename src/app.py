@@ -3,6 +3,7 @@
 import concurrent
 import hashlib
 import pathlib
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from threading import Lock
@@ -16,7 +17,8 @@ from src.cli_args import merge_cli_arg_maps
 from src.config import RevancedConfig
 from src.downloader.sources import APKEEP, apk_sources
 from src.exceptions import BuilderError, DownloadError, PatchingFailedError
-from src.utils import slugify, time_zone
+from src.jars.normalize import normalize_jar_hash
+from src.utils import pbundles_norm_hashes, slugify, time_zone
 
 
 class _DownloadLockState(NamedTuple):
@@ -227,7 +229,7 @@ class APP(object):
 
         # Patch bundles
         parts.append(
-            "|".join(f"{bundle['file_name']}@{bundle['version']}" for bundle in self.patch_bundles),
+            "|".join(norm_hash for norm_hash in self.compute_pb_norm_hashes(sort=True)),
         )
 
         # Patch include / exclude
@@ -251,7 +253,7 @@ class APP(object):
         if archs_to_build:
             parts.append(f"archs:{','.join(sorted(archs_to_build))}")
 
-        # CLI argument family (v5 vs v6)
+        # CLI argument family
         parts.append(f"cli_argsf:{getattr(self, 'effective_cli_argsf', '') or ''}")
 
         # CLI argument maps (custom overrides)
@@ -291,6 +293,45 @@ class APP(object):
     def get_patch_bundles_versions(self: Self) -> list[str]:
         """Get versions of all patch bundles."""
         return [bundle["version"] for bundle in self.patch_bundles]
+
+    def compute_pb_norm_hashes(self: Self, *, sort: bool = False) -> list[str]:
+        """Compute normalized SHA256 hashes for each patch bundle.
+
+        Reads cached hashes from pbundles_norm_hashes first (populated during
+        build-reason detection). Falls back to normalize_jar_hash() for
+        bundles not found in cache.
+
+        Returns hashes aligned to self.patch_bundles iteration order (NOT sorted).
+        """
+        hashes: list[str] = []
+        bundles = self.patch_bundles
+        if sort:
+            bundles = sorted(self.patch_bundles, key=lambda b: b.get("file_name", ""))
+        for bundle in bundles:
+            file_name: str = bundle["file_name"]
+            # Check cache first
+            if file_name in pbundles_norm_hashes:
+                hashes.append(pbundles_norm_hashes[file_name])
+                continue
+
+            # Fall back to file-based computation
+            file_path = pathlib.Path(file_name)
+            if not file_path.exists():
+                fallback = pathlib.Path("apks") / file_name
+                if fallback.exists():
+                    file_path = fallback
+            try:
+                digest = normalize_jar_hash(file_path)
+            except FileNotFoundError:
+                logger.warning(f"File not found for {file_name}. Skipping hash computation of this patch bundle.")
+                digest = ""
+            except zipfile.BadZipFile:
+                logger.warning(f"Invalid ZIP file for {file_name}. Skipping hash computation of this patch bundle.")
+                digest = ""
+            pbundles_norm_hashes[file_name] = digest
+            hashes.append(digest)
+
+        return hashes
 
     def __str__(self: "APP") -> str:
         """Returns the str representation of the app."""
