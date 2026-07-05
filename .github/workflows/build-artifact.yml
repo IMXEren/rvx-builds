@@ -184,20 +184,16 @@ jobs:
             # Delete existing release + tag (force-update pattern)
             gh release delete "$APP_NAME" --repo "$TARGET_REPO" --yes --cleanup-tag 2>/dev/null || true
 
-            # Create the release (non-latest) with changelog body
+            UPLOAD_ASSETS=("$apk" "obtainium_sources/changelogs/${APP_NAME}.md" "obtainium_sources/json/${APP_NAME}.json")
             if gh release create "$APP_NAME" \
+                "${UPLOAD_ASSETS[@]}" \
                 --repo "$TARGET_REPO" \
                 --title "$APP_LABEL" \
                 --notes-file "obtainium_sources/changelogs/${APP_NAME}.md" \
-                --latest=true 2>&1; then
+                --latest 2>&1; then
 
-              UPLOAD_ARGS=("$apk" "obtainium_sources/changelogs/${APP_NAME}.md" "obtainium_sources/json/${APP_NAME}.json")
-
-              # Upload the APK to the already-created release
-              gh release upload "$APP_NAME" "${UPLOAD_ARGS[@]}" --repo "$TARGET_REPO" 2>&1 && {
-                echo "  ✅ Released $APP_NAME"
-                RELEASE_COUNT=$((RELEASE_COUNT + 1))
-              }
+              echo "  ✅ Released $APP_NAME"
+              RELEASE_COUNT=$((RELEASE_COUNT + 1))
             else
               echo "::warning title=Release failed::$APP_NAME release creation failed, continuing."
             fi
