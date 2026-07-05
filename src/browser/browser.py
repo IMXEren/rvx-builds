@@ -2,6 +2,7 @@
 
 from typing import Self
 
+import pydoll.browser.tab as _pydoll_tab
 from loguru import logger
 from pydoll.browser import Chrome
 from pydoll.browser.options import ChromiumOptions
@@ -10,6 +11,7 @@ from pydoll.browser.tab import Tab
 from src.browser.ip_geo import IPGeolocationInfo
 
 BROWSER_SETUP_TRIALS = 0
+_pydoll_tab._CLOUDFLARE_CHECKBOX_SELECTOR = "input[type='checkbox']"  # noqa: SLF001
 
 
 class Browser:
