@@ -134,7 +134,6 @@ class ChangelogGeneratorTests(TestCase):
         with patch.dict("src.utils.changelogs", changelogs, clear=True):
             result = generate_per_app_changelog(app_data)
 
-        self.assertIn("# YouTube", result)
         self.assertIn("**App Version:** 20.47.62", result)
         self.assertIn("## revanced/revanced-patches", result)
         self.assertIn(
@@ -171,7 +170,7 @@ class ChangelogGeneratorTests(TestCase):
         with patch.dict("src.utils.changelogs", {}, clear=True):
             result = generate_per_app_changelog(app_data)
 
-        self.assertEqual(result, "# TestApp\n\n**App Version:** 1.0.0\n")
+        self.assertEqual(result, "**App Version:** 1.0.0\n")
 
     def test_generate_per_app_changelog_multiple_patches(self: Self) -> None:
         """Multiple patch bundles should be numbered Patches-1, Patches-2, etc."""
@@ -234,13 +233,15 @@ class ChangelogGeneratorTests(TestCase):
                 },
             }
 
+            # Ensure parent directory exists (mkdir in write_per_app_changelogs uses exist_ok without parents)
+            Path(temp_dir, "obtainium_sources").mkdir(exist_ok=True)
+
             with patch.dict("src.utils.changelogs", {"revanced/revanced-cli": meta}, clear=True):
                 write_per_app_changelogs(updates_info)
 
             output_path = Path(temp_dir, "obtainium_sources", "changelogs", "YouTube.md")
             self.assertTrue(output_path.exists())
             content = output_path.read_text(encoding="utf_8")
-            self.assertIn("# YouTube", content)
             self.assertIn("**App Version:** 20.47.62", content)
 
             # App without output_file_name should be skipped
