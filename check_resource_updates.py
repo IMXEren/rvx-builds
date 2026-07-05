@@ -21,6 +21,7 @@ from src.utils import (
     handle_request_response,
     patches_dl_list_key,
     patches_versions_key,
+    pbundles_norm_hashes_key,
     request_timeout,
 )
 
@@ -67,6 +68,15 @@ class AppBuildInfo:
         return f"[UNKNOWN] {self.reason.value}"
 
 
+@dataclass
+class PatchBundleSnapshot:
+    """Snapshot of patch bundle metadata for build-reason detection."""
+
+    versions: list[str]
+    sources: list[str]
+    norm_hashes: list[str] | None = None
+
+
 def _is_fresh_build(old_versions: list[str], old_sources: list[str]) -> bool:
     """Check if this is a fresh build with no previous record."""
     no_versions = not old_versions or all(v in ("0", "", None) for v in old_versions)
@@ -74,32 +84,42 @@ def _is_fresh_build(old_versions: list[str], old_sources: list[str]) -> bool:
     return no_versions or no_sources
 
 
+def _normalized_hashes_match(
+    old_hashes: list[str] | None,
+    new_hashes: list[str] | None,
+) -> bool:
+    """Return True if both hash lists are non-empty and element-wise equal."""
+    return bool(old_hashes and new_hashes and old_hashes == new_hashes)
+
+
 def _detect_build_reason(
-    old_versions: list[str],
-    old_sources: list[str],
-    new_versions: list[str],
-    new_sources: list[str],
+    old: PatchBundleSnapshot,
+    new: PatchBundleSnapshot,
 ) -> BuildReason | None:
     """Detect the reason why a build should be triggered."""
     # Check for fresh build first
-    if _is_fresh_build(old_versions, old_sources):
+    if _is_fresh_build(old.versions, old.sources):
         return BuildReason.FRESH_BUILD
 
     # Check for bundle count change
-    if len(old_versions) != len(new_versions) or len(old_sources) != len(new_sources):
+    if len(old.versions) != len(new.versions) or len(old.sources) != len(new.sources):
         return BuildReason.BUNDLE_COUNT_CHANGE
 
     # Check for version or source changes
     for old_ver, old_src, new_ver, new_src in zip(
-        old_versions,
-        old_sources,
-        new_versions,
-        new_sources,
+        old.versions,
+        old.sources,
+        new.versions,
+        new.sources,
         strict=True,
     ):
         if old_src != new_src:
+            if _normalized_hashes_match(old.norm_hashes, new.norm_hashes):
+                continue
             return BuildReason.SOURCE_CHANGE
         if old_ver != new_ver:
+            if _normalized_hashes_match(old.norm_hashes, new.norm_hashes):
+                continue
             return BuildReason.VERSION_UPDATE
 
     return None
@@ -158,16 +178,32 @@ def check_if_build_is_required() -> bool:
 
         app_obj.download_patch_resources(config, resource_cache, resource_lock, {}, Lock())
 
+        # Compute normalized hashes for suppressing metadata-only rebuilds
+        old_norm_hashes = github_manager.get_last_version_source(app_obj, pbundles_norm_hashes_key)
+        if old_norm_hashes == "0" or isinstance(old_norm_hashes, str):
+            old_norm_hashes = []
+        elif isinstance(old_norm_hashes, list):
+            old_patch_bundles = github_manager.get_last_version_source(app_obj, "patch_bundles")
+            sorted_indices = sorted(range(len(old_patch_bundles)), key=lambda k: old_patch_bundles[k])
+            old_norm_hashes[:] = [old_norm_hashes[i] for i in sorted_indices]
+
         new_patches_versions = app_obj.get_patch_bundles_versions()
         new_patches_sources = app_obj.patches_dl_list
+        # Sort bundles by file_name for order-independent comparison
+        new_norm_hashes = app_obj.compute_pb_norm_hashes(sort=True)
 
         # Detect why build is needed
-        reason = _detect_build_reason(
-            old_patches_versions,
-            old_patches_sources,
-            new_patches_versions,
-            new_patches_sources,
+        old_snapshot = PatchBundleSnapshot(
+            versions=old_patches_versions,
+            sources=old_patches_sources,
+            norm_hashes=old_norm_hashes or None,
         )
+        new_snapshot = PatchBundleSnapshot(
+            versions=new_patches_versions,
+            sources=new_patches_sources,
+            norm_hashes=new_norm_hashes,
+        )
+        reason = _detect_build_reason(old_snapshot, new_snapshot)
 
         if reason:
             build_info = AppBuildInfo(

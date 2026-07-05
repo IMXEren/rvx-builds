@@ -79,6 +79,9 @@ resource_folder = "apks"
 branch_name = "changelogs"
 app_dump_key = "app_dump"
 patches_dl_list_key = "patches_dl_list"
+pbundles_norm_hashes_key = "pbundles_norm_hashes"
+# bundle file name -> hash
+pbundles_norm_hashes: dict[str, str] = {}
 
 
 def update_session_data(user_agent: str | None = None) -> None:
@@ -377,6 +380,8 @@ def save_patch_info(app: "APP", updates_info: dict[str, Any]) -> dict[str, Any]:
         "app_dump": app.for_dump(),
         "output_file_name": app.get_output_file_name(),
     }
+    app_dump = updates_info[app.app_name]["app_dump"]
+    app_dump[pbundles_norm_hashes_key] = app.compute_pb_norm_hashes()
     return updates_info
 
 
