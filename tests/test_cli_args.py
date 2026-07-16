@@ -13,11 +13,11 @@ class CliArgProfileTests(TestCase):
     """Verify profile defaults that affect patch command safety."""
 
     def test_morphe_profile_enables_continue_on_error(self: Self) -> None:
-        """Morphe supports continuing after one patch fails, so the profile should emit the flag by default."""
+        """Morphe supports continuing after one patch fails while temp isolation remains patch-only."""
         list_patch_args, patch_args = merge_cli_arg_maps("morphe-cli", ("", ""))
 
         self.assertEqual(["--continue-on-error"], patch_args["CONTINUE_ON_ERROR"])
-        self.assertEqual(["-t"], list_patch_args["TEMPORARY_FILES_PATH"])
+        self.assertNotIn("TEMPORARY_FILES_PATH", list_patch_args)
         self.assertEqual(["-t"], patch_args["TEMPORARY_FILES_PATH"])
 
     def test_revanced_cli_profile_does_not_emit_morphe_only_flag(self: Self) -> None:

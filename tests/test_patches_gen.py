@@ -160,8 +160,8 @@ class PatchesGenParserTests(TestCase):
         self.assertEqual(["app.revanced", "com.google", "com.mgoogle"], option["possible_values"])
         self.assertEqual(["20.47.62", "20.48.46"], gms_core["compatiblePackages"][0]["versions"])
 
-    def test_morphe_list_patches_uses_isolated_temp_path(self: Self) -> None:
-        """Morphe list-patches also supports temp paths, so parallel scans should not share its default."""
+    def test_morphe_list_patches_does_not_emit_patch_temp_path(self: Self) -> None:
+        """Morphe temp isolation is patch-only; list-patches should not receive patch temp-path flags."""
         list_patch_args, _ = merge_cli_arg_maps("morphe-cli", ("", ""))
 
         with (
@@ -172,5 +172,5 @@ class PatchesGenParserTests(TestCase):
             convert_command_output_to_json("morphe-cli.jar", "patches.mpp", list_patch_args)
 
         command = run_command.call_args.args[0]
-        self.assertIn("-t", command)
-        self.assertIn("tmp/youtube", command)
+        self.assertNotIn("-t", command)
+        self.assertNotIn("tmp/youtube", command)

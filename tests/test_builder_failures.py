@@ -93,6 +93,7 @@ def _patch_app() -> APP:
                 "RIP_LIB": [""],
                 "STRIPLIBS": [""],
                 "TEMPORARY_FILES_PATH": [""],
+                "BYTECODE_MODE": [""],
             },
             download_file_name="youtube.apk",
             get_cli_temporary_files_path=lambda config: str(
