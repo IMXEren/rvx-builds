@@ -16,7 +16,6 @@ KEYSTORE_ALIAS_ARG: Final[str] = "--keystore-entry-alias=alias"
 KEYSTORE_ENTRY_PASSWORD_ARG: Final[str] = "--keystore-entry-password=ReVanced"  # noqa: S105
 KEYSTORE_PASSWORD_ARG: Final[str] = "--keystore-password=ReVanced"  # noqa: S105
 
-# These keys define the supported and validated map for `list-patches` command generation.
 LIST_PATCHES_KEYS: Final[set[str]] = {
     "CMD",
     "DESCRIPTIONS",
@@ -30,7 +29,6 @@ LIST_PATCHES_KEYS: Final[set[str]] = {
     "VERSIONS",
 }
 
-# These keys define the supported and validated map for `patch` command generation.
 PATCH_KEYS: Final[set[str]] = {
     "APK",
     "CMD",
@@ -49,6 +47,7 @@ PATCH_KEYS: Final[set[str]] = {
     "RIP_LIB",
     "STRIPLIBS",
     "TEMPORARY_FILES_PATH",
+    "BYTECODE_MODE",
 }
 
 # These defaults intentionally match the existing builder behavior for current stable users.
@@ -92,6 +91,7 @@ DEFAULT_PATCH_ARGS: Final[dict[str, list[str]]] = {
     "STRIPLIBS": [],
     # ReVanced patch exposes `-t`, so each parallel app gets its own temporary files directory.
     "TEMPORARY_FILES_PATH": ["-t"],
+    "BYTECODE_MODE": [],
 }
 
 # Profile map centralizes known CLI families so users can switch format with one env variable.
@@ -141,6 +141,8 @@ CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
             "STRIPLIBS": ["--striplibs"],
             # Morphe otherwise uses `/app/morphe-temporary-files`, which parallel apps can delete mid-patch.
             "TEMPORARY_FILES_PATH": ["-t"],
+            # Follows default bytecode-mode
+            "BYTECODE_MODE": [],
         },
     },
 }
