@@ -33,8 +33,6 @@ class NormalizeJarImportTests(TestCase):
         self.assertTrue(callable(normalize_jar_hash))
 
 
-
-
 class NormalizeJarHashTests(TestCase):
     """Tests for normalize_jar_hash — AC-6 and AC-7."""
 
@@ -66,11 +64,13 @@ class NormalizeJarHashTests(TestCase):
 
     # AC-7: Deterministic across different temp dirs / runs
     def test_deterministic_repeatable(self: Self) -> None:
-        raw = _build_test_jar({
-            "a.class": b"\xca\xfe\xba\xbe",
-            "b.class": b"\xca\xfe\xba\xbf",
-            "META-INF/MANIFEST.MF": b"Manifest: 1.0\n",
-        })
+        raw = _build_test_jar(
+            {
+                "a.class": b"\xca\xfe\xba\xbe",
+                "b.class": b"\xca\xfe\xba\xbf",
+                "META-INF/MANIFEST.MF": b"Manifest: 1.0\n",
+            },
+        )
         inp = self._write_input(raw)
         h = normalize_jar_hash(inp)
         # Run multiple times
@@ -88,4 +88,5 @@ class NormalizeJarHashTests(TestCase):
 
     def tearDown(self: Self) -> None:
         import shutil
+
         shutil.rmtree(self.tmpdir, ignore_errors=True)

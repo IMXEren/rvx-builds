@@ -25,7 +25,7 @@ def get_dpi_modifier(density: int) -> str:
 
 def get_filters(device_spec_path: Path) -> tuple[set[str], set[str]]:
     """Generates the allowlists from either a device-spec.json."""
-    allowed_arch = set()
+    allowed_arch: set[str] = set()
     allowed_dpi = {"nodpi", "anydpi"}
 
     with device_spec_path.open() as f:
