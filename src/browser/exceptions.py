@@ -1,6 +1,10 @@
 """Browser impl exceptions."""
 
 
+class FailedToStartBrowserError(Exception):
+    """Implies failed to create the browser process or tab group."""
+
+
 class PageLoadError(Exception):
     """Implies that the page load checker mechanism failed."""
 

@@ -9,6 +9,12 @@ from loguru import logger
 sys.path.append(str(Path.cwd()))
 from src.browser.site import source as page_source
 
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+#     handlers=[logging.StreamHandler(sys.stderr)],
+# )
+
 
 async def main() -> None:  # noqa: D103
     url = "https://www.wikipedia.com/"  ## Redirect test
@@ -17,6 +23,8 @@ async def main() -> None:  # noqa: D103
     url = "https://nopecha.com/demo/turnstile"  ## Cloudflare Turnstile
     url = "https://pixelscan.net/fingerprint-check"  ## Fingerprint Checker
     url = "https://abrahamjuliot.github.io/creepjs/"  ## Fingerprint Checker
+    url = "https://demo.fingerprint.com/playground"  ## Fingerprint Checker
+    url = "https://peet.ws/turnstile-test/managed.html"  ## Cloudflare Interstitial
     url = "https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram-401-0-0-48-79-release/"  ## ApkMirror Cloudflare  # noqa: E501
 
     try:
@@ -25,7 +33,7 @@ async def main() -> None:  # noqa: D103
         element = soup.select_one("title")
         if element:
             print(element.text)  # noqa: T201
-    except Exception as e:
+    except BaseException as e:
         logger.error(e)
         raise
 

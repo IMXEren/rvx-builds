@@ -21,8 +21,8 @@ services:
     environment:
       VNC_GEOMETRY: 1920x1080
     ports:
-      - 127.0.0.1:5900:5900
-      - 127.0.0.1:6000:6000
+      - 127.0.0.1:5900:5900   # VNC
+      - 127.0.0.1:6000:6000   # X11
   novnc:
     image: geek1011/easy-novnc
     restart: always

@@ -4,10 +4,12 @@ import json
 from collections.abc import Iterator
 from http.cookiejar import CookieJar
 from pathlib import Path
-from typing import Self, TypedDict
+from typing import ClassVar, Self, TypedDict
 
 from pydoll.protocol.network.types import CookieParam as PyDollCookieParam
 from requests.cookies import create_cookie
+
+from src.browser.rwlock import RWLock
 
 
 class Cookie(TypedDict):
@@ -29,6 +31,8 @@ class Cookie(TypedDict):
 class Cookies:
     """Represent the stored cookies from the browser."""
 
+    _lock: ClassVar[RWLock] = RWLock()
+
     def __init__(self: Self) -> None:
         self.cookies_file: Path = Path.cwd().joinpath("browser_cookies.json")
         self.cookies: list[Cookie] = []
@@ -49,7 +53,7 @@ class Cookies:
         """Loads the stored cookies into the cookie jar."""
         cookie_jar = CookieJar()
         for _cookie in self.cookies:
-            cookie = create_cookie(
+            cookie = create_cookie(  # type: ignore[no-untyped-call]
                 name=_cookie["name"],
                 value=_cookie["value"],
                 domain=_cookie["domain"],
@@ -87,6 +91,7 @@ class Cookies:
     def delete_cookies(self: Self) -> None:
         """Delete the saved cookies file."""
         self.cookies_file.unlink(missing_ok=True)
+        self.cookies.clear()
 
     @staticmethod
     def _are_cookies_matching(cookie_new: Cookie, cookie_old: Cookie) -> bool:
@@ -97,21 +102,23 @@ class Cookies:
         )
 
     def _load_cookies_from_file(self: Self) -> list[Cookie]:
-        if self.cookies_file.exists():
-            try:
-                self.cookies = json.loads(self.cookies_file.read_text())
-            except ValueError:
-                self.cookies = []
-        return self.cookies
+        with Cookies._lock.r_locked():
+            if self.cookies_file.exists():
+                try:
+                    self.cookies = json.loads(self.cookies_file.read_text())
+                except ValueError:
+                    self.cookies = []
+            return self.cookies
 
     def _save_cookies_to_file(self: Self) -> bool:
-        try:
-            with self.cookies_file.open("w") as f:
-                json.dump(self.cookies, f)
-        except Exception:  # noqa: BLE001
-            return False
-        else:
-            return True
+        with Cookies._lock.w_locked():
+            try:
+                with self.cookies_file.open("w") as f:
+                    json.dump(self.cookies, f)
+            except Exception:  # noqa: BLE001
+                return False
+            else:
+                return True
 
     def __iter__(self: Self) -> Iterator[Cookie]:
         """Returns an iterator cookies."""

@@ -23,8 +23,7 @@ from loguru import logger
 from requests import Response
 
 from src.browser.cookies import Cookies
-from src.browser.site import Source
-from src.browser.site import source as page_source
+from src.browser.site import Source, load_page_in_browser
 
 if TYPE_CHECKING:
     from src.app import APP
@@ -206,41 +205,6 @@ def make_request(url: str, headers: dict[str, str] | None = None) -> ResponseTyp
     if not response:
         response = session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
     return response
-
-
-def load_page_in_browser(url: str, timeout: int = request_timeout) -> Source | None:
-    """The `load_page_in_browser()` function loads the url in a browser.
-
-    Parameters
-    ----------
-    url: str
-        The url on which to make request.
-    timeout: float
-        Max wait duration in secs that'll allow the page to be loaded.
-
-    Returns
-    -------
-    source: Source | None
-        The `Response` like object from the browser request.
-        `text` attribute will contain the source html content.
-        Note that the source would be None if encountered exceptions.
-    """
-    try:
-        import asyncio
-        from concurrent.futures import ThreadPoolExecutor
-
-        asyncio.get_running_loop()
-        with ThreadPoolExecutor(1) as pool:
-            source = pool.submit(lambda: asyncio.run(page_source(url, timeout))).result()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop.run_until_complete(page_source(url, timeout))
-    except Exception as e:  # noqa: BLE001
-        logger.exception(f"failed to load url in the browser => {e!r}")
-        return None
-    else:
-        return source
 
 
 def handle_request_response(response: ResponseType, url: str) -> None:

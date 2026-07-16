@@ -9,7 +9,10 @@ pre-commit==4.6.0
 python-dotenv==1.2.2
 requests==2.34.2
 tqdm==4.68.1
-pydoll-python==2.23.0
+pydoll-python @git+https://github.com/IMXEren/pydoll.git@2.24.1
+cloakbrowser[geoip]==0.4.10
+pycryptodome==3.23.0
+turbohtml==1.4.0
 curl_cffi==0.15.0
 ruamel.yaml==0.19.1
 semver==3.0.4
