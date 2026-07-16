@@ -169,7 +169,7 @@ class PatchesGenParserTests(TestCase):
             chdir(temp_dir),
             patch("src.patches_gen.run_command_and_capture_output", return_value=MORPHE_SAMPLE) as run_command,
         ):
-            convert_command_output_to_json("morphe-cli.jar", "patches.mpp", list_patch_args, "tmp/youtube")
+            convert_command_output_to_json("morphe-cli.jar", "patches.mpp", list_patch_args)
 
         command = run_command.call_args.args[0]
         self.assertIn("-t", command)

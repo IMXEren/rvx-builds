@@ -154,7 +154,6 @@ class Patches(object):
                     f"{config.temp_folder}/{app.resource["cli"]["file_name"]}",
                     f"{config.temp_folder}/{bundle["file_name"]}",
                     app.cli_lp_args,
-                    app.get_cli_temporary_files_path(config),
                 )
                 # Tag patches with their source bundle so CLI args can be grouped correctly
                 for p in patches:
@@ -166,7 +165,6 @@ class Patches(object):
                 f"{config.temp_folder}/{app.resource["cli"]["file_name"]}",
                 f"{config.temp_folder}/{app.resource["patches"]["file_name"]}",
                 app.cli_lp_args,
-                app.get_cli_temporary_files_path(config),
             )
             self._process_patches(patches, app)
 

@@ -8,15 +8,12 @@ from typing import Final
 
 from loguru import logger
 
-# This sentinel makes it explicit that the value is positional and should not be prefixed with any flag.
 POSITIONAL_ARG: Final[str] = "__POSITIONAL__"
-# The default profile follows the current ReVanced CLI argument shape used by the builder.
+
 DEFAULT_CLI_PROFILE: Final[str] = "revanced-cli"
-# This constant centralizes legacy old-key alias behavior shared across profiles.
+
 KEYSTORE_ALIAS_ARG: Final[str] = "--keystore-entry-alias=alias"
-# This constant centralizes legacy old-key entry password behavior shared across profiles.
 KEYSTORE_ENTRY_PASSWORD_ARG: Final[str] = "--keystore-entry-password=ReVanced"  # noqa: S105
-# This constant centralizes legacy old-key keystore password behavior shared across profiles.
 KEYSTORE_PASSWORD_ARG: Final[str] = "--keystore-password=ReVanced"  # noqa: S105
 
 # These keys define the supported and validated map for `list-patches` command generation.
@@ -29,7 +26,6 @@ LIST_PATCHES_KEYS: Final[set[str]] = {
     "PACKAGES",
     "PATCHES",
     "PATCHES_POST",
-    "TEMPORARY_FILES_PATH",
     "UNIVERSAL",
     "VERSIONS",
 }
@@ -66,8 +62,6 @@ DEFAULT_LIST_PATCHES_ARGS: Final[dict[str, list[str]]] = {
     "PACKAGES": ["--packages"],
     "PATCHES": ["-p"],
     "PATCHES_POST": ["-b"],
-    # ReVanced list-patches does not expose a temp-path flag, so the dynamic temp value must be ignored here.
-    "TEMPORARY_FILES_PATH": [],
     "UNIVERSAL": ["--universal-patches"],
     "VERSIONS": ["--versions"],
 }
@@ -119,8 +113,6 @@ CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
             "PACKAGES": ["-p"],
             "PATCHES": ["--patches"],
             "PATCHES_POST": [],
-            # Morphe list commands share the same temp-path flag as patching and can run concurrently per app.
-            "TEMPORARY_FILES_PATH": ["-t"],
             "UNIVERSAL": ["-u"],
             "VERSIONS": ["-v"],
         },
