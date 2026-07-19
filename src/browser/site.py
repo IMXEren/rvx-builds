@@ -29,6 +29,7 @@ from src.browser.browser import Browser, TabGroup
 from src.browser.cookies import Cookie, Cookies
 from src.browser.exceptions import JSONExtractError, PageLoadError
 from src.browser.utils import run_coroutine_sync
+from src.signals import get_process_cancel_token
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -166,11 +167,8 @@ class Site:
                 headers=self.response_headers,
                 user_agent=self.user_agent,
             )
-        except PageLoadError:
-            raise
         except Exception as e:
-            msg = f"unknown error while loading , > {e}"
-            raise PageLoadError(msg) from e
+            raise PageLoadError(e) from e
         finally:
             await self._cleanup()
 
@@ -630,7 +628,10 @@ async def source(url: str, timeout: int = 60) -> Source:  # noqa: ASYNC109
     try:
         await Browser.start()
         tg = await Browser.create()
-        source = await fetch(tg, url, timeout)
+        source = await get_process_cancel_token().race(
+            fetch(tg, url, timeout),
+            poll_interval=1,
+        )
         # Don't load any cookies into browser as it already loads in persistent ctx
         stored_cookies = Cookies()
         stored_cookies.update_cookies(cast("list[Cookie]", await tg.pd().get_cookies()))
@@ -646,7 +647,7 @@ def load_page_in_browser(url: str, timeout: int) -> Source | None:
     """
     try:
         return run_coroutine_sync(source(url, timeout))  # type: ignore[no-any-return]
-    except BaseException as e:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001
         logger.exception(f"failed to load url in the browser: {e}")
         return None
 

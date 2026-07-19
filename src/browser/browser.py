@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-import signal
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import TYPE_CHECKING, ClassVar, Self
 
 from loguru import logger
 
 from src.browser.driver.runtime import BrowserRuntimeState, resolve_cdp_ws_url
-from src.browser.exceptions import FailedToStartBrowserError
+from src.browser.exceptions import BrowserError, BrowserStartError, BrowserTabError
 from src.browser.lifecycle.startup import BrowserLifecycle, BrowserShutdownState
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from playwright.async_api import Browser as PWBrowser
     from playwright.async_api import BrowserContext as PWBrowserCtx
     from playwright.async_api import Page as PWPage
@@ -128,7 +128,7 @@ class Browser:
         """Attach this process's drivers to a caller-owned remote CDP websocket."""
         if not isinstance(ws_url, str) or not ws_url.strip():
             msg = "Browser.connect requires a non-empty ws_url."
-            raise ValueError(msg)
+            raise BrowserStartError(msg)
         await cls._lifecycle.connect(
             is_running=cls.is_running,
             ws_url=ws_url,
@@ -142,18 +142,18 @@ class Browser:
         Acquires a semaphore slot (max *MAX_GROUPS* concurrent groups).
         Starts the browser automatically if not already running.
 
-        :raises FailedToStartBrowserError: if the browser is shutting down
+        :raises BrowserStartError: if the browser is shutting down
             or group creation fails.
         """
         if cls._lifecycle.shutdown_state is BrowserShutdownState.IN_PROGRESS:
             msg = "Browser is shutting down - cannot create new tab groups."
-            raise FailedToStartBrowserError(msg)
+            raise BrowserStartError(msg)
 
         try:
             instance = await cls._runtime.create_tab_group(TabGroup, cls.start, cls.is_running)
         except Exception as e:
             msg = f"Failed to start the browser due to {e}"
-            raise FailedToStartBrowserError(msg) from e
+            raise BrowserStartError(msg) from e
         else:
             return instance
 
@@ -167,7 +167,7 @@ class Browser:
         """Create a new tab using PW and add it to page map."""
         if cls._lifecycle.shutdown_state is BrowserShutdownState.IN_PROGRESS:
             msg = "Browser is shutting down - cannot create new pages."
-            raise RuntimeError(msg)
+            raise BrowserTabError(msg)
 
         return await cls._runtime.create_page()
 
@@ -224,61 +224,14 @@ class Browser:
         if tg is not None:
             try:
                 await tg.quit()
-            except BaseException as e:  # noqa: BLE001
-                logger.exception(f"TabGroup quit failed during source cleanup: {e}")
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"TabGroup quit failed during source cleanup: {e}")
         await cls.shutdown()
 
     @classmethod
     def _do_sync_chores_before_exit(cls: type[Self]) -> None:
         """The left out synchronous chores that need to be done before exiting."""
         cls._lifecycle.do_sync_chores_before_exit()
-
-    @classmethod
-    def _do_usual_exit(cls: type[Self], sig: signal.Signals) -> None:
-        loop = asyncio.get_running_loop()
-        loop.remove_signal_handler(sig)
-
-        # Restore the default behavior for this signal
-        signal.signal(sig, signal.SIG_DFL)
-
-        # Re-raise the signal so the parent application receives it natively
-        logger.debug(f"Browser cleanup complete. Propagating {sig.name} to parent process.")
-        signal.raise_signal(sig)
-
-    @classmethod
-    def _register_signal_handlers(cls: type[Self]) -> None:
-        """Compatibility facade for lifecycle-owned signal registration."""
-        cls._lifecycle._register_signal_handlers()  # noqa: SLF001
-
-    @classmethod
-    def _unregister_signal_handlers(cls: type[Self]) -> None:
-        """Compatibility facade for lifecycle-owned signal restoration."""
-        cls._lifecycle._unregister_signal_handlers()  # noqa: SLF001
-
-    @classmethod
-    def _dispatch_exit_signal(cls: type[Self], sig: signal.Signals) -> None:
-        """Compatibility facade for lifecycle-owned signal dispatch."""
-        cls._lifecycle.dispatch_exit_signal(sig)
-
-    @classmethod
-    async def _handle_signal_exit(cls: type[Self], sig: signal.Signals) -> None:
-        """Compatibility facade for lifecycle-owned signal cleanup."""
-        await cls._lifecycle._handle_signal_exit(sig)  # noqa: SLF001
-
-    @classmethod
-    def _force_exit(cls: type[Self], sig: signal.Signals) -> None:
-        """Compatibility facade for lifecycle-owned force exit."""
-        cls._lifecycle.force_exit(sig)
-
-    @classmethod
-    def _consume_signal_metadata(cls: type[Self], sig: signal.Signals) -> Any:
-        """Compatibility facade for lifecycle-owned signal metadata."""
-        return cls._lifecycle._consume_signal_metadata(sig)  # noqa: SLF001
-
-    @classmethod
-    def _terminate_by_signal(cls: type[Self], sig: signal.Signals) -> None:
-        """Compatibility facade for lifecycle-owned signal termination."""
-        cls._lifecycle._terminate_by_signal(sig)  # noqa: SLF001
 
     @classmethod
     def _sync_atexit_fallback(cls) -> None:
@@ -319,7 +272,7 @@ class TabGroup:
         fp = Browser._lifecycle.fingerprint  # noqa: SLF001
         if fp is None:
             msg = "Browser fingerprint is not configured - call Browser.start() first."
-            raise RuntimeError(msg)
+            raise BrowserError(msg)
         return fp
 
     async def new_tab(self: Self) -> PDTab:
@@ -331,7 +284,7 @@ class TabGroup:
         tab = await Browser.get_pd_tab(target_id)
         if tab is None:
             msg = f"Failed to resolve newly created tab {target_id} in group #{self.gid}."
-            raise RuntimeError(msg)
+            raise BrowserTabError(msg)
         return tab
 
     @property
@@ -340,7 +293,7 @@ class TabGroup:
         page = Browser._runtime.target_to_page_map.get(self.target_id)  # noqa: SLF001
         if page is None:
             msg = f"Parent page {self.target_id} in group #{self.gid} is no longer available."
-            raise RuntimeError(msg)
+            raise BrowserTabError(msg)
         return page
 
     @property
@@ -349,7 +302,7 @@ class TabGroup:
         tab = await Browser.get_pd_tab(self.target_id)
         if tab is None:
             msg = f"Parent tab {self.target_id} in group #{self.gid} is no longer available."
-            raise RuntimeError(msg)
+            raise BrowserTabError(msg)
         return tab
 
     async def close(self: Self, target_id: str) -> None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import curl_cffi
 from cloakbrowser import launch_persistent_context_async
@@ -13,11 +13,16 @@ from playwright.async_api import async_playwright
 from pydoll.browser import Chrome
 from pydoll.browser.tab import Tab as PDTab
 
-if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
+from src.browser.exceptions import BrowserError, BrowserStartError, BrowserTabError
 
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine
+
+    from playwright.async_api import Browser as PWBrowser
     from playwright.async_api import BrowserContext as PWBrowserCtx
     from playwright.async_api import Page as PWPage
+    from playwright.async_api import Playwright
+    from pydoll.browser.options import ChromiumOptions
 
     from src.browser.browser import TabGroup
 
@@ -29,11 +34,11 @@ class DriverStartupConfig:
     profile_dir: str
     user_data_dir: str
     cdp_port: int
-    fingerprint_options: Any
+    fingerprint_options: ChromiumOptions
     launch_arguments: list[str]
     viewport: dict[str, int]
     locale: str
-    popup_handler: Callable[[Any], Any]
+    popup_handler: Callable[[PWPage], None | Coroutine[None, None, None]]
     headless: bool = False
     geoip: bool = True
     humanize: bool = True
@@ -45,8 +50,8 @@ class DriverRemoteAttachConfig:
     """Explicit inputs for attaching driver clients to a remote CDP websocket."""
 
     ws_url: str
-    popup_handler: Callable[[Any], Any]
-    main_ctx: Any | None = None
+    popup_handler: Callable[[PWPage], None | Coroutine[None, None, None]]
+    main_ctx: PWBrowserCtx | None = None
 
 
 async def resolve_cdp_ws_url(cdp_port: int) -> str:
@@ -77,8 +82,8 @@ class BrowserRuntimeState:
     spawn_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     group_semaphore: asyncio.Semaphore = field(init=False)
     next_group_id: int = 1
-    cdp_playwright: Any | None = None
-    cdp_browser: Any | None = None
+    cdp_playwright: Playwright | None = None
+    cdp_browser: PWBrowser | None = None
     main_ctx_owned: bool = False
 
     def __post_init__(self) -> None:
@@ -87,6 +92,8 @@ class BrowserRuntimeState:
 
     async def start_live(self, config: DriverStartupConfig) -> None:
         """Start concrete browser clients from explicit lifecycle-owned config."""
+        # Reset the group id
+        self.next_group_id = 1
         self.shared_pd = Chrome(options=config.fingerprint_options)
         self.shared_pd._set_browser_preferences_in_user_data_dir(config.user_data_dir)  # noqa: SLF001
 
@@ -110,7 +117,7 @@ class BrowserRuntimeState:
         main_page = self.main_ctx.pages[0]
         if main_tab._target_id is None:  # noqa: SLF001
             msg = "Failed to resolve target ID for the main browser tab."
-            raise RuntimeError(msg)
+            raise BrowserTabError(msg)
         self.target_to_page_map[main_tab._target_id] = main_page  # noqa: SLF001
         self.target_page_owned[main_tab._target_id] = True  # noqa: SLF001
         self.page_to_group[main_page] = None
@@ -118,6 +125,7 @@ class BrowserRuntimeState:
 
     async def attach_remote(self, config: DriverRemoteAttachConfig) -> None:
         """Attach concrete browser clients to a caller-owned remote CDP websocket."""
+        self.next_group_id = 1
         self.shared_pd = Chrome()
         try:
             if config.main_ctx is None:
@@ -152,14 +160,15 @@ class BrowserRuntimeState:
             target_id = result["targetInfo"]["targetId"]
             if main_tab._target_id is None or target_id is None:  # noqa: SLF001
                 msg = "Failed to resolve target ID for the remote browser tab."
-                raise RuntimeError(msg)
+                raise BrowserTabError(msg)
             self.target_to_page_map[target_id] = main_page
             self.target_page_owned[target_id] = page_owned
             self.page_to_group[main_page] = None
             await self.minimize_main_window()
-        except BaseException:
+        except BaseException as e:
             await self.rollback_start()
-            raise
+            msg = "failed to attach remote cdp"
+            raise BrowserStartError(msg) from e
 
     async def rollback_start(self) -> None:
         """Close partially acquired driver resources and clear live maps."""
@@ -167,26 +176,26 @@ class BrowserRuntimeState:
             try:
                 await self.shared_pd.close()
             except BaseException:  # noqa: BLE001
-                logger.exception("Failed to close PyDoll during startup rollback")
+                logger.error("Failed to close PyDoll during startup rollback")
             self.shared_pd = None
         if self.main_ctx is not None and self.main_ctx_owned:
             try:
                 await self.main_ctx.close()
             except BaseException:  # noqa: BLE001
-                logger.exception("Failed to close Playwright context during startup rollback")
+                logger.error("Failed to close Playwright context during startup rollback")
         self.main_ctx = None
         self.main_ctx_owned = False
         if self.cdp_browser is not None:
             try:
                 await self.cdp_browser.close()
             except BaseException:  # noqa: BLE001
-                logger.exception("Failed to close Playwright CDP browser during startup rollback")
+                logger.error("Failed to close Playwright CDP browser during startup rollback")
             self.cdp_browser = None
         if self.cdp_playwright is not None:
             try:
                 await self.cdp_playwright.stop()
             except BaseException:  # noqa: BLE001
-                logger.exception("Failed to stop Playwright during startup rollback")
+                logger.error("Failed to stop Playwright during startup rollback")
             self.cdp_playwright = None
         self.target_to_page_map.clear()
         self.target_page_owned.clear()
@@ -202,20 +211,20 @@ class BrowserRuntimeState:
         """Return the live Playwright context or raise a concrete runtime error."""
         if self.main_ctx is None:
             msg = "Browser is not running - call Browser.start() first."
-            raise RuntimeError(msg)
+            raise BrowserError(msg)
         return self.main_ctx
 
     def is_running(self) -> bool:
         """Return whether concrete runtime clients are live."""
         return self.main_ctx is not None and not self.main_ctx.is_closed() and self.shared_pd is not None
 
-    def get_pw_browser(self) -> Any:
+    def get_pw_browser(self) -> PWBrowser:
         """Return the shared Playwright browser projection."""
         ctx = self._require_main_ctx()
         browser = ctx.browser
         if browser is None:
             msg = "Playwright browser disconnected."
-            raise RuntimeError(msg)
+            raise BrowserError(msg)
         return browser
 
     def get_pw_main_ctx(self) -> PWBrowserCtx:
@@ -226,7 +235,7 @@ class BrowserRuntimeState:
         """Return the shared PyDoll Chrome projection."""
         if self.shared_pd is None:
             msg = "Browser is not running - call Browser.start() first."
-            raise RuntimeError(msg)
+            raise BrowserError(msg)
         return self.shared_pd
 
     def attach_page_to_group(self, page: PWPage, group: TabGroup) -> None:
@@ -247,7 +256,7 @@ class BrowserRuntimeState:
                 await ensure_running()
             if not is_running():
                 msg = "Failed to start from already running: Master browser process is not active."
-                raise RuntimeError(msg)
+                raise BrowserError(msg)
             return await self.create_group(group_factory)
         except Exception:
             self.group_semaphore.release()
@@ -257,10 +266,10 @@ class BrowserRuntimeState:
         """Add a PyDoll tab entry for *target_id* and return it."""
         if self.shared_pd is None:
             msg = "Browser is not running - call Browser.start() first."
-            raise RuntimeError(msg)
+            raise BrowserError(msg)
         tab = PDTab(
             self.shared_pd,
-            **self.shared_pd._get_tab_kwargs(target_id, browser_context_id=None),
+            **self.shared_pd._get_tab_kwargs(target_id, browser_context_id=None),  # noqa: SLF001
         )
         self.shared_pd._tabs_opened[target_id] = tab  # noqa: SLF001
         return tab
@@ -298,7 +307,7 @@ class BrowserRuntimeState:
         """Resolve the live PyDoll tab for *target_id*, or ``None``."""
         if self.shared_pd is None:
             msg = "Browser is not running - call Browser.start() first."
-            raise RuntimeError(msg)
+            raise BrowserError(msg)
         tabs = await self.shared_pd.get_opened_tabs()
         for tab in tabs:
             if tab._target_id == target_id:  # noqa: SLF001
@@ -339,22 +348,20 @@ class BrowserRuntimeState:
             self.target_to_page_map[target_id] = page
             self.target_page_owned[target_id] = True
         self.page_to_group[page] = group
-        group_ref = cast("Any", group)
-        async with group_ref._lock:  # noqa: SLF001
-            group_ref.child_target_ids.append(target_id)
-        logger.debug(f"Popup tab {target_id} attached to group {group_ref.gid}")
+        async with group._lock:  # noqa: SLF001
+            group.child_target_ids.append(target_id)
+        logger.debug(f"Popup tab {target_id} attached to group {group.gid}")
 
     async def close_group_target(self, group: TabGroup, target_id: str) -> None:
         """Close one target owned by a group, or the whole group for parent target."""
-        group_ref = cast("Any", group)
-        if target_id == group_ref.target_id:
+        if target_id == group.target_id:
             await self.close_group(group)
             return
 
-        async with group_ref._lock:  # noqa: SLF001
-            if target_id not in group_ref.child_target_ids:
+        async with group._lock:  # noqa: SLF001
+            if target_id not in group.child_target_ids:
                 msg = f"Target {target_id} does not belong to this tab group."
-                raise RuntimeError(msg)
+                raise BrowserTabError(msg)
 
         target_page = self.get_pw_page(target_id)
         if target_page is not None and self.target_page_owned.get(target_id, True):
@@ -364,31 +371,30 @@ class BrowserRuntimeState:
             self._remove_tab_from_pd(target_id)
             self.target_to_page_map.pop(target_id, None)
             self.target_page_owned.pop(target_id, None)
-        async with group_ref._lock:  # noqa: SLF001
-            if target_id in group_ref.child_target_ids:
-                group_ref.child_target_ids.remove(target_id)
+        async with group._lock:  # noqa: SLF001
+            if target_id in group.child_target_ids:
+                group.child_target_ids.remove(target_id)
         if target_page is not None:
             self.page_to_group.pop(target_page, None)
 
     async def close_group(self, group: TabGroup) -> None:
         """Close all targets for a group and release its concurrency slot once."""
-        group_ref = cast("Any", group)
-        if group_ref._quitting:  # noqa: SLF001
+        if group._quitting:  # noqa: SLF001
             return
-        group_ref._quitting = True  # noqa: SLF001
+        group._quitting = True  # noqa: SLF001
         try:
-            async with group_ref._lock:  # noqa: SLF001
-                child_ids = list(group_ref.child_target_ids)
+            async with group._lock:  # noqa: SLF001
+                child_ids = list(group.child_target_ids)
             for child_id in child_ids:
                 await self.close_group_target(group, child_id)
 
-            parent_page = self.get_pw_page(group_ref.target_id)
-            if parent_page is not None and self.target_page_owned.get(group_ref.target_id, True):
+            parent_page = self.get_pw_page(group.target_id)
+            if parent_page is not None and self.target_page_owned.get(group.target_id, True):
                 await parent_page.close()
             async with self.spawn_lock:
-                self._remove_tab_from_pd(group_ref.target_id)
-                self.target_to_page_map.pop(group_ref.target_id, None)
-                self.target_page_owned.pop(group_ref.target_id, None)
+                self._remove_tab_from_pd(group.target_id)
+                self.target_to_page_map.pop(group.target_id, None)
+                self.target_page_owned.pop(group.target_id, None)
                 if parent_page is not None:
                     self.page_to_group.pop(parent_page, None)
         finally:
