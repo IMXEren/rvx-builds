@@ -1,6 +1,6 @@
 """Class to represent apk to be patched."""
 
-import concurrent
+import concurrent.futures
 import hashlib
 import pathlib
 import zipfile

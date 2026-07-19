@@ -24,6 +24,7 @@ from requests import Response
 
 from src.browser.cookies import Cookies
 from src.browser.site import Source, load_page_in_browser
+from src.signals import get_process_cancel_token
 
 if TYPE_CHECKING:
     from src.app import APP
@@ -187,16 +188,19 @@ def make_request(url: str, headers: dict[str, str] | None = None) -> ResponseTyp
     response: ResponseType
         The response object from the HTTP request.
     """
+    token = get_process_cancel_token()
     i = 0
     update_session_data()
     response = session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
     while (not response or response.status_code != status_code_200) and i < request_retries:
+        token.raise_if_cancelled()
         i += 1
         logger.info(f"Retrying ({i})...")
         if i % 5 == 0:
             sleep_duration = 15 * (i // 5)
             logger.info(f"Sleeping for {sleep_duration}s...")
-            time.sleep(sleep_duration)
+            if token.wait(sleep_duration):
+                token.raise_if_cancelled()
             response = session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
         else:
             response = load_page_in_browser(url, timeout=request_timeout)

@@ -18,6 +18,7 @@ from src.apks.repack import repack_apks
 from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import DownloadError
+from src.signals import get_process_cancel_token
 from src.utils import handle_request_response, implement_method, request_timeout, session
 
 # Extensions that are always treated as split APK bundles and repacked when a device spec is available.
@@ -148,6 +149,7 @@ class Downloader(object):
         try:
             with partial_file_path.open("wb") as dl_file, bar:
                 for chunk in response.iter_content(self._CHUNK_SIZE):
+                    get_process_cancel_token().raise_if_cancelled()
                     size = dl_file.write(chunk)
                     bar.update(size)
             # Atomic replace publishes the completed download only after all bytes are written.

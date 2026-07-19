@@ -14,6 +14,7 @@ from src.downloader.download import Downloader
 from src.exceptions import AppNotFoundError, BuilderError, PatchesJsonLoadError, PatchingFailedError
 from src.parser import Parser
 from src.patches import Patches
+from src.signals import OperationCancelledError, get_coordinator, get_process_cancel_token
 from src.utils import (
     check_java,
     delete_old_changelog,
@@ -40,6 +41,11 @@ def get_app(config: RevancedConfig, app_name: str) -> APP:
     env_package_name = config.env.str(f"{app_name}_PACKAGE_NAME".upper(), None)
     package_name = env_package_name or Patches.get_package_name(app_name)
     return APP(app_name=app_name, package_name=package_name, config=config)
+
+
+def raise_if_cancelled() -> None:
+    """Raise the cancelled exception to let the app processor thread stops."""
+    get_process_cancel_token().raise_if_cancelled()
 
 
 def process_single_app(
@@ -81,6 +87,8 @@ def process_single_app(
         raise
     except PatchingFailedError as e:
         logger.exception(e)
+        raise
+    except OperationCancelledError:
         raise
     except BuilderError as e:
         logger.exception(f"Failed to build {app_name} because of {e}")
@@ -144,6 +152,8 @@ def _process_apps_in_parallel(
                 app_updates = future.result()
                 updates_info.update(app_updates)
                 logger.info(f"Progress: {completed_count}/{total_apps} apps completed ({app_name})")
+            except OperationCancelledError:
+                logger.info(f"Progress: {completed_count}/{total_apps} apps completed ({app_name} - CANCELLED)")
             except Exception as e:  # noqa: BLE001
                 logger.info(f"Progress: {completed_count}/{total_apps} apps completed ({app_name} - FAILED)")
                 _record_failed_app(app_name, e, failed_apps)
@@ -203,8 +213,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    coordinator = get_coordinator()
+    coordinator.install()
     try:
         main()
     except KeyboardInterrupt:
         logger.error("Script halted because of keyboard interrupt.")
         sys.exit(1)
+    finally:
+        if coordinator.guarantees_cleanup:
+            coordinator.uninstall()

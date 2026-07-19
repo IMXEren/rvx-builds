@@ -1,6 +1,7 @@
 """Revanced Parser."""
 
 import re
+import threading
 from subprocess import PIPE, STDOUT, Popen
 from time import perf_counter
 from typing import Any, Self
@@ -14,6 +15,7 @@ from src.cli_args import DEFAULT_PATCH_ARGS, append_cli_argument, is_arg_enabled
 from src.config import RevancedConfig
 from src.exceptions import PatchingFailedError
 from src.patches import Patches
+from src.signals import get_process_cancel_token
 from src.structs.patches import LoadedOption, LoadedOptionValue, LoadedPatchOption, PatchInfo
 from src.utils import possible_archs
 
@@ -625,7 +627,7 @@ class Parser(object):
                 args.append(item)
 
     # noinspection IncorrectFormatting
-    def patch_app(
+    def patch_app(  # noqa: C901, PLR0915
         self: Self,
         app: APP,
     ) -> None:
@@ -679,16 +681,30 @@ class Parser(object):
 
         start = perf_counter()
         logger.debug(f"Sending request to revanced cli for building with args java {args}")
-        # stderr is merged into stdout so CLI failures are visible in the existing build log stream.
-        process = Popen(["java", *args], stdout=PIPE, stderr=STDOUT)
-        output = process.stdout
-        if not output:
-            msg = "Failed to send request for patching."
-            raise PatchingFailedError(msg)
-        for line in output:
-            logger.debug(line.decode(), flush=True, end="")
-        # A non-zero CLI exit means the APK was not patched even if the command produced log output.
-        return_code = process.wait()
+        cancel_token = get_process_cancel_token()
+        try:
+            # stderr is merged into stdout so CLI failures are visible in the existing build log stream.
+            process_done = threading.Event()
+            process = Popen(["java", *args], stdout=PIPE, stderr=STDOUT)
+            cancel_token.wait_for_event_in_daemon(
+                completed=process_done,
+                name=f"java-cancel-{process.pid}",
+                on_cancel=cancel_token.terminate_process,
+                args=(process,),
+            )
+            output = process.stdout
+            if not output:
+                msg = "Failed to send request for patching."
+                raise PatchingFailedError(msg)
+            for line in output:
+                logger.debug(line.decode(), flush=True, end="")
+            # A non-zero CLI exit means the APK was not patched even if the command produced log output.
+            return_code = process.wait()
+        finally:
+            process_done.set()
+            if output:
+                output.close()
+        cancel_token.raise_if_cancelled()
         if return_code != 0:
             output_was_written = output_file_path.is_file() and output_file_path.stat().st_size > 0
             if self._patch_args["CONTINUE_ON_ERROR"] and output_was_written:
