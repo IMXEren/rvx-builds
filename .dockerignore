@@ -7,3 +7,5 @@ README.md
 docker-compose.yml
 venv
 .venv
+
+browser-profile*/

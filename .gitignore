@@ -1,4 +1,6 @@
 *.apk
+*.apkm
+*.xapk
 *.jar
 *.keystore
 *venv
@@ -7,9 +9,11 @@
 /changelog.md
 .idea
 /apks/*.yml
-/apks/temp-*
+/apks/patch-source-temporary-files*
 status.md
 *.zip
 *.rvp
 *.mpp
 *.backup
+
+browser-profile*/
