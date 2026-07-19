@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -59,6 +59,7 @@ changelog_file = "changelog.md"
 changelog_json_file = "changelog.json"
 request_timeout = 60
 request_retries = 15
+
 session = Session(impersonate="chrome146")
 _browsers = [Browser("chrome", min_version=142, max_version=147)]
 _headers = HeaderGenerator(browser=_browsers, os="linux", device="desktop").generate()
@@ -173,42 +174,68 @@ def get_parent_repo() -> str:
     return f"[Docker-py-revanced]({project_url})"
 
 
-def make_request(url: str, headers: dict[str, str] | None = None) -> ResponseType:
-    """The `start_request()` function makes the GET request with the possible retrying methods.
+def make_request(
+    url: str,
+    headers: dict[str, str] | None = None,
+    *,
+    ok_statuses: frozenset[int] = frozenset({200, 404}),
+    retriable_statuses: frozenset[int] = frozenset({403, *range(500, 600)}),
+) -> ResponseType:
+    """Make a GET request with browser-based fallback for retriable failures.
 
-    Parameters
-    ----------
-    url: str
-        The url on which to make request.
-    headers: dict[str, str]
-        The request headers to be used while making the request.
+    Only connection errors and status codes in *retriable_statuses* (default
+    ``{403, 500..599}``) trigger retries. All other codes return immediately.
 
-    Returns
-    -------
-    response: ResponseType
-        The response object from the HTTP request.
+    Retry strategy (up to ``request_retries`` attempts):
+    - First attempt: direct HTTP via session.
+    - On failure, alternate between browser-based retry (4 attempts) and a
+      paced direct retry (every 5th attempt, with increasing sleep).
+    - Final fallback: one last direct HTTP attempt.
+
+    The process-wide ``CancellationToken`` is honoured between retries so
+    that a signal-initiated shutdown cancels pending requests promptly.
     """
     token = get_process_cancel_token()
-    i = 0
+
+    def _direct() -> ResponseType:
+        return session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
+
+    def _is_ok(response: ResponseType | None) -> bool:
+        return bool(response and response.status_code in ok_statuses)
+
+    def _is_retriable(response: ResponseType | None) -> bool:
+        return not response or response.status_code in retriable_statuses
+
     update_session_data()
-    response = session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
-    while (not response or response.status_code != status_code_200) and i < request_retries:
+
+    # Initial attempt: direct HTTP.
+    response = _direct()
+    if _is_ok(response) or not _is_retriable(response):
+        return response
+
+    # Retry loop.
+    for attempt in range(1, request_retries + 1):
         token.raise_if_cancelled()
-        i += 1
-        logger.info(f"Retrying ({i})...")
-        if i % 5 == 0:
-            sleep_duration = 15 * (i // 5)
-            logger.info(f"Sleeping for {sleep_duration}s...")
-            if token.wait(sleep_duration):
+        logger.info(f"Retrying ({attempt})...")
+
+        if attempt % 5 == 0:
+            # Paced direct retry.
+            delay = 15 * (attempt // 5)
+            logger.info(f"Sleeping for {delay}s...")
+            if token.wait(delay):
                 token.raise_if_cancelled()
-            response = session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
+            response = _direct()
         else:
+            # Browser-based retry.
             response = load_page_in_browser(url, timeout=request_timeout)
             if response:
                 update_session_data(response.user_agent)
-    if not response:
-        response = session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
-    return response
+
+        if _is_ok(response) or not _is_retriable(response):
+            return cast("ResponseType", response)
+
+    # One final direct attempt after exhausting retries.
+    return _direct()
 
 
 def handle_request_response(response: ResponseType, url: str) -> None:
