@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Self, cast
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -13,7 +13,7 @@ from src.browser import Browser as PublicBrowser
 from src.browser import TabGroup as PublicTabGroup
 from src.browser.browser import Browser, BrowserShutdownState, TabGroup
 from src.browser.driver import BrowserRuntimeState, DriverRemoteAttachConfig, DriverStartupConfig
-from src.browser.exceptions import FailedToStartBrowserError
+from src.browser.exceptions import BrowserStartError
 from src.browser.lifecycle import BrowserLifecycle
 
 # ruff: noqa: PT009, PT027, SLF001, S108
@@ -24,6 +24,10 @@ _ROOT = Path(__file__).resolve().parents[1]
 
 def _source(path: str) -> str:
     return (_ROOT / path).read_text(encoding="utf-8")
+
+
+async def _noop_popup_handler(_page: Any) -> None:
+    return None
 
 
 class ConcreteBoundaryShapeTests(TestCase):
@@ -72,11 +76,7 @@ class ConcreteBoundaryShapeTests(TestCase):
         src = _source("src/browser/browser.py")
         tree = ast.parse(src)
         browser = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Browser")
-        start = next(
-            node
-            for node in browser.body
-            if isinstance(node, ast.AsyncFunctionDef) and node.name == "start"
-        )
+        start = next(node for node in browser.body if isinstance(node, ast.AsyncFunctionDef) and node.name == "start")
         segment = ast.get_source_segment(src, start) or ""
 
         self.assertNotIn("def can_start", segment)
@@ -107,24 +107,30 @@ class ConcreteBoundaryShapeTests(TestCase):
         self.assertIsInstance(Browser._lifecycle, BrowserLifecycle)
 
     def test_invariant_shutdown_state_fields_live_on_lifecycle_not_browser_or_driver(self) -> None:
-        """Invariant: shutdown state, signal metadata, and atexit flags are lifecycle-owned."""
+        """Invariant: shutdown state and atexit flags are lifecycle-owned; signal fields stay absent."""
         lifecycle_fields = set(BrowserLifecycle.__dataclass_fields__)
         runtime_fields = set(BrowserRuntimeState.__dataclass_fields__)
         owned_fields = {
             "_shutdown_state",
             "_shutdown_error",
             "_shutdown_task",
+            "_atexit_registered",
+            "_owns_local_profile",
+        }
+        absent_signal_fields = {
             "_signal_exit_task",
             "_signal_handlers_registered",
-            "_atexit_registered",
             "_prior_signal_info",
             "_preserved_signal_info",
-            "_owns_local_profile",
         }
 
         self.assertLessEqual(owned_fields, lifecycle_fields)
         self.assertTrue(owned_fields.isdisjoint(runtime_fields))
         for field in owned_fields:
+            self.assertNotIn(field, Browser.__dict__)
+        for field in absent_signal_fields:
+            self.assertNotIn(field, lifecycle_fields)
+            self.assertNotIn(field, runtime_fields)
             self.assertNotIn(field, Browser.__dict__)
 
     def test_happy_path_browser_shutdown_delegates_to_lifecycle(self) -> None:
@@ -133,9 +139,7 @@ class ConcreteBoundaryShapeTests(TestCase):
         tree = ast.parse(src)
         browser = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Browser")
         shutdown = next(
-            node
-            for node in browser.body
-            if isinstance(node, ast.AsyncFunctionDef) and node.name == "shutdown"
+            node for node in browser.body if isinstance(node, ast.AsyncFunctionDef) and node.name == "shutdown"
         )
         segment = ast.get_source_segment(src, shutdown) or ""
 
@@ -149,9 +153,7 @@ class ConcreteBoundaryShapeTests(TestCase):
         tree = ast.parse(src)
         browser = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Browser")
         fallback = next(
-            node
-            for node in browser.body
-            if isinstance(node, ast.FunctionDef) and node.name == "_sync_atexit_fallback"
+            node for node in browser.body if isinstance(node, ast.FunctionDef) and node.name == "_sync_atexit_fallback"
         )
         segment = ast.get_source_segment(src, fallback) or ""
 
@@ -172,7 +174,12 @@ class RuntimeStartupOrderingTests(IsolatedAsyncioTestCase):
         context.on = MagicMock(side_effect=lambda *_args: events.append("page-handler"))
         chrome = MagicMock()
         chrome._set_browser_preferences_in_user_data_dir = MagicMock(side_effect=lambda _path: events.append("prefs"))
-        chrome.connect = AsyncMock(side_effect=lambda _ws: events.append("connect") or _tab("main"))
+
+        async def connect(_ws: str) -> object:
+            events.append("connect")
+            return _tab("main")
+
+        chrome.connect = AsyncMock(side_effect=connect)
         chrome.set_window_minimized = AsyncMock(side_effect=lambda: events.append("minimize"))
 
         async def launch(**_kwargs: Any) -> object:
@@ -430,7 +437,7 @@ class RuntimeStartupOrderingTests(IsolatedAsyncioTestCase):
         runtime = BrowserRuntimeState(max_groups=1)
         with (
             patch("src.browser.driver.runtime.Chrome", return_value=chrome),
-            self.assertRaisesRegex(RuntimeError, "remote refused"),
+            self.assertRaisesRegex(BrowserStartError, "failed to attach remote cdp"),
         ):
             await runtime.attach_remote(
                 DriverRemoteAttachConfig(
@@ -456,7 +463,7 @@ class RuntimeStartupOrderingTests(IsolatedAsyncioTestCase):
         runtime = BrowserRuntimeState(max_groups=1)
         with (
             patch("src.browser.driver.runtime.Chrome", return_value=chrome),
-            self.assertRaisesRegex(RuntimeError, "remote refused"),
+            self.assertRaisesRegex(BrowserStartError, "failed to attach remote cdp"),
         ):
             await runtime.attach_remote(
                 DriverRemoteAttachConfig(
@@ -480,10 +487,10 @@ class LifecycleAdmissionTests(IsolatedAsyncioTestCase):
         lifecycle = BrowserLifecycle(_driver_double())
         lifecycle._shutdown_state = BrowserShutdownState.IN_PROGRESS
 
-        with self.assertRaisesRegex(FailedToStartBrowserError, "shutting down"):
+        with self.assertRaisesRegex(BrowserStartError, "shutting down"):
             await lifecycle.start(
                 is_running=lambda: False,
-                popup_handler=lambda _page: None,
+                popup_handler=_noop_popup_handler,
             )
 
     async def test_idempotent_terminal_shutdown_state_is_reset_before_start(self: Self) -> None:
@@ -495,7 +502,7 @@ class LifecycleAdmissionTests(IsolatedAsyncioTestCase):
 
         await lifecycle.start(
             is_running=lambda: True,
-            popup_handler=lambda _page: None,
+            popup_handler=_noop_popup_handler,
         )
 
         self.assertIs(lifecycle._shutdown_state, BrowserShutdownState.NOT_STARTED)
@@ -517,7 +524,7 @@ class BrowserRemoteFacadeTests(IsolatedAsyncioTestCase):
         lifecycle.connect.assert_awaited_once()
         kwargs = lifecycle.connect.await_args.kwargs
         self.assertEqual(kwargs["ws_url"], "wss://cloud.example/devtools/browser/facade")
-        self.assertIs(kwargs["is_running"].__func__, Browser.is_running.__func__)
+        self.assertEqual(kwargs["is_running"], Browser.is_running)
 
     async def test_boundary_connect_rejects_empty_ws_url_values(self: Self) -> None:
         """Boundary: empty, whitespace, and non-string ws_url values fail before lifecycle."""
@@ -526,8 +533,8 @@ class BrowserRemoteFacadeTests(IsolatedAsyncioTestCase):
 
         with patch.object(Browser, "_lifecycle", lifecycle):
             for value in ("", "   ", None):
-                with self.subTest(value=value), self.assertRaisesRegex(ValueError, "non-empty ws_url"):
-                    await Browser.connect(value)  # type: ignore[arg-type]  # reason: exercise runtime guard
+                with self.subTest(value=value), self.assertRaisesRegex(BrowserStartError, "non-empty ws_url"):
+                    await Browser.connect(cast("Any", value))
 
         lifecycle.connect.assert_not_awaited()
 
@@ -548,7 +555,6 @@ class BrowserRemoteFacadeTests(IsolatedAsyncioTestCase):
                 patch("src.browser.lifecycle.startup.ensure_binary") as ensure,
                 patch("src.browser.lifecycle.startup.get_free_port") as port,
                 patch("src.browser.driver.runtime.resolve_cdp_ws_url", new=AsyncMock()) as resolve,
-                patch.object(BrowserLifecycle, "_register_signal_handlers"),
                 patch.object(BrowserLifecycle, "_register_atexit"),
             ):
                 await Browser.connect("wss://cloud.example/devtools/browser/no-local")

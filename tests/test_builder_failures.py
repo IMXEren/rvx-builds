@@ -1,14 +1,16 @@
-"""Regression tests for builder failure propagation."""
+"""Regression tests for builder failure propagation and parallel processing."""
 
 # These tests guard CI/release behavior: failed patch commands must be visible without discarding good app outputs.
 # The repo's local test command is unittest, so assertion contexts stay on TestCase instead of pytest.
-# ruff: noqa: PT009, PT027
+# ruff: noqa: PT009, PT027, SLF001, F821
 
+import io
 import os
+from concurrent.futures import Future
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Self, cast
+from typing import Self, cast
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -17,9 +19,7 @@ from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import PatchingFailedError
 from src.parser import Parser
-
-if TYPE_CHECKING:
-    from src.patches import Patches
+from src.signals import OperationCancelledError
 
 
 class _FailedProcess:
@@ -27,8 +27,9 @@ class _FailedProcess:
 
     def __init__(self: Self) -> None:
         """Store process output on the instance so each mocked run is isolated."""
-        self.stdout = [b"patching failed\n"]
+        self.stdout = io.BytesIO(b"patching failed\n")
         self.returncode = 2
+        self.pid = 12345
 
     def wait(self: Self) -> int:
         """Return the configured non-zero code after stdout has been drained."""
@@ -40,8 +41,9 @@ class _SuccessfulProcess:
 
     def __init__(self: Self) -> None:
         """Store successful output so Parser.patch_app reaches its completion path."""
-        self.stdout = [b"patching finished\n"]
+        self.stdout = io.BytesIO(b"patching finished\n")
         self.returncode = 0
+        self.pid = 12345
 
     def wait(self: Self) -> int:
         """Return a successful code after stdout has been drained."""
@@ -54,8 +56,9 @@ class _FailedProcessProducingOutput:
     def __init__(self: Self, output_file: Path) -> None:
         """Store the expected output file so wait can simulate CLI write timing."""
         self.output_file = output_file
-        self.stdout = [b"patching failed\n"]
+        self.stdout = io.BytesIO(b"patching failed\n")
         self.returncode = 2
+        self.pid = 12345
 
     def wait(self: Self) -> int:
         """Create a patched APK before returning Morphe's non-zero patch-failure status."""
@@ -213,3 +216,79 @@ class BuilderFailureTests(TestCase):
             self.assertRaisesRegex(PatchingFailedError, "reddit, youtube"),
         ):
             builder_main.main()
+
+
+class _RecordingExecutor:
+    """Executor double that exposes exact shutdown mode and submitted futures."""
+
+    def __init__(self, futures: list[Future[dict[str, object]]], events: list[str]) -> None:
+        self._futures = iter(futures)
+        self.events = events
+        self.shutdown_calls: list[tuple[bool, bool]] = []
+        self.submitted: list[str] = []
+
+    def submit(self, _function: object, app_name: str, *_args: object, **_kwargs: object) -> Future[dict[str, object]]:
+        self.submitted.append(app_name)
+        return next(self._futures)
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *_exc_info: object) -> None:
+        self.shutdown(wait=True)
+
+    def shutdown(self, *, wait: bool, cancel_futures: bool = False) -> None:
+        self.shutdown_calls.append((wait, cancel_futures))
+        self.events.append("executor-shutdown")
+
+
+def _parallel_config() -> RevancedConfig:
+    return cast(
+        "RevancedConfig",
+        SimpleNamespace(apps=["youtube", "reddit"], max_parallel_apps=2),
+    )
+
+
+class ParallelProcessingTests(TestCase):
+    """Verify current parallel processing contract without signal ownership."""
+
+    def test_all_futures_complete_without_signal_uses_one_waiting_shutdown(self: Self) -> None:
+        """Use one waiting executor shutdown after normal completion."""
+        events: list[str] = []
+        first: Future[dict[str, object]] = Future()
+        second: Future[dict[str, object]] = Future()
+        first.set_result({"youtube": {}})
+        second.set_result({"reddit": {}})
+        executor = _RecordingExecutor([first, second], events)
+        updates: dict[str, object] = {}
+
+        with patch("main.ThreadPoolExecutor", return_value=executor):
+            builder_main._process_apps_in_parallel(
+                _parallel_config(),
+                builder_main._build_caches(),
+                updates,
+                [],
+            )
+
+        self.assertEqual(executor.shutdown_calls, [(True, False)])
+        self.assertEqual(set(updates), {"youtube", "reddit"})
+
+    def test_parallel_processing_catches_operation_cancelled_error(self: Self) -> None:
+        """Verify OperationCancelledError from CancellationToken is caught in parallel processing."""
+        first: Future[dict[str, object]] = Future()
+        second: Future[dict[str, object]] = Future()
+        first.set_result({"youtube": {}})
+        second.set_exception(OperationCancelledError())
+        executor = _RecordingExecutor([first, second], [])
+        updates: dict[str, object] = {}
+
+        with patch("main.ThreadPoolExecutor", return_value=executor):
+            builder_main._process_apps_in_parallel(
+                _parallel_config(),
+                builder_main._build_caches(),
+                updates,
+                [],
+            )
+
+        self.assertEqual(set(updates), {"youtube"})
+        self.assertEqual(executor.shutdown_calls, [(True, False)])

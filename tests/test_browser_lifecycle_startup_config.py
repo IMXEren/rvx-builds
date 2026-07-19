@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Self, cast
+from typing import Self, TypedDict, cast
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.browser.browser import Browser
 from src.browser.driver import BrowserRuntimeState, DriverRemoteAttachConfig, DriverStartupConfig
+from src.browser.exceptions import BrowserStartError
 from src.browser.lifecycle import BrowserLifecycle
 from src.browser.lifecycle.startup import get_free_port
 
@@ -36,6 +37,15 @@ class _DriverDouble:
         self.atexit_registered = False
 
 
+async def _noop_popup_handler(_page: object) -> None:
+    return None
+
+
+class _StartResult(TypedDict):
+    events: list[str]
+    request: DriverStartupConfig | None
+
+
 class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
     """Lifecycle start owns concrete config and sequencing."""
 
@@ -44,7 +54,7 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
         self.driver = _DriverDouble()
         self.lifecycle = BrowserLifecycle(cast("BrowserRuntimeState", self.driver))
 
-    async def _start(self, *, running: bool = False) -> dict[str, object]:
+    async def _start(self, *, running: bool = False) -> _StartResult:
         events: list[str] = []
 
         with (
@@ -59,14 +69,20 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
             patch("src.browser.lifecycle.startup.ensure_binary", side_effect=lambda: events.append("binary")),
             patch("src.browser.lifecycle.startup.get_free_port", return_value=9999),
             patch("src.browser.lifecycle.startup.FingerprintManager", return_value=_fingerprint()),
-            patch.object(BrowserLifecycle, "_register_signal_handlers", side_effect=lambda: events.append("signals")),
             patch.object(BrowserLifecycle, "_register_atexit", side_effect=lambda: events.append("atexit")),
         ):
             await self.lifecycle.start(
                 is_running=lambda: running,
-                popup_handler=lambda _page: None,
+                popup_handler=_noop_popup_handler,
             )
-        return {"events": events, "request": self.driver.start_live.await_args.args[0] if not running else None}
+        request = None
+        if not running:
+            await_args = self.driver.start_live.await_args
+            if await_args is None:
+                msg = "driver.start_live was not awaited"
+                raise AssertionError(msg)
+            request = cast("DriverStartupConfig", await_args.args[0])
+        return {"events": events, "request": request}
 
     async def test_happy_path_passes_explicit_driver_startup_config(self) -> None:
         """Happy path: driver receives launch inputs but no pre-resolved websocket."""
@@ -74,8 +90,9 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
         request = result["request"]
 
         self.assertIsInstance(request, DriverStartupConfig)
-        self.assertEqual(request.profile_dir, "/tmp/browser-profile2")
-        self.assertEqual(request.user_data_dir, "/tmp/browser-profile2")
+        request = cast("DriverStartupConfig", request)
+        self.assertEqual(request.profile_dir, "/tmp/browser-profile")
+        self.assertEqual(request.user_data_dir, "/tmp/browser-profile")
         self.assertEqual(request.cdp_port, 9999)
         self.assertEqual(request.viewport, {"width": 1920, "height": 980})
         self.assertEqual(request.locale, "en-US,en")
@@ -84,10 +101,8 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
 
     async def test_invariant_websocket_resolution_is_not_done_by_lifecycle(self) -> None:
         """Invariant: lifecycle must let runtime resolve CDP after launching Chrome."""
-        with patch.object(BrowserLifecycle, "get_cdp_ws_url", AsyncMock(return_value="ws://bad")) as resolver:
-            result = await self._start()
+        result = await self._start()
 
-        resolver.assert_not_awaited()
         self.assertIsInstance(result["request"], DriverStartupConfig)
 
     async def test_invariant_search_engine_runs_after_profile_priming(self) -> None:
@@ -96,7 +111,7 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
         events = result["events"]
 
         self.assertLess(events.index("prime"), events.index("search"))
-        self.assertLess(events.index("search"), events.index("signals"))
+        self.assertLess(events.index("search"), events.index("atexit"))
 
     async def test_boundary_running_browser_skips_startup_side_effects(self) -> None:
         """Boundary: already-running browser admits then returns without unpack, binary, or driver start."""
@@ -110,7 +125,7 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
         self.driver.start_live = AsyncMock(side_effect=RuntimeError("primary"))
         self.driver.rollback_start = AsyncMock()
 
-        with self.assertRaisesRegex(RuntimeError, "primary"):
+        with self.assertRaisesRegex(BrowserStartError, "failed to start the browser"):
             await self._start()
 
         self.driver.rollback_start.assert_awaited_once()
@@ -135,6 +150,8 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
         result = await self._start()
         request = result["request"]
 
+        self.assertIsInstance(request, DriverStartupConfig)
+        request = cast("DriverStartupConfig", request)
         self.assertEqual(request.profile_dir, "/tmp/custom-profile")
         self.assertEqual(request.cdp_port, 9999)
         self.assertEqual(request.viewport, {"width": 320, "height": 568})
@@ -170,10 +187,9 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
                 patch.object(BrowserLifecycle, "pack_profile", side_effect=lambda *_args: events.append("pack")),
                 patch.object(
                     BrowserLifecycle,
-                    "_register_signal_handlers",
-                    side_effect=lambda: events.append("signals"),
+                    "_register_signal_cleanup",
+                    side_effect=lambda: events.append("signal_cleanup"),
                 ),
-                patch.object(BrowserLifecycle, "_register_atexit", side_effect=lambda: events.append("atexit")),
             ):
                 await Browser.connect("wss://cloud.example/devtools/browser/remote")
                 Browser._do_sync_chores_before_exit()
@@ -181,10 +197,14 @@ class BrowserLifecycleStartupTests(IsolatedAsyncioTestCase):
             Browser._runtime = original_runtime
             Browser._lifecycle = original_lifecycle
 
-        request = driver.attach_remote.await_args.args[0]
+        await_args = driver.attach_remote.await_args
+        if await_args is None:
+            msg = "driver.attach_remote was not awaited"
+            raise AssertionError(msg)
+        request = await_args.args[0]
         self.assertIsInstance(request, DriverRemoteAttachConfig)
         self.assertEqual(request.ws_url, "wss://cloud.example/devtools/browser/remote")
-        self.assertEqual(events, ["signals", "atexit"])
+        self.assertEqual(events, ["signal_cleanup"])
 
 
 class BrowserLifecycleProfileTests(TestCase):
@@ -205,6 +225,8 @@ class BrowserLifecycleProfileTests(TestCase):
             archive = lifecycle.pack_profile(profile / "inside.zip")
 
             self.assertEqual(archive, root / "inside.zip")
+            self.assertIsNotNone(archive)
+            archive = cast("Path", archive)
             self.assertTrue(archive.exists())
 
     def test_get_free_port_accepts_zero_for_os_assigned_boundary(self) -> None:

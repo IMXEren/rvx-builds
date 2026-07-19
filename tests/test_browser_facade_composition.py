@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 from typing import Self, cast
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import AsyncMock, MagicMock
@@ -11,7 +12,7 @@ from src.browser import Browser as PackageBrowser
 from src.browser import TabGroup as PackageTabGroup
 from src.browser.browser import Browser, BrowserShutdownState, TabGroup
 from src.browser.driver.runtime import BrowserRuntimeState
-from src.browser.exceptions import FailedToStartBrowserError
+from src.browser.exceptions import BrowserError, BrowserStartError
 from src.browser.lifecycle.startup import BrowserLifecycle
 
 # ruff: noqa: PT009, PT027, SLF001
@@ -64,14 +65,38 @@ class BrowserFacadeProjectionTests(TestCase):
         """Boundary/error path: stopped browser error is raised by runtime, not Browser state checks."""
         Browser._runtime = BrowserRuntimeState(max_groups=1)
 
-        with self.assertRaisesRegex(RuntimeError, "Browser is not running - call Browser.start"):
+        with self.assertRaisesRegex(BrowserError, "Browser is not running - call Browser.start"):
             Browser.pd()
 
     def test_input_variation_connect_rejects_empty_or_non_string_ws_urls(self: Self) -> None:
         """Input variation: remote attach requires explicit websocket text at the facade boundary."""
         for value in ["", "   ", cast("str", None)]:
-            with self.assertRaisesRegex(ValueError, "ws_url"):
+            with self.assertRaisesRegex(BrowserStartError, "non-empty ws_url"):
                 asyncio.run(Browser.connect(value))
+
+    def test_boundary_browser_facade_owns_no_signal_policy_methods(self: Self) -> None:
+        """Boundary: Browser exposes no stale private signal mutation or propagation facade."""
+        stale_names = [
+            "_do_usual_exit",
+            "_register_signal_handlers",
+            "_unregister_signal_handlers",
+            "_dispatch_exit_signal",
+            "_handle_signal_exit",
+            "_force_exit",
+            "_consume_signal_metadata",
+            "_terminate_by_signal",
+        ]
+
+        for name in stale_names:
+            self.assertFalse(hasattr(Browser, name), name)
+
+    def test_invariant_browser_facade_source_has_no_signal_mutation_or_raise(self: Self) -> None:
+        """Invariant: Browser source contains no process-signal mutation or natural propagation."""
+        source = inspect.getsource(Browser)
+        forbidden = ["signal.signal", "remove_signal_handler", "raise_signal", "_handle_signal", "finalize("]
+
+        for needle in forbidden:
+            self.assertNotIn(needle, source, needle)
 
 
 class BrowserFacadeCreateTests(IsolatedAsyncioTestCase):
@@ -112,7 +137,7 @@ class BrowserFacadeCreateTests(IsolatedAsyncioTestCase):
         Browser._lifecycle = BrowserLifecycle(cast("BrowserRuntimeState", runtime))
         Browser._lifecycle._shutdown_state = BrowserShutdownState.IN_PROGRESS
 
-        with self.assertRaisesRegex(FailedToStartBrowserError, "shutting down"):
+        with self.assertRaisesRegex(BrowserStartError, "shutting down"):
             await Browser.create()
 
         runtime.create_tab_group.assert_not_awaited()

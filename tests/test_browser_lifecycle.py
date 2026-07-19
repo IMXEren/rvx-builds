@@ -14,18 +14,20 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import signal
-from typing import TYPE_CHECKING, Any, Self
+from concurrent.futures import ThreadPoolExecutor
+from typing import TYPE_CHECKING, Self
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.browser.browser import Browser, BrowserShutdownState
 from src.browser.driver import BrowserRuntimeState
-from src.browser.exceptions import FailedToStartBrowserError
+from src.browser.exceptions import BrowserShutdownError, BrowserStartError
 from src.browser.lifecycle import BrowserLifecycle
+from src.signals import CoordinatorStateError, RegistrationToken
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from types import TracebackType
 
 # ruff: noqa: PT009, PT027, SLF001
 
@@ -113,6 +115,44 @@ def _startup_base_patches() -> list:
         patch.object(BrowserLifecycle, "unpack_profile", return_value=False),
         patch("src.browser.lifecycle.startup.atexit.register"),
     ]
+
+
+class _FakeCoordinator:
+    def __init__(self) -> None:
+        self.registered: list[RegistrationToken] = []
+        self.unregistered: list[RegistrationToken] = []
+        self.raise_on_register: BaseException | None = None
+        self._next_id = 1
+
+    @property
+    def guarantees_cleanup(self) -> bool:
+        return True
+
+    def register(
+        self,
+        cleanup: Callable[[], None],
+        *,
+        owner_loop: asyncio.AbstractEventLoop | None = None,
+        name: str | None = None,
+        timeout: float | None = None,
+    ) -> RegistrationToken:
+        if self.raise_on_register is not None:
+            raise self.raise_on_register
+        identifier = self._next_id
+        self._next_id += 1
+        token = RegistrationToken(self, identifier)
+        self.registered.append(token)
+        return token
+
+    def unregister(self, token: RegistrationToken) -> bool:
+        self.unregistered.append(token)
+        return token in self.registered
+
+    def registration_active(self, token: RegistrationToken) -> bool:
+        return token in self.registered and token not in self.unregistered
+
+    register_callback = register
+    unregister_callback = unregister
 
 
 # =========================================================================
@@ -461,10 +501,9 @@ class ShutdownTerminalStateTests(IsolatedAsyncioTestCase):
             if lc._shutdown_task is not None and not lc._shutdown_task.done():
                 await asyncio.wait_for(lc._shutdown_task, timeout=5)
 
-            # Terminal state: SUCCEEDED, task cleared, handlers unregistered
+            # Terminal state: SUCCEEDED, task cleared
             self.assertIs(lc._shutdown_state, BrowserShutdownState.SUCCEEDED)
             self.assertIsNone(lc._shutdown_task)
-            self.assertFalse(lc._signal_handlers_registered)
 
             # Retry shutdown: no-op because SUCCEEDED
             with patch.object(BrowserLifecycle, "do_sync_chores_before_exit") as mock_chores:
@@ -491,17 +530,18 @@ class ShutdownTerminalStateTests(IsolatedAsyncioTestCase):
             t2 = asyncio.create_task(Browser.shutdown())
             results = await asyncio.gather(t1, t2, return_exceptions=True)
 
-        # Both callers observe the stored RuntimeError
+        # Both callers observe the stored BrowserShutdownError
         for r in results:
-            self.assertIsInstance(r, RuntimeError)
+            self.assertIsInstance(r, BrowserShutdownError)
             self.assertEqual(str(r), "cleanup failed")
 
         # Terminal state is FAILED with stored error
         self.assertIs(lc._shutdown_state, BrowserShutdownState.FAILED)
         shutdown_error = lc._shutdown_error
-        self.assertIsInstance(shutdown_error, RuntimeError)
+        self.assertIsInstance(shutdown_error, BrowserShutdownError)
         self.assertEqual(
-            str(shutdown_error), "cleanup failed",
+            str(shutdown_error),
+            "cleanup failed",
         )
 
         # Cleanup executed only once
@@ -509,7 +549,7 @@ class ShutdownTerminalStateTests(IsolatedAsyncioTestCase):
         self.assertNotIn(deps["group"], Browser._runtime.active_groups)
 
         # Later retry also raises the stored error
-        with self.assertRaises(RuntimeError) as cm:
+        with self.assertRaises(BrowserShutdownError) as cm:
             await Browser.shutdown()
         self.assertEqual(str(cm.exception), "cleanup failed")
 
@@ -549,242 +589,57 @@ class ShutdownTerminalStateTests(IsolatedAsyncioTestCase):
             if lc._shutdown_task is not None and not lc._shutdown_task.done():
                 await asyncio.wait_for(lc._shutdown_task, timeout=5)
 
-            # Terminal state: FAILED, task cleared, handlers unregistered
+            # Terminal state: FAILED, task cleared
             self.assertIs(lc._shutdown_state, BrowserShutdownState.FAILED)
             shutdown_error = lc._shutdown_error
-            self.assertIsInstance(shutdown_error, RuntimeError)
+            self.assertIsInstance(shutdown_error, BrowserShutdownError)
             self.assertEqual(
-                str(shutdown_error), "cleanup failed",
+                str(shutdown_error),
+                "cleanup failed",
             )
             self.assertIsNone(lc._shutdown_task)
-            self.assertFalse(lc._signal_handlers_registered)
 
             # Retry caller sees stored error
-            with self.assertRaises(RuntimeError) as cm:
+            with self.assertRaises(BrowserShutdownError) as cm:
                 await Browser.shutdown()
             self.assertEqual(str(cm.exception), "cleanup failed")
 
             # Cleanup executed exactly once
             deps["page"].close.assert_awaited_once()
 
-
-# =========================================================================
-# Signal-triggered shutdown
-# =========================================================================
-
-
-class SignalDispatchTests(IsolatedAsyncioTestCase):
-    """Signal dispatch must create a task and return without awaiting it."""
-
-    def setUp(self: Self) -> None:
-        """Reset class state."""
-        _reset_browser_state()
-
-    async def test_signal_dispatch_returns_without_awaiting_cleanup(self) -> None:
-        """_dispatch_exit_signal must create a task and return immediately."""
-        cleanup_started = asyncio.Event()
+    async def test_shutdown_unregisters_and_acknowledges_signal_once(self) -> None:
+        """Terminal cleanup unregisters and clears signal registration."""
+        coordinator = _FakeCoordinator()
+        deps = _running_browser_deps()
         lc = _get_lifecycle()
 
-        async def long_shutdown(_lifecycle: BrowserLifecycle, _sig: object) -> None:
-            cleanup_started.set()
-            await asyncio.Event().wait()  # Never completes
+        with (patch("src.browser.lifecycle.startup.get_coordinator", return_value=coordinator),):
+            lc._register_signal_cleanup()
 
-        with patch.object(BrowserLifecycle, "_handle_signal_exit", new=long_shutdown):
-            lc._dispatch_exit_signal(signal.SIGTERM)
+        token = coordinator.registered[0]
 
-        # Method returned immediately without awaiting the task
-        signal_task = lc._signal_exit_task
-        self.assertIsNotNone(signal_task)
-        # Task is pending, not done (it will wait forever)
-        # Cancel to clean up
-        signal_task.cancel()
-        with self.assertRaises(asyncio.CancelledError):
-            await signal_task
+        with patch("src.browser.lifecycle.startup.get_coordinator", return_value=coordinator):
+            await Browser.shutdown()
 
-    async def test_second_signal_during_cleanup_triggers_force_exit(self) -> None:
-        """A second signal while cleanup is in progress must force-exit."""
-        cleanup_entered = asyncio.Event()
-        cleanup_can_exit = asyncio.Event()
+        self.assertEqual(coordinator.unregistered, [token])
+        self.assertIsNone(lc._signal_registration)
+        deps["ctx"].close.assert_awaited_once()
+
+    async def test_signal_trigger_schedules_shutdown_and_returns_promptly(self) -> None:
+        """Registered cleanup schedules async shutdown on its loop."""
+        coordinator = _FakeCoordinator()
+        _running_browser_deps()
         lc = _get_lifecycle()
 
-        async def controlled_cleanup(_lifecycle: BrowserLifecycle, _sig: object) -> None:
-            cleanup_entered.set()
-            await cleanup_can_exit.wait()
+        with patch("src.browser.lifecycle.startup.get_coordinator", return_value=coordinator):
+            lc._register_signal_cleanup()
 
-        with (
-            patch.object(BrowserLifecycle, "_handle_signal_exit", new=controlled_cleanup),
-            patch.object(BrowserLifecycle, "force_exit") as mock_force,
-        ):
-            lc._dispatch_exit_signal(signal.SIGINT)
-            await cleanup_entered.wait()
+        token = coordinator.registered[0]
+        with (patch.object(BrowserLifecycle, "_cleanup_resources", new=AsyncMock()) as cleanup_mock,):
+            await Browser.shutdown()
 
-            # Second signal should force exit
-            lc._dispatch_exit_signal(signal.SIGTERM)
-            mock_force.assert_called_once()
-
-            # Let first task clean up
-            cleanup_can_exit.set()
-            signal_task = lc._signal_exit_task
-            if signal_task is not None and not signal_task.done():
-                await asyncio.wait_for(signal_task, timeout=5)
-
-    async def test_signal_exit_task_reserved_not_shutdown_task(self) -> None:
-        """Signal exit must use _signal_exit_task, not overwrite _shutdown_task."""
-        lc = _get_lifecycle()
-
-        async def blocking_shutdown(_lifecycle: BrowserLifecycle, _sig: object) -> None:
-            await asyncio.Event().wait()
-
-        with patch.object(BrowserLifecycle, "_handle_signal_exit", new=blocking_shutdown):
-            lc._dispatch_exit_signal(signal.SIGTERM)
-
-        signal_task = lc._signal_exit_task
-        self.assertIsNotNone(signal_task)
-        self.assertIsNone(lc._shutdown_task)
-
-        # Clean up
-        signal_task.cancel()
-        with self.assertRaises(asyncio.CancelledError):
-            await signal_task
-
-
-# =========================================================================
-# Exact signal handler restoration
-# =========================================================================
-
-
-class SignalRestorationTests(IsolatedAsyncioTestCase):
-    """Signal handlers must save and restore exact prior handlers."""
-
-    def setUp(self: Self) -> None:
-        """Reset class state and capture original loop."""
-        _reset_browser_state()
-
-    async def test_loop_installation_saves_and_restores_exact_prior(self) -> None:
-        """loop.add_signal_handler saves prior; unregister restores it exactly."""
-        prior_sigint = MagicMock()
-        prior_sigterm = MagicMock()
-        lc = _get_lifecycle()
-
-        def fake_getsignal(sig: signal.Signals) -> object:
-            mapping = {signal.SIGINT: prior_sigint, signal.SIGTERM: prior_sigterm}
-            return mapping[sig]
-
-        with (
-            patch("signal.getsignal", side_effect=fake_getsignal),
-            patch("signal.signal") as mock_signal,
-        ):
-            lc._register_signal_handlers()
-            self.assertTrue(lc._signal_handlers_registered)
-            self.assertIn(signal.SIGINT, lc._prior_signal_info)
-            self.assertIn(signal.SIGTERM, lc._prior_signal_info)
-
-            # Verify stored prior handlers are correct
-            _kind_si, prior_si, _loop_si = lc._prior_signal_info[signal.SIGINT]
-            _kind_st, prior_st, _loop_st = lc._prior_signal_info[signal.SIGTERM]
-            self.assertIs(prior_si, prior_sigint)
-            self.assertIs(prior_st, prior_sigterm)
-
-            mock_signal.reset_mock()
-
-            lc._unregister_signal_handlers()
-            self.assertFalse(lc._signal_handlers_registered)
-
-            # After unregister, prior info is cleared
-            self.assertNotIn(signal.SIGINT, lc._prior_signal_info)
-            self.assertNotIn(signal.SIGTERM, lc._prior_signal_info)
-
-        # Verify the final signal.signal() for each signal restored the prior
-        sigint_restore = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGINT
-        ]
-        sigterm_restore = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGTERM
-        ]
-        self.assertIs(sigint_restore[-1].args[1], prior_sigint)
-        self.assertIs(sigterm_restore[-1].args[1], prior_sigterm)
-
-    async def test_partial_rollback_restores_exact_prior_handler(self) -> None:
-        """Registration failure rolls back and restores the exact prior handler."""
-        prior_sigint = MagicMock()
-        prior_sigterm = MagicMock()
-        lc = _get_lifecycle()
-
-        def fake_getsignal(sig: signal.Signals) -> object:
-            mapping = {signal.SIGINT: prior_sigint, signal.SIGTERM: prior_sigterm}
-            return mapping[sig]
-
-        loop = asyncio.get_running_loop()
-        call_count = 0
-
-        def failing_add(sig: signal.Signals, callback: Callable[..., object], *args: Any) -> None:
-            nonlocal call_count
-            call_count += 1
-            if call_count == _FAIL_ON_SECOND_CALL:
-                msg = "second handler failed"
-                raise RuntimeError(msg)
-            loop.add_signal_handler(sig, callback, *args)
-
-        with (
-            patch("signal.getsignal", side_effect=fake_getsignal),
-            patch.object(loop, "add_signal_handler", new=failing_add),
-            patch("signal.signal") as mock_signal,
-            self.assertRaises(RuntimeError),
-        ):
-            lc._register_signal_handlers()
-
-        self.assertFalse(lc._signal_handlers_registered)
-
-        # The first handler (SIGINT) must have been rolled back and restored
-        sigint_calls = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGINT
-        ]
-        if sigint_calls:
-            self.assertIs(sigint_calls[-1].args[1], prior_sigint)
-
-        # Loop should have no SIGINT handler after rollback
-        removed = loop.remove_signal_handler(signal.SIGINT)
-        self.assertFalse(removed)
-
-    async def test_signal_signal_fallback_restores_exact_prior(self) -> None:
-        """signal.signal fallback path restores the exact prior handler."""
-        prior_sigint = MagicMock()
-        prior_sigterm = MagicMock()
-        lc = _get_lifecycle()
-
-        def fake_getsignal(sig: signal.Signals) -> object:
-            mapping = {signal.SIGINT: prior_sigint, signal.SIGTERM: prior_sigterm}
-            return mapping[sig]
-
-        loop = asyncio.get_running_loop()
-
-        with (
-            patch("signal.getsignal", side_effect=fake_getsignal),
-            patch.object(loop, "add_signal_handler", side_effect=NotImplementedError),
-            patch("signal.signal") as mock_signal,
-        ):
-            lc._register_signal_handlers()
-            self.assertTrue(lc._signal_handlers_registered)
-
-            mock_signal.reset_mock()
-
-            lc._unregister_signal_handlers()
-            self.assertFalse(lc._signal_handlers_registered)
-
-        # Verify the final signal.signal() for each signal restored the prior
-        sigint_calls = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGINT
-        ]
-        sigterm_calls = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGTERM
-        ]
-        self.assertIs(sigint_calls[-1].args[1], prior_sigint)
-        self.assertIs(sigterm_calls[-1].args[1], prior_sigterm)
+        cleanup_mock.assert_awaited_once()
+        self.assertIn(token, coordinator.unregistered)
 
 
 # =========================================================================
@@ -873,7 +728,7 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
             ctxs[1].return_value = _fp_mock()
             ctxs[2].return_value = _sei_mock()
 
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(BrowserStartError):
                 await Browser.start()
 
         mock_pd.close.assert_awaited_once()
@@ -906,7 +761,7 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
             ctxs[1].return_value = _fp_mock()
             ctxs[2].return_value = _sei_mock()
 
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(BrowserStartError):
                 await Browser.start()
 
         mock_pd.close.assert_awaited_once()
@@ -938,7 +793,7 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
             ctxs[1].return_value = _fp_mock()
             ctxs[2].return_value = _sei_mock()
 
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(BrowserStartError):
                 await Browser.start()
 
         self.assertEqual(len(Browser._runtime.target_to_page_map), 0)
@@ -977,15 +832,13 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
             ctxs[1].return_value = _fp_mock()
             ctxs[2].return_value = _sei_mock()
 
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(BrowserStartError):
                 await Browser.start()
 
         mock_main_ctx.close.assert_awaited_once()
         mock_pd.close.assert_awaited_once()
         self.assertIsNone(Browser._runtime.shared_pd)
         self.assertIsNone(Browser._runtime.main_ctx)
-        lc = _get_lifecycle()
-        self.assertFalse(lc._signal_handlers_registered)
 
     async def test_startup_failure_registers_no_handlers(self) -> None:
         """No signal/atexit handlers after failed startup."""
@@ -1005,11 +858,10 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
             ctxs[1].return_value = _fp_mock()
             ctxs[2].return_value = _sei_mock()
 
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(BrowserStartError):
                 await Browser.start()
 
         lc = _get_lifecycle()
-        self.assertFalse(lc._signal_handlers_registered)
         self.assertFalse(lc._atexit_registered)
 
     async def test_startup_failure_partial_state_cleaned(self) -> None:
@@ -1037,15 +889,13 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
             ctxs[1].return_value = _fp_mock()
             ctxs[2].return_value = _sei_mock()
 
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(BrowserStartError):
                 await Browser.start()
 
         mock_prime.close.assert_awaited_once()
         mock_pd.close.assert_awaited_once()
         self.assertIsNone(Browser._runtime.shared_pd)
         self.assertIsNone(Browser._runtime.main_ctx)
-        lc = _get_lifecycle()
-        self.assertFalse(lc._signal_handlers_registered)
 
     async def test_startup_succeeds_with_prime_ctx_path(self) -> None:
         """Full startup with prime_ctx path succeeds end-to-end."""
@@ -1056,6 +906,7 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
         mock_tab._target_id = "target-1"
         mock_pd.connect = AsyncMock(return_value=mock_tab)
         mock_main_ctx = MagicMock()
+        mock_main_ctx.close = AsyncMock()
         mock_main_ctx.pages = [MagicMock()]
 
         bases = _startup_base_patches()
@@ -1072,7 +923,6 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
             ),
             patch("src.browser.driver.runtime.resolve_cdp_ws_url", return_value="ws://localhost:9999"),
             patch.object(BrowserRuntimeState, "minimize_main_window"),
-            patch.object(BrowserLifecycle, "_register_signal_handlers"),
         ]
 
         with _nested(*bases, *extras) as ctxs:
@@ -1089,48 +939,6 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
             raise AssertionError(msg)
         self.assertIsNotNone(driver.shared_pd)
         self.assertIsNotNone(driver.main_ctx)
-
-    # ── Handler registration failure during startup ────────────────
-
-    async def test_handler_registration_failure_during_startup_rolls_back_clients(self) -> None:
-        """If handler registration fails during startup, all clients are rolled back."""
-        mock_pd = MagicMock()
-        mock_pd.close = AsyncMock()
-        mock_pd.connect = AsyncMock()
-        mock_main_ctx = MagicMock()
-        mock_main_ctx.close = AsyncMock()
-        mock_main_ctx.pages = [MagicMock()]
-
-        bases = _startup_base_patches()
-        extras = [
-            patch("src.browser.lifecycle.startup.Path.exists", return_value=True),
-            patch("src.browser.driver.runtime.Chrome", return_value=mock_pd),
-            patch(
-                "src.browser.driver.runtime.launch_persistent_context_async",
-                return_value=mock_main_ctx,
-            ),
-            patch("src.browser.driver.runtime.resolve_cdp_ws_url", return_value="ws://localhost:9999"),
-            patch.object(BrowserRuntimeState, "minimize_main_window"),
-            patch.object(
-                BrowserLifecycle,
-                "_register_signal_handlers",
-                side_effect=RuntimeError("handler registration failed"),
-            ),
-        ]
-
-        with _nested(*bases, *extras) as ctxs:
-            ctxs[1].return_value = _fp_mock()
-            ctxs[2].return_value = _sei_mock()
-
-            with self.assertRaises(RuntimeError):
-                await Browser.start()
-
-        mock_pd.close.assert_awaited_once()
-        mock_main_ctx.close.assert_awaited_once()
-        self.assertIsNone(Browser._runtime.shared_pd)
-        self.assertIsNone(Browser._runtime.main_ctx)
-        lc = _get_lifecycle()
-        self.assertFalse(lc._signal_handlers_registered)
 
     # ── AC-07: Primary error survives driver rollback error ────────
 
@@ -1180,9 +988,8 @@ class StartupRollbackTests(IsolatedAsyncioTestCase):
         # rollback_start called exactly once
         mock_rollback.assert_awaited_once()
 
-        # Signal handlers unregistered
+        # Atexit unregistered
         lc = _get_lifecycle()
-        self.assertFalse(lc._signal_handlers_registered)
         self.assertFalse(lc._atexit_registered)
 
 
@@ -1226,61 +1033,113 @@ class HandlerRegistrationTests(IsolatedAsyncioTestCase):
             await Browser.start()
 
         lc = _get_lifecycle()
-        self.assertTrue(lc._signal_handlers_registered)
         self.assertTrue(lc._atexit_registered)
 
-    async def test_handler_registration_is_transactional(self) -> None:
-        """If one signal handler fails, flag remains False (BUG: currently True)."""
+    async def test_worker_thread_startup_succeeds_and_registers_atexit(self) -> None:
+        """Successful worker startup skips signals but keeps atexit registration."""
+        mock_pd = MagicMock()
+        mock_tab = MagicMock()
+        mock_tab._target_id = "target-worker"
+        mock_pd.connect = AsyncMock(return_value=mock_tab)
+        mock_main_ctx = MagicMock()
+        mock_main_ctx.pages = [MagicMock()]
+
+        bases = _startup_base_patches()
+        extras = [
+            patch("src.browser.lifecycle.startup.Path.exists", return_value=True),
+            patch("src.browser.driver.runtime.Chrome", return_value=mock_pd),
+            patch(
+                "src.browser.driver.runtime.launch_persistent_context_async",
+                return_value=mock_main_ctx,
+            ),
+            patch("src.browser.driver.runtime.resolve_cdp_ws_url", return_value="ws://localhost:9999"),
+            patch.object(BrowserRuntimeState, "minimize_main_window"),
+        ]
+
+        with _nested(*bases, *extras) as ctxs:
+            ctxs[1].return_value = _fp_mock()
+            ctxs[2].return_value = _sei_mock()
+
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                executor.submit(asyncio.run, Browser.start()).result()
+
         lc = _get_lifecycle()
-        loop = asyncio.get_running_loop()
-        original_add = loop.add_signal_handler
-        call_count = 0
+        self.assertIsNotNone(Browser._runtime.main_ctx)
+        self.assertTrue(lc._atexit_registered)
+        ctxs[6].assert_called_once_with(lc.sync_atexit_fallback)
 
-        def failing_add(
-            sig: signal.Signals,
-            callback: Callable[..., object],
-            *args: Any,
-        ) -> None:
-            nonlocal call_count
-            call_count += 1
-            if call_count == _FAIL_ON_SECOND_CALL:
-                msg = "second handler failed"
-                raise RuntimeError(msg)
-            original_add(sig, callback, *args)
+    async def test_start_registers_signal_trigger_after_success(self) -> None:
+        """Successful local start arms one generation-scoped signal trigger."""
+        coordinator = _FakeCoordinator()
+        bases = _startup_base_patches()
+        extras = [
+            patch("src.browser.lifecycle.startup.Path.exists", return_value=True),
+            patch("src.browser.driver.runtime.Chrome", return_value=MagicMock(connect=AsyncMock())),
+            patch(
+                "src.browser.driver.runtime.launch_persistent_context_async",
+                return_value=MagicMock(pages=[MagicMock()]),
+            ),
+            patch("src.browser.driver.runtime.resolve_cdp_ws_url", return_value="ws://localhost:9999"),
+            patch.object(BrowserRuntimeState, "minimize_main_window"),
+            patch("src.browser.lifecycle.startup.get_coordinator", return_value=coordinator),
+        ]
 
-        with patch.object(loop, "add_signal_handler", new=failing_add), self.assertRaises(RuntimeError):
-            lc._register_signal_handlers()
+        with _nested(*bases, *extras) as ctxs:
+            ctxs[1].return_value = _fp_mock()
+            ctxs[2].return_value = _sei_mock()
+            await Browser.start()
 
-        self.assertFalse(lc._signal_handlers_registered)
-
-    async def test_partial_handler_rollback_uninstalls_first_handler(self) -> None:
-        """If the second signal handler fails, the first is uninstalled."""
         lc = _get_lifecycle()
-        loop = asyncio.get_running_loop()
-        original_add = loop.add_signal_handler
-        call_count = 0
+        self.assertEqual(len(coordinator.registered), 1)
+        self.assertIsNotNone(lc._signal_registration)
+        self.assertIs(coordinator.registered[0], lc._signal_registration)
 
-        def failing_add(
-            sig: signal.Signals,
-            callback: Callable[..., object],
-            *args: Any,
-        ) -> None:
-            nonlocal call_count
-            call_count += 1
-            if call_count == _FAIL_ON_SECOND_CALL:
-                msg = "second handler failed"
-                raise RuntimeError(msg)
-            original_add(sig, callback, *args)
+    async def test_connect_registers_signal_trigger_after_success(self) -> None:
+        """Remote attach shares serialized generation-scoped registration."""
+        coordinator = _FakeCoordinator()
+        driver = Browser._runtime
 
-        with patch.object(loop, "add_signal_handler", new=failing_add), self.assertRaises(RuntimeError):
-            lc._register_signal_handlers()
+        async def attach_remote(_config: object) -> None:
+            driver.main_ctx = MagicMock(is_closed=MagicMock(return_value=False))
+            driver.shared_pd = MagicMock()
 
-        self.assertFalse(lc._signal_handlers_registered)
+        with (
+            patch.object(BrowserRuntimeState, "attach_remote", side_effect=attach_remote),
+            patch("src.browser.lifecycle.startup.atexit.register"),
+            patch("src.browser.lifecycle.startup.get_coordinator", return_value=coordinator),
+        ):
+            await Browser.connect("ws://remote")
 
-        # The first handler (SIGINT) must have been rolled back.
-        # remove_signal_handler returns False when no handler is registered.
-        removed = loop.remove_signal_handler(signal.SIGINT)
-        self.assertFalse(removed)
+        lc = _get_lifecycle()
+        self.assertEqual(len(coordinator.registered), 1)
+        self.assertIsNotNone(lc._signal_registration)
+        self.assertIs(coordinator.registered[0], lc._signal_registration)
+
+    async def test_registration_failure_does_not_prevent_startup(self) -> None:
+        """CoordinatorStateError during registration gracefully degrades; startup continues."""
+        coordinator = _FakeCoordinator()
+        coordinator.raise_on_register = CoordinatorStateError("active event")
+        bases = _startup_base_patches()
+        extras = [
+            patch("src.browser.lifecycle.startup.Path.exists", return_value=True),
+            patch("src.browser.driver.runtime.Chrome", return_value=MagicMock(connect=AsyncMock())),
+            patch(
+                "src.browser.driver.runtime.launch_persistent_context_async",
+                return_value=MagicMock(pages=[MagicMock()]),
+            ),
+            patch("src.browser.driver.runtime.resolve_cdp_ws_url", return_value="ws://localhost:9999"),
+            patch.object(BrowserRuntimeState, "minimize_main_window"),
+            patch("src.browser.lifecycle.startup.get_coordinator", return_value=coordinator),
+        ]
+
+        with _nested(*bases, *extras) as ctxs:
+            ctxs[1].return_value = _fp_mock()
+            ctxs[2].return_value = _sei_mock()
+            await Browser.start()
+
+        lc = _get_lifecycle()
+        self.assertIsNone(lc._signal_registration)
+        self.assertTrue(lc._atexit_registered)
 
 
 # =========================================================================
@@ -1307,7 +1166,7 @@ class SyncIntegrationTests(IsolatedAsyncioTestCase):
 
         with (
             patch("src.browser.site.Browser.start"),
-            patch("src.browser.site.Browser.shutdown") as mock_shutdown,
+            patch("src.browser.site.Browser.finally_cleanup") as mock_shutdown,
             patch("src.browser.site.Browser.create", return_value=mock_tg),
             patch("src.browser.site.resolve_site", return_value=mock_site),
             patch("src.browser.site.Cookies"),
@@ -1328,7 +1187,7 @@ class SyncIntegrationTests(IsolatedAsyncioTestCase):
 
         with (
             patch("src.browser.site.Browser.start"),
-            patch("src.browser.site.Browser.shutdown") as mock_shutdown,
+            patch("src.browser.site.Browser.finally_cleanup") as mock_shutdown,
             patch("src.browser.site.Browser.create", return_value=mock_tg),
             patch("src.browser.site.resolve_site", return_value=mock_site),
         ):
@@ -1338,6 +1197,66 @@ class SyncIntegrationTests(IsolatedAsyncioTestCase):
                 await source("http://example.com", 10)
 
         mock_shutdown.assert_awaited_once()
+
+    async def test_source_propagates_cleanup_failure_without_signal_registration(self) -> None:
+        """Source cleanup failure propagates without owning process-signal registration."""
+        events: list[str] = []
+        mock_tg = MagicMock()
+        mock_tg.pd.return_value.get_cookies = AsyncMock(return_value=[])
+
+        async def fail_cleanup(_tg: object) -> None:
+            events.append("cleanup")
+            msg = "cleanup failed"
+            raise RuntimeError(msg)
+
+        with (
+            patch("src.browser.site.Browser.start"),
+            patch("src.browser.site.Browser.create", return_value=mock_tg),
+            patch("src.browser.site.fetch", new=AsyncMock(return_value=MagicMock())),
+            patch("src.browser.site.Browser.finally_cleanup", side_effect=fail_cleanup),
+            patch("src.browser.site.Cookies"),
+        ):
+            from src.browser.site import source  # noqa: PLC0415
+
+            with self.assertRaisesRegex(RuntimeError, "cleanup failed"):
+                await source("http://example.com", 10)
+
+        self.assertEqual(events, ["cleanup"])
+
+    async def test_source_cleanup_starts_after_fetch_cancellation(self) -> None:
+        """Source retains ordinary finally cleanup when fetch is cancelled."""
+        mock_tg = MagicMock()
+        fetch_started = asyncio.Event()
+        cleanup_started = asyncio.Event()
+        release_cleanup = asyncio.Event()
+
+        async def blocked_fetch(*_args: object) -> object:
+            fetch_started.set()
+            await asyncio.Event().wait()
+            return object()  # pragma: no cover
+
+        async def blocked_cleanup(_tg: object) -> None:
+            cleanup_started.set()
+            await release_cleanup.wait()
+
+        with (
+            patch("src.browser.site.Browser.start"),
+            patch("src.browser.site.Browser.create", return_value=mock_tg),
+            patch("src.browser.site.fetch", side_effect=blocked_fetch),
+            patch("src.browser.site.Browser.finally_cleanup", side_effect=blocked_cleanup),
+        ):
+            from src.browser.site import source  # noqa: PLC0415
+
+            source_task = asyncio.create_task(source("http://example.com", 10))
+            await fetch_started.wait()
+            source_task.cancel()
+            await cleanup_started.wait()
+
+            self.assertFalse(source_task.done())
+
+            release_cleanup.set()
+            with self.assertRaises(asyncio.CancelledError):
+                await source_task
 
 
 # =========================================================================
@@ -1359,7 +1278,7 @@ class AtexitSyncTests(TestCase):
         lc._owns_local_profile = True
 
         with patch.object(BrowserLifecycle, "pack_profile") as mock_pack:
-            lc._sync_atexit_fallback()
+            lc.sync_atexit_fallback()
 
         mock_pack.assert_called_once()
 
@@ -1369,7 +1288,7 @@ class AtexitSyncTests(TestCase):
         lc._shutdown_state = BrowserShutdownState.SUCCEEDED
 
         with patch.object(BrowserLifecycle, "pack_profile") as mock_pack:
-            lc._sync_atexit_fallback()
+            lc.sync_atexit_fallback()
 
         mock_pack.assert_not_called()
 
@@ -1380,7 +1299,7 @@ class AtexitSyncTests(TestCase):
         lc._owns_local_profile = True
 
         with patch.object(BrowserLifecycle, "pack_profile") as mock_pack:
-            lc._sync_atexit_fallback()
+            lc.sync_atexit_fallback()
 
         mock_pack.assert_called_once()
 
@@ -1394,7 +1313,7 @@ class AtexitSyncTests(TestCase):
             patch.object(BrowserLifecycle, "pack_profile") as mock_pack,
             patch.object(Browser, "shutdown") as mock_shutdown,
         ):
-            lc._sync_atexit_fallback()
+            lc.sync_atexit_fallback()
 
         mock_shutdown.assert_not_called()
         mock_pack.assert_called_once()
@@ -1406,7 +1325,43 @@ class AtexitSyncTests(TestCase):
         lc._owns_local_profile = True
 
         with patch.object(BrowserLifecycle, "pack_profile", side_effect=RuntimeError("pack failed")):
-            lc._sync_atexit_fallback()  # Must not raise
+            lc.sync_atexit_fallback()  # Must not raise
+
+
+class BrowserLifecycleSignalBoundaryTests(IsolatedAsyncioTestCase):
+    """Regression coverage for lifecycle signal ownership boundary."""
+
+    def setUp(self: Self) -> None:
+        """Reset singleton state before each facade compatibility assertion."""
+        _reset_browser_state()
+
+    def test_lifecycle_does_not_expose_generic_signal_handler_compatibility_wrappers(self) -> None:
+        """Boundary: lifecycle keeps cleanup registration without generic install wrappers."""
+        lifecycle = _get_lifecycle()
+        stale_names = [
+            "_register_signal_handlers",
+            "_unregister_signal_handlers",
+            "dispatch_exit_signal",
+            "_handle_signal_exit",
+            "force_exit",
+            "_consume_signal_metadata",
+            "_terminate_by_signal",
+        ]
+
+        for name in stale_names:
+            self.assertFalse(hasattr(lifecycle, name), name)
+
+    async def test_lifecycle_retains_browser_cleanup_registration_and_ack(self) -> None:
+        """Happy path: lifecycle owns callback registration, unregister, and terminal ack only."""
+        lifecycle = _get_lifecycle()
+        coordinator = _FakeCoordinator()
+
+        with patch("src.browser.lifecycle.startup.get_coordinator", return_value=coordinator):
+            lifecycle._register_signal_cleanup()
+            lifecycle._unregister_signal_cleanup()
+
+        self.assertEqual(len(coordinator.registered), 1)
+        self.assertEqual(coordinator.unregistered, coordinator.registered)
 
 
 # =========================================================================
@@ -1454,7 +1409,6 @@ class ReuseTests(IsolatedAsyncioTestCase):
 
                 if cycle == 0:
                     lc = _get_lifecycle()
-                    self.assertTrue(lc._signal_handlers_registered)
                     self.assertEqual(lc._shutdown_state, BrowserShutdownState.NOT_STARTED)
 
             # Shutdown each cycle
@@ -1464,7 +1418,6 @@ class ReuseTests(IsolatedAsyncioTestCase):
             lc = _get_lifecycle()
             self.assertIs(lc._shutdown_state, BrowserShutdownState.SUCCEEDED)
             self.assertIsNone(lc._shutdown_task)
-            self.assertFalse(lc._signal_handlers_registered)
 
     async def test_shutdown_allows_new_create_after_reuse(self) -> None:
         """create() must work after a completed shutdown cycle."""
@@ -1515,7 +1468,7 @@ class StartDuringShutdownTests(IsolatedAsyncioTestCase):
         _reset_browser_state()
 
     async def test_start_rejected_when_cleanup_running(self) -> None:
-        """start() raises FailedToStartBrowserError when state is IN_PROGRESS."""
+        """start() raises BrowserStartError when state is IN_PROGRESS."""
         lc = _get_lifecycle()
         lc._shutdown_state = BrowserShutdownState.IN_PROGRESS
         cleanup_task = asyncio.create_task(asyncio.sleep(999))
@@ -1524,7 +1477,7 @@ class StartDuringShutdownTests(IsolatedAsyncioTestCase):
 
         with (
             patch.object(Browser, "_cleanup_resources") as mock_cleanup,
-            self.assertRaises(FailedToStartBrowserError),
+            self.assertRaises(BrowserStartError),
         ):
             await Browser.start()
 
@@ -1540,7 +1493,7 @@ class StartDuringShutdownTests(IsolatedAsyncioTestCase):
         lc = _get_lifecycle()
         lc._shutdown_state = BrowserShutdownState.IN_PROGRESS
 
-        with self.assertRaises(FailedToStartBrowserError):
+        with self.assertRaises(BrowserStartError):
             await Browser.start()
 
         # State still IN_PROGRESS after rejection
@@ -1554,7 +1507,6 @@ class StartDuringShutdownTests(IsolatedAsyncioTestCase):
         # start() resets SUCCEEDED to NOT_STARTED early, before resource init.
         # Mock the failing resource so the assertion is on state, not the crash.
         with (
-            patch.object(BrowserLifecycle, "_register_signal_handlers"),
             patch("src.browser.lifecycle.startup.FingerprintManager") as mock_fp,
             patch("src.browser.lifecycle.startup.SearchEngineInjector") as mock_sei,
             patch("src.browser.lifecycle.startup.get_free_port", return_value=9999),
@@ -1573,7 +1525,7 @@ class StartDuringShutdownTests(IsolatedAsyncioTestCase):
             chrome_mock = MagicMock()
             chrome_mock.close = AsyncMock()
             mock_chrome.return_value = chrome_mock
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(BrowserStartError):
                 await Browser.start()
 
         # State was reset from SUCCEEDED before launch failed
@@ -1593,366 +1545,32 @@ class StartDuringShutdownTests(IsolatedAsyncioTestCase):
         self.assertEqual(lc._shutdown_state, BrowserShutdownState.NOT_STARTED)
 
 
-# =========================================================================
-# Defect 2: _terminate_by_signal restores prior exactly once
-# =========================================================================
-
-
-class SignalTerminateRestorationTests(IsolatedAsyncioTestCase):
-    """_terminate_by_signal must restore prior handler once without SIG_DFL."""
-
-    def setUp(self: Self) -> None:
-        """Reset class state."""
-        _reset_browser_state()
-
-    async def test_terminate_restores_prior_exactly_once(self) -> None:
-        """_terminate_by_signal restores prior and calls raise_signal once."""
-        lc = _get_lifecycle()
-        prior = MagicMock()
-        lc._prior_signal_info[signal.SIGTERM] = (
-            "add_signal_handler", prior, None,
-        )
-
-        with (
-            patch("signal.signal") as mock_signal,
-            patch("signal.raise_signal") as mock_raise,
-            patch("os._exit"),
-        ):
-            lc._terminate_by_signal(signal.SIGTERM)
-
-        # signal.signal called exactly once with the prior handler
-        sigterm_calls = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGTERM
-        ]
-        self.assertEqual(len(sigterm_calls), 1)
-        self.assertIs(sigterm_calls[-1].args[1], prior)
-
-        # No SIG_DFL anywhere
-        dfl_calls = [c for c in mock_signal.call_args_list if c.args[1] is signal.SIG_DFL]
-        self.assertEqual(len(dfl_calls), 0)
-
-        # raise_signal called
-        mock_raise.assert_called_once_with(signal.SIGTERM)
-
-    async def test_terminate_falls_back_to_sig_dfl(self) -> None:
-        """_terminate_by_signal uses SIG_DFL when no prior handler saved."""
-        lc = _get_lifecycle()
-        self.assertEqual(len(lc._prior_signal_info), 0)
-
-        with (
-            patch("signal.signal") as mock_signal,
-            patch("signal.raise_signal"),
-            patch("os._exit"),
-        ):
-            lc._terminate_by_signal(signal.SIGTERM)
-
-        # signal.signal called with SIG_DFL
-        sigterm_calls = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGTERM
-        ]
-        self.assertGreaterEqual(len(sigterm_calls), 1)
-        dfl_calls = [c for c in sigterm_calls if c.args[1] is signal.SIG_DFL]
-        self.assertGreaterEqual(len(dfl_calls), 1)
-
-    async def test_terminate_uses_install_loop_for_removal(self) -> None:
-        """_terminate_by_signal removes handler from saved install loop."""
-        lc = _get_lifecycle()
-        install_loop = MagicMock()
-        install_loop.remove_signal_handler = MagicMock()
-        lc._prior_signal_info[signal.SIGTERM] = (
-            "add_signal_handler", MagicMock(), install_loop,
-        )
-
-        with (
-            patch("signal.signal"),
-            patch("signal.raise_signal"),
-            patch("os._exit"),
-        ):
-            lc._terminate_by_signal(signal.SIGTERM)
-
-        # Must have used the saved install_loop, not current loop
-        install_loop.remove_signal_handler.assert_called_once_with(signal.SIGTERM)
-
-    async def test_terminate_handles_closed_install_loop(self) -> None:
-        """_terminate_by_signal tolerates RuntimeError from closed loop."""
-        lc = _get_lifecycle()
-        install_loop = MagicMock()
-        install_loop.remove_signal_handler = MagicMock(
-            side_effect=RuntimeError("closed loop"),
-        )
-        lc._prior_signal_info[signal.SIGTERM] = (
-            "add_signal_handler", MagicMock(), install_loop,
-        )
-
-        with (
-            patch("signal.signal"),
-            patch("signal.raise_signal"),
-            patch("os._exit"),
-        ):
-            lc._terminate_by_signal(signal.SIGTERM)  # Must not raise
-
-    async def test_terminate_prior_none_does_not_raise(self) -> None:
-        """_terminate_by_signal with prior=None (no prior info) does not raise."""
-        lc = _get_lifecycle()
-        with (
-            patch("signal.signal"),
-            patch("signal.raise_signal"),
-            patch("os._exit"),
-        ):
-            lc._terminate_by_signal(signal.SIGTERM)  # Must not raise
-
-
-# =========================================================================
-# Defect 3: _unregister_signal_handlers uses install loop, not current loop
-# =========================================================================
-
-
-class UnregisterLoopTests(IsolatedAsyncioTestCase):
-    """_unregister_signal_handlers must target saved install_loop."""
-
-    def setUp(self: Self) -> None:
-        """Reset class state."""
-        _reset_browser_state()
-
-    async def test_unregister_uses_install_loop_not_current(self) -> None:
-        """Handler removal uses saved install_loop, not current loop."""
-        lc = _get_lifecycle()
-        install_loop = MagicMock()
-        install_loop.remove_signal_handler = MagicMock()
-
-        lc._prior_signal_info[signal.SIGINT] = (
-            "add_signal_handler", MagicMock(), install_loop,
-        )
-        lc._prior_signal_info[signal.SIGTERM] = (
-            "add_signal_handler", MagicMock(), install_loop,
-        )
-        lc._signal_handlers_registered = True
-
-        with patch("signal.signal"):
-            lc._unregister_signal_handlers()
-
-        # Both signals removed from the saved install loop
-        install_loop.remove_signal_handler.assert_any_call(signal.SIGINT)
-        install_loop.remove_signal_handler.assert_any_call(signal.SIGTERM)
-        self.assertEqual(install_loop.remove_signal_handler.call_count, 2)
-
-        # Flag cleared
-        self.assertFalse(lc._signal_handlers_registered)
-
-    async def test_unregister_handles_closed_install_loop(self) -> None:
-        """Closed install loop (RuntimeError) is tolerated."""
-        lc = _get_lifecycle()
-        install_loop = MagicMock()
-        install_loop.remove_signal_handler = MagicMock(
-            side_effect=RuntimeError("closed loop"),
-        )
-
-        lc._prior_signal_info[signal.SIGINT] = (
-            "add_signal_handler", MagicMock(), install_loop,
-        )
-        lc._signal_handlers_registered = True
-
-        with patch("signal.signal"):
-            lc._unregister_signal_handlers()  # Must not raise
-
-        self.assertFalse(lc._signal_handlers_registered)
-
-    async def test_unregister_handles_value_error(self) -> None:
-        """ValueError from remove_signal_handler is tolerated."""
-        lc = _get_lifecycle()
-        install_loop = MagicMock()
-        install_loop.remove_signal_handler = MagicMock(
-            side_effect=ValueError("handler not found"),
-        )
-
-        lc._prior_signal_info[signal.SIGINT] = (
-            "add_signal_handler", MagicMock(), install_loop,
-        )
-        lc._signal_handlers_registered = True
-
-        with patch("signal.signal"):
-            lc._unregister_signal_handlers()  # Must not raise
-
-        self.assertFalse(lc._signal_handlers_registered)
-
-    async def test_unregister_skips_when_install_loop_none(self) -> None:
-        """When install_loop is None, handler removal is skipped (no crash)."""
-        lc = _get_lifecycle()
-        lc._prior_signal_info[signal.SIGINT] = (
-            "add_signal_handler", MagicMock(), None,
-        )
-        lc._signal_handlers_registered = True
-
-        with patch("signal.signal"):
-            lc._unregister_signal_handlers()  # Must not raise
-
-        self.assertFalse(lc._signal_handlers_registered)
-
-    async def test_unregister_skips_non_add_signal_handler_kind(self) -> None:
-        """signal.signal fallback kind skips loop removal entirely."""
-        lc = _get_lifecycle()
-        lc._prior_signal_info[signal.SIGINT] = (
-            "signal.signal", MagicMock(), MagicMock(),
-        )
-        lc._signal_handlers_registered = True
-
-        with patch("signal.signal"):
-            lc._unregister_signal_handlers()  # Must not raise
-
-        self.assertFalse(lc._signal_handlers_registered)
-
-
-# =========================================================================
-# Defect 4: Full-path signal shutdown restoration
-# =========================================================================
-
-
-class FullPathSignalRestorationTests(IsolatedAsyncioTestCase):
-    """Full-path: dispatch -> cleanup -> unregister -> terminate -> re-deliver.
-
-    The triggering signal's install record must survive _unregister_signal_handlers
-    so _terminate_by_signal can restore the exact prior handler instead of SIG_DFL.
-    """
-
-    def setUp(self: Self) -> None:
-        """Reset class state."""
-        _reset_browser_state()
-
-    async def test_full_path_restores_prior_exactly_once(self) -> None:
-        """Full dispatch-to-delivery: exact prior handler installed, no SIG_DFL."""
-        lc = _get_lifecycle()
-        prior = MagicMock()
-        lc._prior_signal_info[signal.SIGTERM] = (
-            "add_signal_handler", prior, asyncio.get_running_loop(),
-        )
-        lc._signal_handlers_registered = True
-
-        with (
-            patch.object(BrowserLifecycle, "do_sync_chores_before_exit"),
-            patch.object(BrowserRuntimeState, "close_all_groups_and_pages", new=AsyncMock()),
-            patch("signal.signal") as mock_signal,
-            patch("signal.raise_signal") as mock_raise,
-            patch("os._exit"),
-        ):
-            # This simulates what the signal handler does
-            lc._dispatch_exit_signal(signal.SIGTERM)
-            sig_task = lc._signal_exit_task
-            if sig_task is not None:
-                await sig_task
-
-        # Verify termination restored the prior handler
-        sigterm_calls = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGTERM
-        ]
-        self.assertEqual(len(sigterm_calls), 1)
-        self.assertIs(sigterm_calls[-1].args[1], prior)
-
-        mock_raise.assert_called_once_with(signal.SIGTERM)
-
-    async def test_full_path_sig_dfl_when_no_prior(self) -> None:
-        """Full path uses SIG_DFL when no prior handler exists."""
-        lc = _get_lifecycle()
-        lc._signal_handlers_registered = True
-
-        with (
-            patch.object(BrowserLifecycle, "do_sync_chores_before_exit"),
-            patch.object(BrowserRuntimeState, "close_all_groups_and_pages", new=AsyncMock()),
-            patch("signal.signal") as mock_signal,
-            patch("signal.raise_signal"),
-            patch("os._exit"),
-        ):
-            lc._dispatch_exit_signal(signal.SIGTERM)
-            sig_task = lc._signal_exit_task
-            if sig_task is not None:
-                await sig_task
-
-        # Must call SIG_DFL at least once
-        sigterm_calls = [
-            c for c in mock_signal.call_args_list
-            if c.args[0] == signal.SIGTERM
-        ]
-        dfl_calls = [c for c in sigterm_calls if c.args[1] is signal.SIG_DFL]
-        self.assertGreaterEqual(len(dfl_calls), 1)
-
-    async def test_full_path_clears_preserved_info_after_usage(self) -> None:
-        """After full path, preserved_signal_info must be None."""
-        lc = _get_lifecycle()
-        prior = MagicMock()
-        lc._prior_signal_info[signal.SIGTERM] = (
-            "add_signal_handler", prior, asyncio.get_running_loop(),
-        )
-        lc._signal_handlers_registered = True
-
-        with (
-            patch.object(BrowserLifecycle, "do_sync_chores_before_exit"),
-            patch.object(BrowserRuntimeState, "close_all_groups_and_pages", new=AsyncMock()),
-            patch("signal.signal"),
-            patch("signal.raise_signal"),
-            patch("os._exit"),
-        ):
-            lc._dispatch_exit_signal(signal.SIGTERM)
-            sig_task = lc._signal_exit_task
-            if sig_task is not None:
-                await sig_task
-
-        self.assertIsNone(lc._preserved_signal_info)
-
-
-# =========================================================================
-# Defect 5: _consume_signal_metadata edge cases
-# =========================================================================
-
-
-class ConsumeSignalMetadataTests(IsolatedAsyncioTestCase):
-    """_consume_signal_metadata edge cases."""
-
-    def setUp(self: Self) -> None:
-        """Reset class state."""
-        _reset_browser_state()
-
-    async def test_consume_signal_metadata_returns_sig_dfl_when_no_data(self) -> None:
-        """With no prior info, consume returns SIG_DFL."""
-        lc = _get_lifecycle()
-        handler = lc._consume_signal_metadata(signal.SIGTERM)
-        self.assertIs(handler, signal.SIG_DFL)
-
-    async def test_consume_signal_metadata_clears_preserved(self) -> None:
-        """Consume clears _preserved_signal_info after consuming last entry."""
-        lc = _get_lifecycle()
-        lc._preserved_signal_info = {signal.SIGTERM: ("kind", MagicMock(), None)}
-        lc._prior_signal_info[signal.SIGTERM] = ("kind", MagicMock(), None)
-
-        handler = lc._consume_signal_metadata(signal.SIGTERM)
-        self.assertIsNot(handler, signal.SIG_DFL)
-        self.assertIsNone(lc._preserved_signal_info)
-
-
-# =========================================================================
-# Helpers
-# =========================================================================
-
-
-def _nested(*patches: contextlib.AbstractContextManager[object]) -> contextlib.AbstractContextManager[list[object]]:
+def _nested(
+    *patches: contextlib.AbstractContextManager[MagicMock],
+) -> contextlib.AbstractContextManager[list[MagicMock]]:
     """Apply several context-manager patches at once.
 
     Returns a list so callers can index into it for mock return values.
     """
+
     class _NestedStack:
         """Helper that enters all patches and returns their values."""
 
-        def __init__(self, *patches: object) -> None:
+        def __init__(self, *patches: contextlib.AbstractContextManager[MagicMock]) -> None:
             self._stack = contextlib.ExitStack()
-            self._values: list[object] = []
+            self._values: list[MagicMock] = []
             for p in patches:
                 self._values.append(self._stack.enter_context(p))
 
-        def __enter__(self) -> list[object]:
+        def __enter__(self) -> list[MagicMock]:
             return self._values
 
-        def __exit__(self, *exc: object) -> None:
-            return self._stack.__exit__(*exc)
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc: BaseException | None,
+            tb: TracebackType | None,
+        ) -> bool | None:
+            return self._stack.__exit__(exc_type, exc, tb)
 
     return _NestedStack(*patches)
