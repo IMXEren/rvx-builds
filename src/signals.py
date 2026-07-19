@@ -539,9 +539,7 @@ class SignalCoordinator:
 
             # The signal handler may already have frozen the old snapshot. In
             # that case removal cannot prevent this cleanup from running.
-            return (
-                self._phase is CoordinatorPhase.ACTIVE or token._identifier not in self._frozen_identifiers
-            )  # noqa: SLF001
+            return self._phase is CoordinatorPhase.ACTIVE or token._identifier not in self._frozen_identifiers
 
     def registration_active(self, token: RegistrationToken) -> bool:
         """Return whether *token* still represents an active registration."""
