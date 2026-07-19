@@ -1,4 +1,4 @@
-# ruff: noqa 
+# ruff: noqa
 # Ref: https://gist.githubusercontent.com/tylerneylon/a7ff6017b7a1f9a506cf75aa23eacfd6/raw/6c8829fa44671a87557a49167f7283401c2d55df/rwlock.py
 """rwlock.py
 
@@ -15,15 +15,16 @@ Code written by Tyler Neylon at Unbox Research.
 This file is public domain.
 """
 
-
 # _______________________________________________________________________
 # Imports
 
 from collections.abc import Iterator
 from contextlib import contextmanager
 from threading import Lock
+
 # _______________________________________________________________________
 # Class
+
 
 class RWLock(object):
     """RWLock class; this is meant to allow an object to be read from by

@@ -1,11 +1,13 @@
 """Fingerprint management."""
 
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
-from pydoll.browser.options import ChromiumOptions
 from pydoll.constants import PageLoadState
 
 from src.browser.options import BrowserOptions
+
+if TYPE_CHECKING:
+    from pydoll.browser.options import ChromiumOptions
 
 
 class FingerprintManager:
@@ -27,7 +29,7 @@ class FingerprintManager:
         self.options.add_argument(f"--fingerprint-screen-width={screen['width']}")
         self.options.add_argument(f"--fingerprint-screen-height={screen['height']}")
 
-        self.options.add_argument("--fingerprint-storage-quota=1000") # in MB
+        self.options.add_argument("--fingerprint-storage-quota=1000")  # in MB
         self.options.add_argument("--fingerprint-noise=false")
         self.options.add_argument("--fingerprint-windows-font-metrics")
         self.options.add_argument("--fingerprint-allow-3p-cookies")

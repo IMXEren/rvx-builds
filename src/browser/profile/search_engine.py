@@ -37,7 +37,11 @@ from Crypto.Cipher import AES
 
 # Chromium OSCrypt fallback: PBKDF2-HMAC-SHA1("peanuts", "saltysalt", 1 iter)
 _OSCRYPT_KEY: bytes = hashlib.pbkdf2_hmac(
-    "sha1", b"peanuts", b"saltysalt", 1, dklen=16,
+    "sha1",
+    b"peanuts",
+    b"saltysalt",
+    1,
+    dklen=16,
 )
 _OSCRYPT_IV: bytes = b" " * 16  # fixed IV: 16 spaces
 
@@ -74,6 +78,7 @@ def _next_keyword_id(db: sqlite3.Connection) -> int:
 # Public API
 # ---------------------------------------------------------------------------
 
+
 class SearchEngineInjector:
     """Inject a custom search engine and promote it to the default.
 
@@ -91,8 +96,7 @@ class SearchEngineInjector:
 
         if not self._db_path.exists():
             msg = (
-                f"Web Data not found at {self._db_path}. "
-                "Launch Chrome in this profile at least once to generate it."
+                f"Web Data not found at {self._db_path}. " "Launch Chrome in this profile at least once to generate it."
             )
             raise RuntimeError(msg)
 
@@ -224,6 +228,7 @@ class SearchEngineInjector:
     def __exit__(self, *args: object) -> None:
         """Close DB connection on context exit."""
         self.close()
+
 
 # ============================================================================
 # RE DOCUMENTATION -- keep for reference when forking

@@ -404,7 +404,8 @@ class BrowserLifecycle:
             else:
                 self._shutdown_state = BrowserShutdownState.IN_PROGRESS
                 cleanup_to_await = asyncio.get_running_loop().create_task(
-                    self._do_shutdown(), name="browser-cleanup",
+                    self._do_shutdown(),
+                    name="browser-cleanup",
                 )
                 self._shutdown_task = cleanup_to_await
 
