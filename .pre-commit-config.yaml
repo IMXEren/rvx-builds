@@ -23,7 +23,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.15.17'
+    rev: 'v0.15.22'
     hooks:
       - id: ruff
         args:
@@ -38,14 +38,14 @@ repos:
           - "--config=pyproject.toml"
 
   - repo: https://github.com/pycqa/isort
-    rev: 9.0.0a3
+    rev: 9.0.0b1
     hooks:
       - id: isort
         args:
           - "--settings-path=pyproject.toml"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.1.0
+    rev: v2.3.0
     hooks:
       - id: mypy
         args:

@@ -10,7 +10,7 @@ python-dotenv==1.2.2
 requests==2.34.2
 tqdm==4.68.1
 pydoll-python @git+https://github.com/IMXEren/pydoll.git@2.24.1
-cloakbrowser[geoip]==0.4.10
+cloakbrowser[geoip]==0.4.12
 pycryptodome==3.23.0
 turbohtml==1.4.0
 curl_cffi==0.15.0
