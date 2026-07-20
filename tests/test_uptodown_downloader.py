@@ -29,7 +29,7 @@ def _config() -> "RevancedConfig":
 
 def _download_headers() -> dict[str, str]:
     """Mirror the auth headers Uptodown expects when resolving signed direct download tokens."""
-    return {
+    return request_header | {
         "User-Agent": request_header["User-Agent"],
         "Authorization": request_header["Authorization"],
     }

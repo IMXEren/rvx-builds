@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.browser.browser import Browser, TabGroup
 from src.browser.driver import BrowserRuntimeState
+from src.browser.exceptions import BrowserTabError
 from src.browser.lifecycle import BrowserLifecycle
 
 # ruff: noqa: PT009, PT027, SLF001
@@ -115,7 +116,7 @@ class BrowserDriverOperationsTests(IsolatedAsyncioTestCase):
             group = await Browser._create_from_running()
             await group.new_tab()
 
-        with self.assertRaisesRegex(RuntimeError, "does not belong"):
+        with self.assertRaisesRegex(BrowserTabError, "does not belong"):
             await group.close("foreign")
         await group.close("child")
 
