@@ -133,7 +133,7 @@ class UptoDown(Downloader):
                     "download_url": dl_url,
                     "archs": list(parsed_archs),
                     "density": parsed_density,
-                }
+                },
             )
 
         return variants
@@ -230,7 +230,7 @@ class UptoDown(Downloader):
                             variant_result = self._select_best_variant(app, app_code, version_id)
                             if variant_result is not None:
                                 return variant_result
-                        download_url = f"{version_url_data['url']}/{version_url_data['extraURL']}/" f"{version_id}"
+                        download_url = f"{version_url_data['url']}/{version_url_data['extraURL']}/{version_id}"
                     else:
                         download_url = f"{version_url_data}-x"
                     version_found = True
