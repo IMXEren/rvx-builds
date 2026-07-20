@@ -33,8 +33,6 @@ from collections.abc import Awaitable, Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Self, TypeVar
 
-from loguru import logger
-
 if TYPE_CHECKING:
     import concurrent.futures
     from subprocess import Popen
@@ -96,8 +94,8 @@ def _drain_pending_calls(_argument: ctypes.c_void_p) -> int:
 
         try:
             callback()
-        except BaseException:  # noqa: BLE001
-            logger.exception("Main-thread pending callback failed.")
+        except BaseException as e:  # noqa: BLE001
+            os.write(2, f"[pid={os.getpid()}] Main-thread pending callback failed:\n{e}\n".encode())
 
 
 try:
@@ -377,6 +375,7 @@ class SignalCoordinator:
         *,
         signals: Iterable[signal.Signals] = MANAGED_SIGNALS,
         grace_period: float = DEFAULT_GRACE_PERIOD,
+        redeliver: bool = True,
     ) -> None:
         managed = tuple(dict.fromkeys(signals))  # dedup with order preserving
         if not managed:
@@ -388,6 +387,7 @@ class SignalCoordinator:
 
         self._signals = managed
         self._grace_period = float(grace_period)
+        self._redeliver = redeliver
         self._phase = CoordinatorPhase.NEW
         self._prior_handlers: dict[signal.Signals, SignalHandler] = {}
 
@@ -539,7 +539,10 @@ class SignalCoordinator:
 
             # The signal handler may already have frozen the old snapshot. In
             # that case removal cannot prevent this cleanup from running.
-            return self._phase is CoordinatorPhase.ACTIVE or token._identifier not in self._frozen_identifiers
+            return (
+                self._phase is CoordinatorPhase.ACTIVE
+                or token._identifier not in self._frozen_identifiers  # noqa: SLF001
+            )
 
     def registration_active(self, token: RegistrationToken) -> bool:
         """Return whether *token* still represents an active registration."""
@@ -587,10 +590,11 @@ class SignalCoordinator:
             CoordinatorPhase.DRAINING,
             CoordinatorPhase.FINALIZING,
         ):
-            logger.warning(
-                "Received {} during graceful shutdown; escalating.",
-                received.name,
+            os.write(
+                2,
+                f"[pid={os.getpid()}] Received {received.name} during graceful shutdown; escalating.\n".encode(),
             )
+
             self._abort.set()
             future = self._active_async_future
             if future is not None:
@@ -610,9 +614,10 @@ class SignalCoordinator:
 
             remaining = self._remaining_grace()
             if remaining <= 0:
-                logger.warning(
-                    "Grace period expired; skipping {} cleanup handler(s).",
-                    len(registrations) - index,
+                os.write(
+                    2,
+                    f"[pid={os.getpid()}] Grace period expired; "
+                    f"skipping {len(registrations) - index} cleanup handler(s).\n".encode(),
                 )
                 break
 
@@ -631,8 +636,10 @@ class SignalCoordinator:
             # signal handlers itself. Preserve the failure loudly rather than
             # pretending native propagation was restored.
             triggering = self._require_triggering_signal()
-            logger.exception(
-                "Unable to finalize signal handling on the main thread; terminating with signal exit status.",
+            os.write(
+                2,
+                f"[pid={os.getpid()}] Unable to finalize signal handling on the main thread; "
+                "terminating with signal exit status.\n".encode(),
             )
             os._exit(128 + int(triggering))
 
@@ -677,26 +684,24 @@ class SignalCoordinator:
                     future.result(timeout=timeout)
                 except TimeoutError:
                     future.cancel()
-                    logger.warning(
-                        "Cleanup {} exceeded its {:.3f}s timeout.",
-                        registration.name,
-                        timeout,
+                    os.write(
+                        2,
+                        f"[pid={os.getpid()}] Cleanup {registration.name} "
+                        "exceeded its {timeout:.3f}s timeout.\n".encode(),
                     )
                 finally:
                     with self._lock:
                         if self._active_async_future is future:
                             self._active_async_future = None
         except BaseException:  # noqa: BLE001
-            logger.exception("Cleanup {} failed.", registration.name)
+            os.write(2, f"[pid={os.getpid()}] Cleanup {registration.name} failed.\n".encode())
         finally:
             elapsed = time.monotonic() - started
             if registration.owner_loop is None and elapsed > timeout:
-                logger.warning(
-                    "Synchronous cleanup {} returned after {:.3f}s "
-                    "(limit {:.3f}s); synchronous callbacks cannot be pre-empted.",
-                    registration.name,
-                    elapsed,
-                    timeout,
+                os.write(
+                    2,
+                    f"[pid={os.getpid()}] Synchronous cleanup {registration.name} returned after {elapsed:.3f}s "
+                    f"(limit {timeout:.3f}s); synchronous callbacks cannot be pre-empted.\n".encode(),
                 )
 
     @staticmethod
@@ -706,10 +711,10 @@ class SignalCoordinator:
         if inspect.isawaitable(result):
             await result
         elif result is not None:
-            logger.debug(
-                "Cleanup {} returned non-awaitable value {!r}; ignoring it.",
-                registration.name,
-                result,
+            os.write(
+                2,
+                f"[pid={os.getpid()}] Cleanup {registration.name}"
+                " returned non-awaitable value {result!r}; ignoring it.\n".encode(),
             )
 
     def _finalize_on_main_thread(self) -> None:
@@ -720,16 +725,17 @@ class SignalCoordinator:
         triggering = self._require_triggering_signal()
         self._detach_and_restore_on_main()
 
-        # Do not redeliver from inside the ctypes pending-call callback: a prior
-        # Python handler may raise (for example KeyboardInterrupt), and ctypes
-        # callback boundaries suppress normal exception propagation. A helper
-        # thread redelivers after this callback has returned to the interpreter.
-        threading.Thread(
-            target=self._redeliver_after_pending_call,
-            args=(triggering,),
-            name="signal-coordinator-redelivery",
-            daemon=True,
-        ).start()
+        if self._redeliver:
+            # Do not redeliver from inside the ctypes pending-call callback: a prior
+            # Python handler may raise (for example KeyboardInterrupt), and ctypes
+            # callback boundaries suppress normal exception propagation. A helper
+            # thread redelivers after this callback has returned to the interpreter.
+            threading.Thread(
+                target=self._redeliver_after_pending_call,
+                args=(triggering,),
+                name="signal-coordinator-redelivery",
+                daemon=True,
+            ).start()
 
     def _propagate_from_main(self, signum: signal.Signals) -> None:
         """Immediately restore handlers and redeliver from a real signal path."""
@@ -756,7 +762,8 @@ class SignalCoordinator:
     def _restore_handlers(self) -> None:
         """Restore every prior managed handler; main-thread-only."""
         self._assert_main_thread()
-        for managed_signal, prior_handler in self._prior_handlers.items():
+        handlers = list(self._prior_handlers.items())
+        for managed_signal, prior_handler in handlers:
             signal.signal(managed_signal, prior_handler)
         self._prior_handlers.clear()
 
