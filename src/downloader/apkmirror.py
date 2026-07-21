@@ -49,10 +49,13 @@ class ApkMirror(Downloader):
         pass the download page URL as a Referer header — exactly what the
         twitter-apk reference implementation does — to satisfy Cloudflare checks.
         """
-        link_page_source = self._extract_source(link)
-        notes_divs = self._extracted_search_source_div(link_page_source, "tab-pane")
+        link_page_doc = turbohtml.parse(self._extract_source(link))
+        download_links_container = link_page_doc.find(class_="tab-pane")
+        if download_links_container is None:
+            msg = f"Unable to extract force download for {app}"
+            raise APKMirrorAPKDownloadError(msg, url=link)
         extension = self._select_download_extension(self.apk_type, preserve_bundle=preserve_bundle)
-        possible_links = notes_divs.find_all("a")
+        possible_links = download_links_container.find_all("a")
         for possible_link in possible_links:
             if possible_link.attr("href") and "download.php?id=" in cast("str", possible_link.attr("href")):
                 file_name = f"{app}.{extension}"
@@ -74,7 +77,11 @@ class ApkMirror(Downloader):
         :param app: Name of the app
         """
         logger.debug(f"Extracting download link from\n{page}")
-        download_button = self._extracted_search_div(page, "center")
+        download_page_doc = turbohtml.parse(self._extract_source(page))
+        download_button = download_page_doc.find(class_="center")
+        if download_button is None:
+            msg = f"Unable to extract link from {app} version list"
+            raise APKMirrorAPKDownloadError(msg, url=page)
         download_links = download_button.find_all("a")
         if matched_link := next(
             (
@@ -122,7 +129,8 @@ class ApkMirror(Downloader):
         :return:
         """
         try:
-            list_widget = self._extracted_search_div(main_page, "tab-pane noPadding")
+            main_page_doc = turbohtml.parse(self._extract_source(main_page))
+            variants_container = main_page_doc.select_one(".tab-pane.noPadding")
         except ScrapingError as exc:
             if not exc.is_not_found():
                 # Non-404 scraping errors (5xx, etc.) should propagate, not trigger fallback.
@@ -133,10 +141,10 @@ class ApkMirror(Downloader):
                 msg,
                 url=main_page,
             ) from exc
-        if list_widget is None:
+        if variants_container is None:
             msg = "Unable to find APKMirror variants table on release page"
             raise APKMirrorAPKDownloadError(msg, url=main_page)
-        table_rows = list_widget.find_all(class_="table-row headerFont")
+        table_rows = variants_container.select(".table-row.headerFont")
         apk_variants: list[dict[str, Any]] = []
         bundle_variants: list[dict[str, Any]] = []
 
@@ -225,7 +233,8 @@ class ApkMirror(Downloader):
         try:
             page_source = self._extract_source(guessed_url)
             # A valid release page contains the variants table; a 404/soft-error page does not.
-            if self._extracted_search_source_div(page_source, "tab-pane noPadding") is not None:
+            release_doc = turbohtml.parse(page_source)
+            if release_doc.select_one(".tab-pane.noPadding") is not None:
                 logger.debug(f"Direct URL resolved for {app.app_name} {version}: {guessed_url}")
                 return guessed_url
             logger.debug(f"Guessed URL {guessed_url} loaded but has no variants table; falling back to listing.")
@@ -234,13 +243,14 @@ class ApkMirror(Downloader):
             logger.debug(f"Guessed URL {guessed_url} failed; falling back to listing scrape.")
 
         # Slow path: scrape the first page of the version listing and match by title text.
-        versions_div = self._extracted_search_div(app.download_source, "listWidget p-relative")
-        if versions_div is None:
+        listing_doc = turbohtml.parse(self._extract_source(app.download_source))
+        versions_container = listing_doc.select_one(".listWidget.p-relative")
+        if versions_container is None:
             # A missing listing container means the source page is not the expected APKMirror app listing.
             msg = f"Unable to find APKMirror version list for {app.app_name}"
             raise APKMirrorAPKDownloadError(msg, url=app.download_source)
 
-        for app_row in versions_div.find_all(class_="appRow"):
+        for app_row in versions_container.find_all(class_="appRow"):
             # APKMirror release slugs can differ from the app source slug, so links must come from the listing row.
             title = app_row.find(class_="appRowTitle")
             download_link = app_row.find(class_="downloadLink")
@@ -259,16 +269,6 @@ class ApkMirror(Downloader):
         handle_request_response(response, url)
         return response.text
 
-    @staticmethod
-    def _extracted_search_source_div(source: str, search_class: str) -> turbohtml.Element:
-        """Extract search div from source."""
-        doc = turbohtml.parse(source)
-        return doc.find(class_=search_class)  # type: ignore[return-value]
-
-    def _extracted_search_div(self: Self, url: str, search_class: str) -> turbohtml.Element:
-        """Extract search div from url."""
-        return self._extracted_search_source_div(self._extract_source(url), search_class)
-
     def specific_version(self: Self, app: APP, version: str, main_page: str = "") -> tuple[str, str]:
         """Function to download the specified version of app from  apkmirror.
 
@@ -284,12 +284,14 @@ class ApkMirror(Downloader):
         if app.app_version == "latest":
             try:
                 logger.info(f"Trying to guess {app.app_name} version.")
-                appsec_val = self._extracted_search_div(download_page, "appspec-value")
-                appsec_version = str(appsec_val.find(text=lambda text: "Version" in text if text else False))
-                appsec_version = appsec_version.rsplit(":", maxsplit=1)[-1].strip()
-                appsec_version = appsec_version.split(maxsplit=1)[0]
-                app.app_version = slugify(appsec_version)
-                logger.info(f"Guessed {app.app_version} for {app.app_name}")
+                download_page_doc = turbohtml.parse(self._extract_source(download_page))
+                appspec_value = download_page_doc.find(class_="appspec-value")
+                if appspec_value is not None:
+                    appspec_version = str(appspec_value.find(text=lambda text: "Version" in text if text else False))
+                    appspec_version = appspec_version.rsplit(":", maxsplit=1)[-1].strip()
+                    appspec_version = appspec_version.split(maxsplit=1)[0]
+                    app.app_version = slugify(appspec_version)
+                    logger.info(f"Guessed {app.app_version} for {app.app_name}")
             except ScrapingError:
                 pass
         return self.extract_download_link_for_app(download_page, app)
@@ -301,12 +303,13 @@ class ApkMirror(Downloader):
         :return: Version of downloaded apk
         """
         app_main_page = app.download_source
-        versions_div = self._extracted_search_div(app_main_page, "listWidget p-relative")
-        if versions_div is None:
+        main_page_doc = turbohtml.parse(self._extract_source(app_main_page))
+        versions_container = main_page_doc.select_one(".listWidget.p-relative")
+        if versions_container is None:
             # Without the listing widget there is no safe way to infer the latest APKMirror release.
             msg = f"Unable to find APKMirror version list for {app.app_name}"
             raise APKMirrorAPKDownloadError(msg, url=app_main_page)
-        app_rows = versions_div.find_all(class_="appRow")
+        app_rows = versions_container.find_all(class_="appRow")
         version_urls = [
             href
             for app_row in app_rows

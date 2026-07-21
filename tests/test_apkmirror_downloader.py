@@ -19,6 +19,7 @@ from src.utils import request_header
 
 if TYPE_CHECKING:
     from src.app import APP
+    from src.utils import ResponseType
 
 
 class _APKMirrorResponse(SimpleNamespace):
@@ -129,7 +130,10 @@ class APKMirrorDownloaderTests(TestCase):
                     side_effect=[
                         ScrapingError(
                             "404 not found",
-                            response=_APKMirrorResponse(status_code=404, text="<html><h1>404</h1></html>"),
+                            response=cast(
+                                "ResponseType",
+                                _APKMirrorResponse(status_code=404, text="<html><h1>404</h1></html>"),
+                            ),
                         ),
                         listing_page,
                     ],
@@ -167,7 +171,7 @@ class APKMirrorDownloaderTests(TestCase):
         """When multiple APK variants exist, the one with arm64-v8a+nodpi sorts higher than arm64-v8a+480dpi."""
         variant_page = """
             <div class="tab-pane noPadding">
-                <div class="table-row headerFont">
+                <div class="headerFont table-row">
                     <span class="apkm-badge">APK</span>
                     <a class="accent_color" href="/download/narrow/">Download</a>
                     Variant 1 APK arm64-v8a 480dpi Android 5.0+
@@ -212,6 +216,111 @@ class APKMirrorDownloaderTests(TestCase):
 
         self.assertEqual(f"{APK_MIRROR_BASE_URL}/download/bundle-noarch/", result)
         self.assertEqual(downloader.apk_type, "BUNDLE")
+
+    def test_get_download_page_handles_reversed_multi_class_ordering(self: Self) -> None:
+        """CSS conjunction selector matches multi-class elements regardless of token order.
+
+        The CSS selector ``.tab-pane.noPadding`` is an explicit AND predicate:
+        it matches elements that have both ``tab-pane`` and ``noPadding``
+        classes, independent of attribute ordering or extra class tokens.
+        """
+        variant_page = """
+            <div class="noPadding tab-pane">
+                <div class="headerFont table-row">
+                    <span class="apkm-badge">APK</span>
+                    <a class="accent_color" href="/download/best/">Download</a>
+                    Variant 1 APK arm64-v8a nodpi Android 5.0+
+                </div>
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with patch.object(downloader, "_extract_source", return_value=variant_page):
+                result = downloader.get_download_page(
+                    "https://www.apkmirror.com/apk/google-inc/youtube/",
+                )
+
+        self.assertEqual(f"{APK_MIRROR_BASE_URL}/download/best/", result)
+        self.assertEqual(downloader.apk_type, "APK")
+
+    def test_force_download_raises_when_missing_tab_pane(self: Self) -> None:
+        """Missing tab-pane container should raise APKMirrorAPKDownloadError instead of crashing on None."""
+        page_without_tab_pane = """
+            <div class="something-else">
+                <a href="/download.php?id=1">Download</a>
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with (
+                patch.object(downloader, "_extract_source", return_value=page_without_tab_pane),
+                self.assertRaisesRegex(APKMirrorAPKDownloadError, "Unable to extract force download for MISSING"),
+            ):
+                downloader._extract_force_download_link(
+                    "https://www.apkmirror.com/apk/example/app/download/",
+                    "MISSING",
+                )
+
+    def test_extract_download_link_raises_when_missing_center(self: Self) -> None:
+        """Missing center container should raise APKMirrorAPKDownloadError instead of crashing on None."""
+        page_without_center = """
+            <div class="not-center">
+                <a href="/download/?key=abc123">Download APK</a>
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with (
+                patch.object(downloader, "_extract_source", return_value=page_without_center),
+                self.assertRaisesRegex(APKMirrorAPKDownloadError, "Unable to extract link from MISSING version list"),
+            ):
+                downloader._extract_download_link(
+                    "https://www.apkmirror.com/apk/example/app/download/",
+                    "MISSING",
+                    preserve_bundle=False,
+                )
+
+    def test_specific_version_skips_version_guess_when_missing_appspec(self: Self) -> None:
+        """Missing appspec-value container should not crash or overwrite app.app_version."""
+        page_with_variants = """
+            <div class="tab-pane noPadding">
+                <div class="table-row headerFont">
+                    <span class="apkm-badge">APK</span>
+                    <a class="accent_color" href="/download/best/">Download</a>
+                    APK arm64-v8a nodpi Android 5.0+
+                </div>
+            </div>
+        """
+        app = cast(
+            "APP",
+            SimpleNamespace(
+                app_name="YOUTUBE",
+                app_version="latest",
+                download_source="https://www.apkmirror.com/apk/google-inc/youtube/youtube",
+                effective_cli_argsf="revanced-cli",
+            ),
+        )
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with (
+                patch.object(downloader, "_extract_source", return_value=page_with_variants),
+                patch.object(
+                    downloader,
+                    "extract_download_link_for_app",
+                    return_value=("YOUTUBE.apk", "https://example.test/download.php?id=1"),
+                ) as extract_link,
+            ):
+                file_name, download_url = downloader.specific_version(app, "latest")
+
+        # app_version should remain "latest" (not overwritten by a missing appspec-value element).
+        self.assertEqual(app.app_version, "latest")
+        extract_link.assert_called_once()
+        self.assertEqual("YOUTUBE.apk", file_name)
+        self.assertEqual("https://example.test/download.php?id=1", download_url)
 
     def test_force_download_preserves_bundle_as_apkm_when_requested(self: Self) -> None:
         """Morphe patch sources need APKMirror bundles preserved as APKM instead of merged through APKEditor."""
