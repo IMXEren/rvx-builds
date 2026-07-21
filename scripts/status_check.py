@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import requests
-from bs4 import BeautifulSoup
+import turbohtml
 from google_play_scraper import app as gplay_app
 from google_play_scraper.exceptions import GooglePlayScraperException
 
@@ -26,7 +26,7 @@ from src.exceptions import (
 )
 from src.patches import Patches
 from src.patches_gen import parse_text_to_json, run_command_and_capture_output
-from src.utils import apkmirror_status_check, bs4_parser, handle_request_response, request_header, request_timeout
+from src.utils import apkmirror_status_check, handle_request_response, request_header, request_timeout
 
 no_of_col = 4
 combo_headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/116.0"}
@@ -171,11 +171,11 @@ def apkmirror_scrapper(package_name: str) -> str:
 def _extracted_from_apkmirror_scrapper(search_url: str) -> str:
     r = requests.get(search_url, headers=request_header, timeout=request_timeout)
     handle_request_response(r, search_url)
-    soup = BeautifulSoup(r.text, bs4_parser)
-    icon_element = soup.select_one("div.bubble-wrap > img")
+    doc = turbohtml.parse(r.text)
+    icon_element = doc.select_one("div.bubble-wrap > img")
     if not icon_element:
         raise APKMirrorIconScrapError(url=search_url)
-    sub_url = str(icon_element["src"])
+    sub_url = str(icon_element.attrs["src"])
     new_width = 500
     new_height = 500
     new_quality = 100

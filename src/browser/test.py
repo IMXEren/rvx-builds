@@ -3,7 +3,7 @@ import sys
 import time
 from pathlib import Path
 
-from bs4 import BeautifulSoup
+import turbohtml
 from loguru import logger
 
 sys.path.append(str(Path.cwd()))
@@ -29,8 +29,8 @@ async def main() -> None:  # noqa: D103
 
     try:
         r = await page_source(url, 60)
-        soup = BeautifulSoup(r.text, "html.parser")
-        element = soup.select_one("title")
+        doc = turbohtml.parse(r.text)
+        element = doc.select_one("title")
         if element:
             print(element.text)  # noqa: T201
     except BaseException as e:

@@ -3,14 +3,14 @@
 import re
 from typing import Any, Self, cast
 
-from bs4 import BeautifulSoup, Tag
+import turbohtml
 from loguru import logger
 
 from src.apks.variant_sorter import VariantSorter
 from src.app import APP
 from src.downloader.download import Downloader
 from src.exceptions import NOT_FOUND_STATUS_CODE, ScrapingError, UptoDownAPKDownloadError, VersionNotFoundError
-from src.utils import bs4_parser, handle_request_response, make_request, request_header
+from src.utils import handle_request_response, make_request, request_header
 
 
 class UptoDown(Downloader):
@@ -22,15 +22,15 @@ class UptoDown(Downloader):
         return page.rstrip("/").endswith("-x")
 
     @staticmethod
-    def _is_xapk_store_bridge(detail_download_button: Tag, page: str) -> bool:
+    def _is_xapk_store_bridge(detail_download_button: turbohtml.Element, page: str) -> bool:
         """Detect generic XAPK download pages whose direct token is missing and needs the legacy variant path."""
-        button_classes = detail_download_button.get("class") or []
+        button_classes = detail_download_button.attr("class") or []
         # Direct variant pages already point at app bytes, so only generic pages are eligible for fallback rewriting.
         return "xapk" in button_classes and not UptoDown._is_xapk_variant_page(page)
 
-    def _resolve_xapk_variant_page(self: Self, detail_download_button: Tag, page: str, app: str) -> str:
+    def _resolve_xapk_variant_page(self: Self, detail_download_button: turbohtml.Element, page: str, app: str) -> str:
         """Build the direct XAPK variant URL from Uptodown's generic app-store bridge button."""
-        download_version = detail_download_button.get("data-download-version")
+        download_version = detail_download_button.attr("data-download-version")
         if not download_version:
             msg = f"Unable to resolve direct XAPK download for {app} from uptodown."
             raise UptoDownAPKDownloadError(msg, url=page)
@@ -41,32 +41,32 @@ class UptoDown(Downloader):
     def _get_app_code(self: Self, url: str) -> str:
         """Extract the numeric app code from a Uptodown page."""
         html = make_request(url, headers=request_header).text
-        soup = BeautifulSoup(html, bs4_parser)
-        el = soup.find("h1", id="detail-app-name")
-        if not isinstance(el, Tag):
+        doc = turbohtml.parse(html)
+        el = doc.find("h1", id="detail-app-name")
+        if not el:
             msg = f"Could not find app code element on {url}"
             raise UptoDownAPKDownloadError(msg, url=url)
-        code = cast("str", el.get("data-code", ""))
+        code = el.attr("data-code", "")
         if not code:
             msg = f"App code missing on {url}"
             raise UptoDownAPKDownloadError(msg, url=url)
         return code
 
     @staticmethod
-    def _text_or(tag: Tag | None) -> str:
+    def _text_or(el: turbohtml.Element | None) -> str:
         """Return stripped text of a tag, or empty string."""
-        return tag.text.strip() if tag is not None else ""
+        return el.text.strip() if el is not None else ""
 
     @staticmethod
-    def _parse_variant_arch_text(soup: BeautifulSoup) -> list[Any]:
+    def _parse_variant_arch_text(doc: turbohtml.Document) -> list[Any]:
         """Extract shared arch text from the variants section."""
         arch_text = ""
-        section = soup.find("section", class_="variants")
+        section = doc.find("section", class_="variants")
         content_div = section.find("div", class_="content") if section else None
         if content_div:
             p_tag = content_div.find("p")
             if p_tag:
-                arch_text = p_tag.get_text(strip=True)
+                arch_text = "".join(p_tag.stripped_strings)
         return list(VariantSorter.parse_archs(arch_text)) if arch_text else []
 
     def _fetch_variants(self: Self, app: APP, app_code: str, version_id: str) -> list[dict[str, Any]]:
@@ -104,20 +104,20 @@ class UptoDown(Downloader):
         if not content:
             return []
 
-        soup = BeautifulSoup(content, bs4_parser)
-        parsed_archs = self._parse_variant_arch_text(soup)
+        doc = turbohtml.parse(content)
+        parsed_archs = self._parse_variant_arch_text(doc)
 
         variants: list[dict[str, Any]] = []
-        for card in soup.find_all("div", class_="variant"):
+        for card in doc.find_all("div", class_="variant"):
             img = card.find("img", attrs={"data-file-id": True})
             if not img:
                 continue
 
-            file_id = img.get("data-file-id", "")
+            file_id = img.attr("data-file-id", "")
             name_el = card.find("div", class_="v-version")
             arch_el = card.find("div", class_="v-screen")
 
-            onclick = cast("str", name_el.get("onclick", "")) if name_el else ""
+            onclick = cast("str", name_el.attr("onclick", "")) if name_el else ""
             dl_url = ""
             if "location.href" in onclick:
                 m = re.search(r"location\.href='([^']+)'", onclick)
@@ -164,14 +164,14 @@ class UptoDown(Downloader):
         """Extract download link from uptodown url."""
         r = make_request(page, headers=request_header)
         handle_request_response(r, page)
-        soup = BeautifulSoup(r.text, bs4_parser)
-        detail_download_button = soup.find("button", id="detail-download-button")
+        doc = turbohtml.parse(r.text)
+        detail_download_button = doc.find("button", id="detail-download-button")
 
-        if not isinstance(detail_download_button, Tag):
+        if not detail_download_button:
             msg = f"Unable to download {app} from uptodown."
             raise UptoDownAPKDownloadError(msg, url=page)
 
-        data_url = detail_download_button.get("data-url")
+        data_url = detail_download_button.attr("data-url")
         if not isinstance(data_url, str) or not data_url:
             if self._is_xapk_store_bridge(detail_download_button, page):
                 # Older Uptodown pages omitted the direct token, so keep the variant-page fallback for that shape.
@@ -200,14 +200,14 @@ class UptoDown(Downloader):
         logger.debug("downloading specified version of app from uptodown.")
         url = f"{app.download_source}/versions"
         html = make_request(url, headers=request_header).text
-        soup = BeautifulSoup(html, bs4_parser)
-        detail_app_name = soup.find("h1", id="detail-app-name")
+        doc = turbohtml.parse(html)
+        detail_app_name = doc.find("h1", id="detail-app-name")
 
-        if not isinstance(detail_app_name, Tag):
+        if not detail_app_name:
             msg = f"Unable to download {app} from uptodown."
             raise UptoDownAPKDownloadError(msg, url=url)
 
-        app_code = cast("str", detail_app_name.get("data-code"))
+        app_code = cast("str", detail_app_name.attr("data-code"))
         version_page = 1
         download_url = None
         version_found = False
@@ -263,15 +263,15 @@ class UptoDown(Downloader):
         try:
             r = make_request(page, headers=request_header)
             handle_request_response(r, page)
-            soup = BeautifulSoup(r.text, bs4_parser)
+            doc = turbohtml.parse(r.text)
 
             app_code = ""
-            el = soup.find("h1", id="detail-app-name")
-            if isinstance(el, Tag):
-                app_code = cast("str", el.get("data-code", ""))
+            el = doc.find("h1", id="detail-app-name")
+            if el:
+                app_code = el.attr("data-code", "")
 
-            dl_button = soup.find("button", id="detail-download-button")
-            version_id = cast("str", dl_button.get("data-download-version", "")) if isinstance(dl_button, Tag) else ""
+            dl_button = doc.find("button", id="detail-download-button")
+            version_id = dl_button.attr("data-download-version", "") if dl_button else ""
 
             if app_code and version_id:
                 variant_result = self._select_best_variant(app, app_code, version_id)

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class _UptodownResponse(SimpleNamespace):
-    """Small response double with the fields consumed by `handle_request_response` and BeautifulSoup."""
+    """Small response double with the fields consumed by `handle_request_response` and turbohtml."""
 
     status_code: int = 200
     text: str

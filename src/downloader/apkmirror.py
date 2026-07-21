@@ -2,7 +2,7 @@
 
 from typing import Any, Self, cast
 
-from bs4 import BeautifulSoup, Tag
+import turbohtml
 from loguru import logger
 
 from src.apks.variant_sorter import VariantSorter
@@ -11,7 +11,6 @@ from src.downloader.download import Downloader
 from src.downloader.sources import APK_MIRROR_BASE_URL
 from src.exceptions import APKMirrorAPKDownloadError, ScrapingError, VersionNotFoundError
 from src.utils import (
-    bs4_parser,
     handle_request_response,
     make_request,
     request_header,
@@ -55,9 +54,9 @@ class ApkMirror(Downloader):
         extension = self._select_download_extension(self.apk_type, preserve_bundle=preserve_bundle)
         possible_links = notes_divs.find_all("a")
         for possible_link in possible_links:
-            if possible_link.get("href") and "download.php?id=" in cast("str", possible_link.get("href")):
+            if possible_link.attr("href") and "download.php?id=" in cast("str", possible_link.attr("href")):
                 file_name = f"{app}.{extension}"
-                download_url = APK_MIRROR_BASE_URL + cast("str", possible_link["href"])
+                download_url = APK_MIRROR_BASE_URL + cast("str", possible_link.attrs["href"])
                 # Use cloudscraper + Referer so Cloudflare allows the binary download
                 self._download(
                     download_url,
@@ -81,7 +80,7 @@ class ApkMirror(Downloader):
             (
                 download_link
                 for download_link in download_links
-                if download_link.get("href") and "download/?key=" in cast("str", download_link.get("href"))
+                if download_link.attr("href") and "download/?key=" in cast("str", download_link.attr("href"))
             ),
             None,
         ):
@@ -89,10 +88,10 @@ class ApkMirror(Downloader):
             # a simple APK or an APKM bundle. The text inside the box (<a> tag)
             # determines which one it is.
             if self.apk_type == "BUNDLE":
-                link_text = matched_link.get_text().lower()
+                link_text = "".join(matched_link.strings).lower()
                 self.apk_type = "BUNDLE" if "apk bundle" in link_text else "APK"
 
-            final_download_link = cast("str", matched_link["href"])
+            final_download_link = cast("str", matched_link.attrs["href"])
             return self._extract_force_download_link(
                 APK_MIRROR_BASE_URL + final_download_link,
                 app,
@@ -148,8 +147,8 @@ class ApkMirror(Downloader):
             badge = row.find(class_="apkm-badge")
             if not badge:
                 continue
-            apk_type = badge.get_text()
-            sub_url = accent["href"]
+            apk_type = "".join(badge.strings)
+            sub_url = accent.attr("href")
             text = row.text.strip()
 
             archs = VariantSorter.parse_archs(text, delimiter=None)
@@ -245,10 +244,10 @@ class ApkMirror(Downloader):
             # APKMirror release slugs can differ from the app source slug, so links must come from the listing row.
             title = app_row.find(class_="appRowTitle")
             download_link = app_row.find(class_="downloadLink")
-            if not title or not download_link or not download_link.get("href"):
+            if not title or not download_link or not download_link.attr("href"):
                 continue
-            if self._version_matches_title(version, title.get_text(" ", strip=True)):
-                return f"{APK_MIRROR_BASE_URL}{download_link['href']}"
+            if self._version_matches_title(version, " ".join(title.stripped_strings)):
+                return f"{APK_MIRROR_BASE_URL}{download_link.attrs['href']}"
 
         msg = f"Unable to find {app.app_name} version {version} on APKMirror"
         raise VersionNotFoundError(msg, url=app.download_source)
@@ -261,12 +260,12 @@ class ApkMirror(Downloader):
         return response.text
 
     @staticmethod
-    def _extracted_search_source_div(source: str, search_class: str) -> Tag:
+    def _extracted_search_source_div(source: str, search_class: str) -> turbohtml.Element:
         """Extract search div from source."""
-        soup = BeautifulSoup(source, bs4_parser)
-        return soup.find(class_=search_class)  # type: ignore[return-value]
+        doc = turbohtml.parse(source)
+        return doc.find(class_=search_class)  # type: ignore[return-value]
 
-    def _extracted_search_div(self: Self, url: str, search_class: str) -> Tag:
+    def _extracted_search_div(self: Self, url: str, search_class: str) -> turbohtml.Element:
         """Extract search div from url."""
         return self._extracted_search_source_div(self._extract_source(url), search_class)
 
@@ -309,12 +308,12 @@ class ApkMirror(Downloader):
             raise APKMirrorAPKDownloadError(msg, url=app_main_page)
         app_rows = versions_div.find_all(class_="appRow")
         version_urls = [
-            cast("str", href)
+            href
             for app_row in app_rows
-            if (dl := app_row.find(class_="downloadLink")) and (href := dl.get("href"))
+            if (dl := app_row.find(class_="downloadLink")) and (href := dl.attr("href"))
             if (title := app_row.find(class_="appRowTitle"))
-            and "beta" not in title.get_text().lower()
-            and "alpha" not in title.get_text().lower()
+            and "beta" not in "".join(title.strings).lower()
+            and "alpha" not in "".join(title.strings).lower()
         ]
         if not version_urls:
             msg = f"No stable APKMirror release found for {app.app_name}"

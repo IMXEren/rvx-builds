@@ -9,7 +9,6 @@ import time
 from typing import TYPE_CHECKING, Any, Self, cast
 from urllib.parse import parse_qsl, urlsplit
 
-from bs4 import BeautifulSoup
 from loguru import logger
 from pydoll.browser.tab import Tab
 from pydoll.commands.dom_commands import DomCommands
@@ -90,8 +89,8 @@ class Source:
         i.e. if this fails with `JSONExtractError` then most likely `requests`
         would also fail for the same.
         """
-        soup = BeautifulSoup(self.text, "html.parser")
-        data = soup.select_one("body > pre")
+        doc = tb_parse(self.text)
+        data = doc.select_one("body > pre")
         if not data:
             msg = "the json extractor implementation failed"
             raise JSONExtractError(msg)
@@ -304,8 +303,8 @@ class Site:
             body_decoded = body["body"]
             if body["base64Encoded"]:
                 body_decoded = base64.b64decode(body_decoded).decode()
-            soup = BeautifulSoup(body_decoded, "html.parser")
-            title = soup.select_one("title")
+            doc = tb_parse(body_decoded)
+            title = doc.select_one("title")
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Exception occurred while checking for cf: {e}")
         else:

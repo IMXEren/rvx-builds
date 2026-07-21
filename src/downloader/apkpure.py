@@ -6,13 +6,13 @@ from functools import cmp_to_key
 from typing import Any, Self
 from urllib.parse import parse_qs, urlparse
 
-from bs4 import BeautifulSoup
+import turbohtml
 from loguru import logger
 
 from src.app import APP
 from src.downloader.download import Downloader
 from src.exceptions import APKPureAPKDownloadError, ScrapingError, VersionNotFoundError
-from src.utils import bs4_parser, handle_request_response, make_request, request_header, slugify
+from src.utils import handle_request_response, make_request, request_header, slugify
 
 
 class ApkPure(Downloader):
@@ -80,12 +80,12 @@ class ApkPure(Downloader):
         logger.debug(f"Extracting download link from\n{page}")
         r = make_request(page, headers=request_header)
         handle_request_response(r, page)
-        soup = BeautifulSoup(r.text, bs4_parser)
-        apks = soup.select("#version-list a.download-btn")
+        doc = turbohtml.parse(r.text)
+        apks = doc.select("#version-list a.download-btn")
         _apk_dls: list[str] = []
         _xapk_dls: list[str] = []
         for apk in apks:
-            if _apk_dl := apk.get("href"):
+            if _apk_dl := apk.attr("href"):
                 if "/b/XAPK/" in _apk_dl:
                     _xapk_dls.append(_apk_dl)  # type: ignore  # noqa: PGH003
                 else:
@@ -96,8 +96,8 @@ class ApkPure(Downloader):
         if not file_name or not app_dl:
             msg = f"Unable to extract link from {app} version list"
             raise APKPureAPKDownloadError(msg, url=page)
-        if app_version := soup.select_one("span.info-sdk > span"):
-            self.app_version = slugify(app_version.get_text(strip=True))
+        if app_version := doc.select_one("span.info-sdk > span"):
+            self.app_version = slugify("".join(app_version.stripped_strings))
             logger.info(f"Will be downloading {app}'s version {self.app_version}...")
         else:
             self.app_version = "latest"
@@ -133,16 +133,16 @@ class ApkPure(Downloader):
         response = make_request(version_page, headers=request_header)
         handle_request_response(response, version_page)
 
-        soup = BeautifulSoup(response.text, bs4_parser)
+        doc = turbohtml.parse(response.text)
 
-        for box in soup.select("ul.ver-wrap > *"):
+        for box in doc.select("ul.ver-wrap > *"):
             download_link = box.select_one("a.ver_download_link")
             if not download_link:
                 continue
 
-            found_version = download_link.get("data-dt-version")
+            found_version = download_link.attr("data-dt-version")
             if found_version == version:
-                download_page = download_link.get("href")
+                download_page = download_link.attr("href")
                 try:
                     file_name, download_source = self.extract_download_link(
                         str(download_page),

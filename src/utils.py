@@ -54,7 +54,6 @@ default_cli = "https://github.com/revanced/revanced-cli/releases/latest"
 # Prefer ReVanced's API-hosted patch bundle because it exposes the `.rvp` file directly without relying on
 # release pages whose asset metadata may be unavailable or may only contain source archives.
 default_patches = "https://api.revanced.app/v5/patches.rvp"
-bs4_parser = "html.parser"
 changelog_file = "changelog.md"
 changelog_json_file = "changelog.json"
 request_timeout = 60
