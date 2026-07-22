@@ -48,7 +48,8 @@ jobs:
         id: should_build
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PAT: ${{ secrets.SECRET_GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          GITLAB_PAT: ${{ secrets.SECRET_GITLAB_PAT }}
         run: |
           output=$(python check_resource_updates.py)
           should_build="$(grep -m1 '^PATCH_APPS=' <<< "$output" | cut -d= -f2- | tr -d '\r' || printf '')"
