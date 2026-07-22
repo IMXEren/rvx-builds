@@ -10,12 +10,6 @@ on:
         required: false
       DOCKER_PY_REVANCED_SECRETS:
         required: false
-      SECRET_GITHUB_PAT:
-        required: false
-      SECRET_GITLAB_PAT:
-        required: false
-      SECRET_REDDIT_CLIENT_ID:
-        required: false
     inputs:
       CI_TEST:
         required: false
@@ -52,10 +46,23 @@ jobs:
           ALL_VARS: ${{ toJson(vars) }}
         run: |
           echo "${{ secrets.ENVS }}" >> .env
-          echo "GITHUB_REPOSITORY=${{ github.repository }}" >> .env
           echo "${{ secrets.DOCKER_PY_REVANCED_SECRETS }}" >> .env
-          echo "$ALL_SECRETS" | jq -r 'to_entries | .[] | select(.key | startswith("SECRET_")) | "\(.key | sub("^SECRET_"; ""))=\(.value)"' >> .env
-          echo "$ALL_VARS" | jq -r 'to_entries | .[] | select(.key | startswith("VAR_")) | "\(.key | sub("^VAR_"; ""))=\(.value)"' >> .env
+          echo "GITHUB_REPOSITORY=${{ github.repository }}" >> .env
+
+          write_prefixed_envs() {
+            local json="$1"
+            local prefix="$2"
+
+            printf '%s\n' "$json" |
+              jq -r --arg prefix "$prefix" '
+                to_entries[]
+                | select(.key | startswith($prefix))
+                | "\(.key | ltrimstr($prefix))=\(.value | tostring | @json)"
+              ' >> .env
+          }
+
+          write_prefixed_envs "$ALL_SECRETS" "SECRET_"
+          write_prefixed_envs "$ALL_VARS" "VAR_"
           echo "Injected custom secrets into .env file"
 
       - name: Setup python
