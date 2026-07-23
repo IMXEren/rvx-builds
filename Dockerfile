@@ -1,4 +1,4 @@
-FROM nikhilbadyal/docker-py-revanced-base
+FROM ghcr.io/imxeren/docker-py-revanced-base:latest
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Chromium runtime libraries
