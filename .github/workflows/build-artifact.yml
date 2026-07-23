@@ -191,6 +191,22 @@ jobs:
             # Delete existing release + tag (force-update pattern)
             gh release delete "$APP_NAME" --repo "$TARGET_REPO" --yes --cleanup-tag 2>/dev/null || true
 
+            # Workaround for https://github.com/cli/cli/issues/8458
+            echo "[$APP_NAME] Waiting for tag deletion to propagate..."
+            for attempt in {1..20}; do
+                if ! gh api \
+                    "repos/$TARGET_REPO/git/ref/tags/$APP_NAME" \
+                    >/dev/null 2>&1; then
+                    break
+                fi
+                if (( attempt == 20 )); then
+                    echo "::error title=Tag deletion timed out::$APP_NAME still exists in $TARGET_REPO"
+                    exit 1
+                fi
+                echo "[$APP_NAME] Tag still exists; retrying in 3 seconds..."
+                sleep 3
+            done
+
             UPLOAD_ASSETS=("$apk" "obtainium_sources/changelogs/${APP_NAME}.md" "obtainium_sources/json/${APP_NAME}.json")
             if gh release create "$APP_NAME" \
                 "${UPLOAD_ASSETS[@]}" \
@@ -198,7 +214,6 @@ jobs:
                 --title "$APP_LABEL" \
                 --notes-file "obtainium_sources/changelogs/${APP_NAME}.md" \
                 --latest 2>&1; then
-
               echo "  ✅ Released $APP_NAME"
               RELEASE_COUNT=$((RELEASE_COUNT + 1))
             else
