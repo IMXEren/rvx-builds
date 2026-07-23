@@ -10,12 +10,19 @@ on:
       FILE:
         required: false
         type: string
+      EXTRA_FONTS:
+        default: true
+        type: boolean
+        required: false
   push:
     branches:
       - "main"
     paths:
       - "**.py"
       - "README.md"
+
+env:
+  EXTRA_FONTS: ${{ github.event_name == 'push' || inputs.EXTRA_FONTS }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -55,6 +62,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch extra fonts
+        if: env.EXTRA_FONTS == 'true'
         env:
           GH_TOKEN: ${{ secrets.SECRET_GITHUB_PAT }}
         run: |
