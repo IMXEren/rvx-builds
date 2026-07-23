@@ -1,0 +1,55 @@
+name: Push Base Image to GHCR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "Dockerfile-base"
+  schedule:
+    - cron: "0 0 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_TAG: ${{ steps.image.outputs.IMAGE_TAG }}
+    steps:
+      - name: Set image tag
+        id: image
+        run: |
+          OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_TAG=ghcr.io/${OWNER}/docker-py-revanced-base:latest" >> "$GITHUB_OUTPUT"
+
+  ghcr-push:
+    if: github.repository == 'IMXEren/rvx-builds'
+    uses: ./.github/workflows/ghcr-push.yml
+    needs: image-tag
+    with:
+      IMAGE_TAG: ${{ needs.image-tag.outputs.IMAGE_TAG }}
+      FILE: Dockerfile-base
+      EXTRA_FONTS: false
+
+  cleanup:
+    needs: ghcr-push
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - name: Clean up orphaned untagged layers
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          package: docker-py-revanced-base
+          keep-n-tagged: 1
+          delete-untagged: true
+          delete-partial-images: true
