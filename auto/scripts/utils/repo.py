@@ -1,5 +1,5 @@
 class GitHubRepo:
-    repo = "IMXEren/rvx-builds"
+    repo = "Datokina/rvx-builds"
     branch = "changelogs"
     backup_branch = "main"
 

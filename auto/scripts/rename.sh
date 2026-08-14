@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-github_repo="IMXEren/rvx-builds"
+github_repo="Datokina/rvx-builds"
 github_branch="changelogs"
 github_backup_branch="main"
 rename_script_1="auto/scripts/utils/repo.py"
