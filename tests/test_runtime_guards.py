@@ -83,3 +83,27 @@ class RuntimeGuardTests(TestCase):
         self.assertNotIn("super-secret-token", logged_text)
         self.assertIn("<redacted-email>", logged_text)
         self.assertIn("<redacted-token>", logged_text)
+
+    def test_apkeep_command_includes_app_device_configuration(self: Self) -> None:
+        """Per-app device settings should become APKEEP Google Play options."""
+        with TemporaryDirectory() as tmp_dir:
+            temp_folder = Path(tmp_dir)
+            process = _ApkeepProcess(temp_folder / "com.example.apk")
+            app = cast(
+                "APP",
+                SimpleNamespace(
+                    package_name="com.example",
+                    apkeep_device_name="ad_g3_pro",
+                    apkeep_device_file="apks/device.properties",
+                ),
+            )
+
+            with patch("src.downloader.apkeep.Popen", return_value=process) as popen:
+                Apkeep(_apkeep_config(temp_folder)).latest_version(app)
+
+        command = popen.call_args.args[0]
+        options = command[command.index("-o") + 1]
+        self.assertEqual(
+            "split_apk=true,device=ad_g3_pro,device_properties_file=apks/device.properties",
+            options,
+        )

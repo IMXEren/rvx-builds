@@ -95,6 +95,9 @@ class APP(object):
         # Obtainium metadata reuses the computed output name, so cache the value with an explicit string type.
         self._cached_output_file_name: str = ""
 
+        self.apkeep_device_name = config.env.str(f"{app_name}_APKEEP_DEVICE_NAME".upper(), config.apkeep_device_name)
+        self.apkeep_device_file = config.env.str(f"{app_name}_APKEEP_DEVICE_FILE".upper(), config.apkeep_device_file)
+
     def download_apk_for_patching(
         self: Self,
         config: RevancedConfig,

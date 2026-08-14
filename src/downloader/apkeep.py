@@ -15,7 +15,7 @@ from src.exceptions import DownloadError
 class Apkeep(Downloader):
     """Apkeep-based Downloader."""
 
-    def _run_apkeep(self: Self, package_name: str, version: str = "") -> str:
+    def _run_apkeep(self: Self, package_name: str, version: str = "", extra_options: list[str] | None = None) -> str:
         """Run apkeep CLI to fetch APK from Google Play."""
         email = self.config.env.str("APKEEP_EMAIL")
         token = self.config.env.str("APKEEP_TOKEN")
@@ -37,6 +37,8 @@ class Apkeep(Downloader):
             logger.debug(f"{zip_path.name} already zipped and exists.")
             return zip_path.name
 
+        options = ["split_apk=true", *(extra_options or [])]
+
         # Build apkeep command
         cmd = [
             "apkeep",
@@ -49,7 +51,7 @@ class Apkeep(Downloader):
             "-t",
             token,
             "-o",
-            "split_apk=true",
+            ",".join(options),
             self.config.temp_folder_name,
         ]
         # Keep the exact execution command separate from the log-safe command so credentials never reach CI logs.
@@ -87,6 +89,14 @@ class Apkeep(Downloader):
 
     def latest_version(self: Self, app: APP, **kwargs: Any) -> tuple[str, str]:
         """Download latest version from Google Play via Apkeep."""
-        file_name = self._run_apkeep(app.package_name)
+        extra_options = list(kwargs.get("extra_options") or [])
+        device_name: str | None = getattr(app, "apkeep_device_name", None)
+        device_file: str | None = getattr(app, "apkeep_device_file", None)
+        if device_name or device_file:
+            extra_options.append(f"device={device_name or 'default'}")
+        if device_file:
+            extra_options.append(f"device_properties_file={device_file}")
+
+        file_name = self._run_apkeep(app.package_name, extra_options=extra_options)
         logger.info(f"Got file name as {file_name}")
         return file_name, f"apkeep://google-play/{app.package_name}"

@@ -32,3 +32,19 @@ Spoof client:
 Based on the spec [`device-spec.json`](./device-spec.json) provided, it only includes necessary archs and screen density (dpi) from the split apk archives before merging and then passing to the cli, resulting in relatively low-sized apks. Though, this would make the apk sometimes specific for your device (may not work for others). To enable, use `REPACK_SPLIT_APKS=True`.
 
 To find the specification, use device info apps like App Manager (_Settings -> About the device -> CPU, Screen_), etc.
+
+### APKEEP Google Play Device Profile
+
+A custom APKEEP device properties file, such as one exported from Aurora Store's spoof manager, can also be placed in this directory. Reference it from `.env` with its repository-relative path:
+
+```ini
+APKEEP_DEVICE_FILE=apks/device.properties
+```
+
+Use an app-prefixed variable to select a different profile for one app:
+
+```ini
+YOUTUBE_APKEEP_DEVICE_FILE=apks/youtube-device.properties
+```
+
+Built-in profiles can instead be selected with `APKEEP_DEVICE_NAME` or its app-prefixed equivalent. See the [APKEEP device configuration documentation](../auto/docs/customize-patches.md#apkeep-device-configuration) and [upstream APKEEP guide](https://github.com/EFForg/apkeep/blob/master/USAGE-google-play.md#device-configuration) for available settings and profile details.
