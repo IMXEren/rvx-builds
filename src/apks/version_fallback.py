@@ -55,7 +55,8 @@ class VersionFallback:
                 )
                 last_error = exc
                 continue
-            app.app_version = version
-            logger.info(f"Fell back to version {version} for {app.app_name}")
+            if app.resolved_version is None:
+                app.resolved_version = version
+            logger.info(f"Resolved fallback version {app.resolved_version} for {app.app_name}")
             return result
         raise cast("VersionNotFoundError", last_error)

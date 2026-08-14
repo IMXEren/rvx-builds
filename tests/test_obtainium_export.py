@@ -72,6 +72,15 @@ class ObtainiumExportTests(TestCase):
 
         self.assertIn("Version50.1.1.5001014", app.get_output_file_name())
 
+    def test_output_file_name_uses_resolved_version_without_changing_latest_selector(self: Self) -> None:
+        """Release metadata should name the concrete download while retaining the requested selector."""
+        app = _app_with_patch_bundles("v2.0.0")
+        app.app_version = "latest"
+        app.resolved_version = "20.51.39"
+
+        self.assertIn("Version20.51.39", app.get_output_file_name())
+        self.assertEqual("latest", app.app_version)
+
     def test_generate_obtainium_export_encodes_url_and_slugifies_html_name(self: Self) -> None:
         """Generated HTML should be safe to serve and should link to the exact encoded release asset."""
         with TemporaryDirectory() as temp_dir, chdir(temp_dir):
