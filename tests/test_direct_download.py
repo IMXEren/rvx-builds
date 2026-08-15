@@ -12,6 +12,7 @@ from unittest import TestCase
 from unittest.mock import patch
 from zipfile import ZipFile
 
+from src.apks.repack import get_apk_version
 from src.config import RevancedConfig
 from src.downloader.download import Downloader
 
@@ -69,6 +70,22 @@ def _write_zip(path: Path, names: list[str]) -> None:
 
 class DirectDownloadTests(TestCase):
     """Verify generic direct downloads handle patch bundle endpoints explicitly."""
+
+    def test_apk_version_can_be_read_from_inner_split_bundle_apk(self: Self) -> None:
+        """Version discovery should inspect a bundled base APK when the outer archive has no manifest."""
+        with TemporaryDirectory() as tmp_dir:
+            bundle_path = Path(tmp_dir) / "youtube.apkm"
+            with ZipFile(bundle_path, "w") as bundle:
+                bundle.writestr("base.apk", b"inner-apk")
+
+            with patch(
+                "src.apks.repack.APK",
+                return_value=SimpleNamespace(version_name="20.51.39"),
+            ) as apk_parser:
+                version = get_apk_version(bundle_path)
+
+        self.assertEqual("20.51.39", version)
+        apk_parser.assert_called_once_with(b"inner-apk", raw=True)
 
     def test_patch_bundle_direct_download_requests_octet_stream(self: Self) -> None:
         """ReVanced API's `.rvp` endpoint should be requested as raw binary content."""
@@ -155,6 +172,38 @@ class DirectDownloadTests(TestCase):
         self.assertEqual("youtube_music.apk", output_file)
         self.assertIn(f"{tmp_dir}/youtube_music.xapk", command)
         self.assertIn(f"{tmp_dir}/youtube_music.apk", command)
+
+    def test_download_uses_apk_manifest_when_latest_source_does_not_resolve_version(self: Self) -> None:
+        """A downloaded manifest is the final concrete-version fallback for opaque latest URLs."""
+        with TemporaryDirectory() as tmp_dir:
+            config = _config(Path(tmp_dir))
+            app = cast(
+                "APP",
+                SimpleNamespace(
+                    app_name="YOUTUBE",
+                    app_version="latest",
+                    resolved_version=None,
+                    effective_cli_argsf="revanced-cli",
+                ),
+            )
+            downloader = Downloader(config)
+
+            with (
+                patch.object(
+                    downloader,
+                    "latest_version",
+                    return_value=("YOUTUBE.apk", "https://example/apk"),
+                ),
+                patch.object(downloader, "convert_to_apk", return_value="YOUTUBE.apk"),
+                patch("src.downloader.download.get_apk_version", return_value="20.51.39") as apk_version,
+            ):
+                output_file, download_url = downloader.download("latest", app)
+
+        self.assertEqual("YOUTUBE.apk", output_file)
+        self.assertEqual("https://example/apk", download_url)
+        self.assertEqual("latest", app.app_version)
+        self.assertEqual("20.51.39", app.resolved_version)
+        apk_version.assert_called_once_with(Path(tmp_dir) / "YOUTUBE.apk")
 
     def test_download_passes_morphe_apkm_to_patcher_without_apkeditor(self: Self) -> None:
         """Morphe can patch APKM inputs directly, so preserving them avoids corrupting split-bundle patch targets."""

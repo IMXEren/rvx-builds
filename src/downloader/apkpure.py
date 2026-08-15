@@ -97,11 +97,11 @@ class ApkPure(Downloader):
             msg = f"Unable to extract link from {app} version list"
             raise APKPureAPKDownloadError(msg, url=page)
         if app_version := doc.select_one("span.info-sdk > span"):
-            self.app_version = slugify("".join(app_version.stripped_strings))
-            logger.info(f"Will be downloading {app}'s version {self.app_version}...")
+            self.resolved_version = slugify("".join(app_version.stripped_strings))
+            logger.info(f"Will be downloading {app}'s version {self.resolved_version}...")
         else:
-            self.app_version = "latest"
-            logger.info(f"Unable to guess latest version of {app}")
+            self.resolved_version = "latest"
+            logger.info(f"Unable to resolve latest version of {app}")
         return file_name, app_dl
 
     def specific_version(self: Self, app: APP, version: str) -> tuple[str, str]:
@@ -158,8 +158,8 @@ class ApkPure(Downloader):
                         url=str(download_page),
                     ) from exc
 
-                app.app_version = self.app_version
-                logger.info(f"Guessed {app.app_version} for {app.app_name}")
+                app.resolved_version = self.resolved_version or version
+                logger.info(f"Resolved {app.resolved_version} for {app.app_name}")
 
                 self._download(download_source, file_name)
                 return file_name, download_source
@@ -175,8 +175,8 @@ class ApkPure(Downloader):
         self.global_archs_priority = tuple(self._sort_by_priority(app.archs_to_build))
         download_page = app.download_source + "/download"
         file_name, download_source = self.extract_download_link(download_page, app.app_name)
-        app.app_version = self.app_version
-        if self.app_version != "latest":
-            logger.info(f"Guessed {app.app_version} for {app.app_name}")
+        app.resolved_version = self.resolved_version or "latest"
+        if app.resolved_version != "latest":
+            logger.info(f"Resolved {app.resolved_version} for {app.app_name}")
         self._download(download_source, file_name)
         return file_name, download_source

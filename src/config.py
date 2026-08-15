@@ -48,3 +48,5 @@ class RevancedConfig(object):
         self.obtainium_gh_private_export = env.str("OBTAINIUM_GH_PRIVATE_EXPORT", None)
         self.repack_split_apks = env.bool("REPACK_SPLIT_APKS", False)
         self.device_spec = self.temp_folder / "device-spec.json"
+        self.apkeep_device_name = env.str("APKEEP_DEVICE_NAME", None)
+        self.apkeep_device_file = env.str("APKEEP_DEVICE_FILE", None)

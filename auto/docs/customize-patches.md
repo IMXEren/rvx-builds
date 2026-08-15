@@ -25,6 +25,8 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
 | [EXISTING_DOWNLOADED_APKS ](#existing-downloaded-apks)    |           Already downloaded clean apks           | []                                                                                                       |
 | [GITHUB_PAT](#personal-access-token)                      |             GitHub Token to be used               | None                                                                                                     |
 | [GITLAB_PAT](#personal-access-token)                      |             GitLab Token to be used               | None                                                                                                     |
+| [APKEEP_DEVICE_NAME\*](#apkeep-device-configuration)      |  Device profile for APKEEP Google Play downloads  | None                                                                                                     |
+| [APKEEP_DEVICE_FILE\*](#apkeep-device-configuration)      |     Custom device properties file for APKEEP      | None                                                                                                     |
 | DRY_RUN                                                   |                   Do a dry run                    | False                                                                                                    |
 | [EXTRA_FILES](#extra-files)                               |    Extra files apk to upload in GitHub upload.    | None                                                                                                     |
 | [GLOBAL_CLI_DL\*](#global-resources)                      |     DL for CLI to be used for patching apps.      | [Revanced CLI](https://github.com/revanced/revanced-cli)                                                                        |
@@ -76,6 +78,8 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
 | [_APP_NAME_\_VERSION](#app-version)                             |         Version to use for download for patching.         | Recommended by patch resources |
 | [_APP_NAME_\_PACKAGE_NAME\*\*\*](#any-patch-apps)               |           Package name of the app to be patched           | None                           |
 | [_APP_NAME_\_DL_SOURCE\*\*\*](#any-patch-apps)                  |     Download source of any of the supported scrapper      | None                           |
+| APP_NAME_APKEEP_DEVICE_NAME                                     |          APKEEP device profile for **APP_NAME**.          | APKEEP_DEVICE_NAME             |
+| APP_NAME_APKEEP_DEVICE_FILE                                     |      APKEEP device properties file for **APP_NAME**.      | APKEEP_DEVICE_FILE             |
 | [_APP_NAME_\_DL\*\*\*](#app-dl)                                 |            Direct download Link for clean apk             | None                           |
 
 `*` - By default all patches for a given app are included.<br>
@@ -114,10 +118,39 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    3. APKPURE - Supports downloading any available version
        1. Link Format - `https://apkpure.net/-/<package-name>`
        2. Example Link - https://apkpure.net/-/com.google.android.youtube
-   4. APKEEP - Supports downloading any available version using [APKEEP](https://github.com/EFForg/apkeep)
+   4. APKEEP - Downloads the current Google Play version using [APKEEP](https://github.com/EFForg/apkeep)
        1. Link Format - `apkeep`
        2. Example Link - `apkeep`
-       3. You need to provide `APKEEP_EMAIL` and `APKEEP_TOKEN` in `[custom GitHub secrets](extras.md#custom-secrets)` for authentication.
+       3. You need to provide `APKEEP_EMAIL` and `APKEEP_TOKEN` in [custom GitHub secrets](extras.md#custom-secrets) for authentication.
+       4. Google Play does not provide historical app versions, so APKEEP cannot download a specifically requested older version.
+
+   <a id="apkeep-device-configuration"></a>
+   **APKEEP Google Play device configuration**
+
+   APKEEP uses its `px_9a` profile by default. Set `APKEEP_DEVICE_NAME` to use another built-in
+   [device profile](https://github.com/EFForg/rs-google-play/blob/master/gpapi/device.properties):
+
+   ```ini
+   APKEEP_DEVICE_NAME=ad_g3_pro
+   ```
+
+   To use a custom device properties file, such as one exported from Aurora Store's spoof manager, place the file in
+   the repository and provide its path. Files placed under `apks/` are available to local and container builds:
+
+   ```ini
+   APKEEP_DEVICE_FILE=apks/device.properties
+   ```
+
+   Both settings can be overridden per app. The app name prefix must match its entry in `PATCH_APPS`:
+
+   ```ini
+   YOUTUBE_APKEEP_DEVICE_NAME=ad_g3_pro
+   YOUTUBE_APKEEP_DEVICE_FILE=apks/youtube-device.properties
+   ```
+
+   These settings correspond to APKEEP's `device` and `device_properties_file` Google Play options. See the
+   [upstream device configuration guide](https://github.com/EFForg/apkeep/blob/master/USAGE-google-play.md#device-configuration)
+   for details. When no override is configured, APKEEP also defaults to the `UTC` timezone and `en_US` locale.
 
    <br>Please verify the source of original APKs yourself with links provided. I'm not responsible for any damage
    caused.If you know any better/safe source to download clean. Open a discussion.

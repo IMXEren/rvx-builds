@@ -27,7 +27,7 @@ from src.utils import (
 
 # Shared cache tuple keeps app-processing helpers explicit without repeating the full nested type.
 AppCaches = tuple[
-    dict[tuple[str, str], tuple[str, str]],
+    dict[tuple[str, str], tuple[str, str, str]],
     dict[str, tuple[str, str]],
     Lock,
     Lock,

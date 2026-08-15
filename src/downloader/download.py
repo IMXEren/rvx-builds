@@ -14,7 +14,7 @@ from curl_cffi import Session
 from loguru import logger
 from tqdm import tqdm
 
-from src.apks.repack import repack_apks
+from src.apks.repack import get_apk_version, repack_apks
 from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import DownloadError
@@ -34,7 +34,7 @@ class Downloader(object):
         self._QUEUE_LENGTH = 0
         self.config = config
         self.global_archs_priority: Any = None
-        self.app_version: Any = None
+        self.resolved_version: str | None = None
 
     @staticmethod
     def _existing_file_size(file_path: Path) -> int | None:
@@ -297,19 +297,39 @@ class Downloader(object):
         # Only Morphe accepts APKM safely; every other profile keeps the established APKEditor merge path.
         return file_name.endswith(".apkm") and app.effective_cli_argsf == "morphe-cli"
 
+    @staticmethod
+    def _has_concrete_version(version: str | None) -> bool:
+        """Return whether a version is more specific than the latest-release selector."""
+        return bool(version and version.strip().casefold() != "latest")
+
+    def _resolve_version_from_download(self: Self, file_name: str, app: APP) -> None:
+        """Use the downloaded manifest as the final source of a concrete version."""
+        if self._has_concrete_version(app.resolved_version):
+            return
+
+        resolved_version = get_apk_version(self.config.temp_folder / file_name)
+        if resolved_version:
+            app.resolved_version = resolved_version
+            logger.info(f"Resolved {resolved_version} for {app.app_name} from the downloaded APK manifest.")
+
     def download(self: Self, version: str, app: APP, **kwargs: Any) -> tuple[str, str]:
         """Public function to download apk to patch.
 
         :param version: version to download
         :param app: App to download
         """
+        requested_version = version or "latest"
+        # Each call is a fresh resolution attempt (including each VersionFallback candidate).
+        app.resolved_version = None
         if self.config.dry_run:
+            app.resolved_version = requested_version
             return "", ""
         if app.app_name in self.config.existing_downloaded_apks:
-            logger.debug(f"Will not download {app.app_name} -v{version} from the internet.")
+            logger.debug(f"Will not download {app.app_name} -v{requested_version} from the internet.")
+            app.resolved_version = requested_version
             return app.app_name, f"local://{app.app_name}"
-        if version and version != "latest":
-            file_name, app_dl = self.specific_version(app, version)
+        if requested_version != "latest":
+            file_name, app_dl = self.specific_version(app, requested_version)
         else:
             file_name, app_dl = self.latest_version(app, **kwargs)
 
@@ -318,8 +338,16 @@ class Downloader(object):
 
         if self._should_patch_download_directly(file_name, app):
             # The patcher can consume this input as-is, so conversion would remove the split-package shape it needs.
-            return file_name, app_dl
-        return self.convert_to_apk(file_name), app_dl
+            output_file_name = file_name
+        else:
+            output_file_name = self.convert_to_apk(file_name)
+
+        # Source pages are preferred, but the resulting APK manifest is the final fallback for unresolved latest URLs.
+        self._resolve_version_from_download(output_file_name, app)
+        if not self._has_concrete_version(app.resolved_version):
+            app.resolved_version = requested_version
+
+        return output_file_name, app_dl
 
     def direct_download(self: Self, dl: str, file_name: str) -> None:
         """Download from DL."""

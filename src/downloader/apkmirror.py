@@ -281,17 +281,21 @@ class ApkMirror(Downloader):
             # APKMirror may rename app slugs independently from source paths, so resolve release URLs from listing HTML.
             main_page = self._find_specific_version_page(app, version)
         download_page = self.get_download_page(main_page)
-        if app.app_version == "latest":
+        if version == "latest":
             try:
-                logger.info(f"Trying to guess {app.app_name} version.")
+                logger.info(f"Trying to resolve {app.app_name} version.")
                 download_page_doc = turbohtml.parse(self._extract_source(download_page))
                 appspec_value = download_page_doc.find(class_="appspec-value")
                 if appspec_value is not None:
-                    appspec_version = str(appspec_value.find(text=lambda text: "Version" in text if text else False))
-                    appspec_version = appspec_version.rsplit(":", maxsplit=1)[-1].strip()
-                    appspec_version = appspec_version.split(maxsplit=1)[0]
-                    app.app_version = slugify(appspec_version)
-                    logger.info(f"Guessed {app.app_version} for {app.app_name}")
+                    appspec_text = next(
+                        (text for text in appspec_value.stripped_strings if "Version" in text),
+                        "",
+                    )
+                    if appspec_text:
+                        appspec_version = appspec_text.rsplit(":", maxsplit=1)[-1].strip()
+                        appspec_version = appspec_version.split(maxsplit=1)[0]
+                        app.resolved_version = slugify(appspec_version)
+                        logger.info(f"Resolved {app.resolved_version} for {app.app_name}")
             except ScrapingError:
                 pass
         return self.extract_download_link_for_app(download_page, app)

@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 
 from loguru import logger
 
+from src.apks.repack import get_apk_version
 from src.cli_args import merge_cli_arg_maps
 from src.config import RevancedConfig
 from src.downloader.sources import APKEEP, apk_sources
@@ -42,8 +43,10 @@ class APP(object):
             config (RevancedConfig): Configuration object.
         """
         self.app_name = app_name
-        self.app_version = config.env.str(f"{app_name}_VERSION".upper(), None)
-        # Capture whether the env explicitly set a version, BEFORE patches overwrites it.
+        # Keep the requested selector separate from the concrete version discovered by a download source.
+        self.app_version: str | None = config.env.str(f"{app_name}_VERSION".upper(), None)
+        self.resolved_version: str | None = None
+        # Capture whether the env explicitly set a version, BEFORE patches selects a recommended default.
         self._env_version_set: bool = self.app_version is not None
         self.experiment = False
         self.cli_dl = config.env.str(f"{app_name}_CLI_DL".upper(), config.global_cli_dl)
@@ -92,10 +95,13 @@ class APP(object):
         # Obtainium metadata reuses the computed output name, so cache the value with an explicit string type.
         self._cached_output_file_name: str = ""
 
+        self.apkeep_device_name = config.env.str(f"{app_name}_APKEEP_DEVICE_NAME".upper(), config.apkeep_device_name)
+        self.apkeep_device_file = config.env.str(f"{app_name}_APKEEP_DEVICE_FILE".upper(), config.apkeep_device_file)
+
     def download_apk_for_patching(
         self: Self,
         config: RevancedConfig,
-        download_cache: dict[tuple[str, str], tuple[str, str]],
+        download_cache: dict[tuple[str, str], tuple[str, str, str]],
         download_lock: Lock,
     ) -> None:
         """Download apk to be patched, skipping if already downloaded (matching source and version)."""
@@ -106,6 +112,16 @@ class APP(object):
             logger.info("Downloading apk to be patched using provided dl")
             self.download_file_name = f"{self.app_name}.apk"
             Downloader(config).direct_download(self.download_dl, self.download_file_name)
+            requested_version = self.app_version or "latest"
+            self.resolved_version = None
+            if requested_version.casefold() == "latest":
+                self.resolved_version = get_apk_version(config.temp_folder / self.download_file_name)
+                if self.resolved_version:
+                    logger.info(
+                        f"Resolved {self.resolved_version} for {self.app_name} from the downloaded APK manifest.",
+                    )
+            # Keep the selector only when even the downloaded manifest cannot provide a concrete version.
+            self.resolved_version = self.resolved_version or requested_version
         else:
             logger.info("Downloading apk to be patched by scrapping")
             try:
@@ -130,20 +146,21 @@ class APP(object):
                 )
                 return
 
-            # Get unique cache key for this app
+            # Get unique cache key for this app. A missing selector has always meant "latest" to Downloader.
             cache_key = self.get_download_cache_key()
+            requested_version = self.app_version or "latest"
 
             if config.disable_caching:
                 # Operators use this mode to force fresh APK resolution instead of reusing another app's in-run result.
                 logger.info(f"Caching disabled. Downloading APK for {self.app_name} without cache lookup.")
                 downloader = DownloaderFactory.create_downloader(config=config, apk_source=self.download_source)
-                self.download_file_name, self.download_dl = downloader.download(self.app_version, self)
+                self.download_file_name, self.download_dl = downloader.download(requested_version, self)
                 return
 
             # Optimistic cache check (outside lock for better performance)
             if cache_key in download_cache:
                 logger.info(f"Skipping download. Reusing APK from cache for {self.app_name} ({self.app_version})")
-                self.download_file_name, self.download_dl = download_cache[cache_key]
+                self.download_file_name, self.download_dl, self.resolved_version = download_cache[cache_key]
                 return
 
             # Thread-safe cache check and download
@@ -151,16 +168,24 @@ class APP(object):
                 # Double-check after acquiring lock to handle race conditions
                 if cache_key in download_cache:
                     logger.info(f"Skipping download. Reusing APK from cache for {self.app_name} ({self.app_version})")
-                    self.download_file_name, self.download_dl = download_cache[cache_key]
+                    self.download_file_name, self.download_dl, self.resolved_version = download_cache[cache_key]
                     return
 
                 logger.info(f"Cache miss for {self.app_name} ({self.app_version}). Proceeding with download.")
                 downloader = DownloaderFactory.create_downloader(config=config, apk_source=self.download_source)
-                self.download_file_name, self.download_dl = downloader.download(self.app_version, self)
+                self.download_file_name, self.download_dl = downloader.download(requested_version, self)
 
-                # Save to cache using the unique cache key
-                download_cache[cache_key] = (self.download_file_name, self.download_dl)
+                # Cache the concrete version too, so another app reusing a "latest" download gets identical metadata.
+                download_cache[cache_key] = (
+                    self.download_file_name,
+                    self.download_dl,
+                    self.get_effective_version(),
+                )
                 logger.info(f"Added {self.app_name} ({self.app_version}) to download cache.")
+
+    def get_effective_version(self: Self) -> str:
+        """Return the downloaded version, falling back to the requested selector when it cannot be discovered."""
+        return getattr(self, "resolved_version", None) or self.app_version or "latest"
 
     def get_download_cache_key(self: Self) -> tuple[str, str]:
         """Generate a unique cache key for APK downloads.
@@ -219,7 +244,7 @@ class APP(object):
         parts: list[str] = []
 
         # App version
-        parts.append(f"app_version:{getattr(self, 'app_version', '') or ''}")
+        parts.append(f"app_version:{self.get_effective_version()}")
 
         # CLI
         resource = getattr(self, "resource", {}) or {}
@@ -284,7 +309,7 @@ class APP(object):
         current_date = datetime.now(ZoneInfo(time_zone))
         formatted_date = current_date.strftime("%Y%b%d.%I%M%p").upper()
         self._cached_output_file_name = (
-            f"Re{self.app_name}-Version{slugify(self.app_version)}"
+            f"Re{self.app_name}-Version{slugify(self.get_effective_version())}"
             f"-PatchVersion{slugify(patch_bundle_versions)}"
             f"-BuildHash{self.build_hash}-{formatted_date}-output.apk"
         )

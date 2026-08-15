@@ -283,8 +283,8 @@ class APKMirrorDownloaderTests(TestCase):
                     preserve_bundle=False,
                 )
 
-    def test_specific_version_skips_version_guess_when_missing_appspec(self: Self) -> None:
-        """Missing appspec-value container should not crash or overwrite app.app_version."""
+    def test_specific_version_leaves_version_unresolved_when_missing_appspec(self: Self) -> None:
+        """Missing appspec metadata should preserve the requested selector and leave resolution to the caller."""
         page_with_variants = """
             <div class="tab-pane noPadding">
                 <div class="table-row headerFont">
@@ -299,6 +299,7 @@ class APKMirrorDownloaderTests(TestCase):
             SimpleNamespace(
                 app_name="YOUTUBE",
                 app_version="latest",
+                resolved_version=None,
                 download_source="https://www.apkmirror.com/apk/google-inc/youtube/youtube",
                 effective_cli_argsf="revanced-cli",
             ),
@@ -316,11 +317,49 @@ class APKMirrorDownloaderTests(TestCase):
             ):
                 file_name, download_url = downloader.specific_version(app, "latest")
 
-        # app_version should remain "latest" (not overwritten by a missing appspec-value element).
         self.assertEqual(app.app_version, "latest")
+        self.assertIsNone(app.resolved_version)
         extract_link.assert_called_once()
         self.assertEqual("YOUTUBE.apk", file_name)
         self.assertEqual("https://example.test/download.php?id=1", download_url)
+
+    def test_specific_latest_resolves_version_without_overwriting_selector(self: Self) -> None:
+        """Source-discovered versions belong in resolved_version while app_version remains the request."""
+        release_page = """
+            <div class="tab-pane noPadding">
+                <div class="table-row headerFont">
+                    <span class="apkm-badge">APK</span>
+                    <a class="accent_color" href="/download/best/">Download</a>
+                    APK arm64-v8a nodpi Android 5.0+
+                </div>
+            </div>
+            <div class="appspec-value">Version: 20.51.39 APK</div>
+        """
+        app = cast(
+            "APP",
+            SimpleNamespace(
+                app_name="YOUTUBE",
+                app_version="latest",
+                resolved_version=None,
+                download_source="https://www.apkmirror.com/apk/google-inc/youtube/youtube",
+                effective_cli_argsf="revanced-cli",
+            ),
+        )
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with (
+                patch.object(downloader, "_extract_source", return_value=release_page),
+                patch.object(
+                    downloader,
+                    "extract_download_link_for_app",
+                    return_value=("YOUTUBE.apk", "https://example.test/download.php?id=1"),
+                ),
+            ):
+                downloader.specific_version(app, "latest")
+
+        self.assertEqual("latest", app.app_version)
+        self.assertEqual("20.51.39", app.resolved_version)
 
     def test_force_download_preserves_bundle_as_apkm_when_requested(self: Self) -> None:
         """Morphe patch sources need APKMirror bundles preserved as APKM instead of merged through APKEditor."""

@@ -8,12 +8,54 @@ from threading import Lock
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Self, cast
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+from src.apks.version_fallback import VersionFallback
 from src.app import APP
 
 if TYPE_CHECKING:
     from src.config import RevancedConfig
+    from src.downloader.download import Downloader
+
+
+class AppVersionStateTests(TestCase):
+    """Verify requested and resolved app versions remain separate."""
+
+    def test_version_fallback_resolves_candidate_without_overwriting_latest_selector(self: Self) -> None:
+        """A successful fallback candidate is concrete download state, not a replacement request selector."""
+        app = cast(
+            "APP",
+            SimpleNamespace(app_name="YOUTUBE", app_version="latest", resolved_version=None),
+        )
+        downloader = cast(
+            "Downloader",
+            SimpleNamespace(download=Mock(return_value=("YOUTUBE.apk", "https://example.test/YOUTUBE.apk"))),
+        )
+
+        result = VersionFallback.run(app, downloader, ["20.51.39"])
+
+        self.assertEqual(("YOUTUBE.apk", "https://example.test/YOUTUBE.apk"), result)
+        self.assertEqual("latest", app.app_version)
+        self.assertEqual("20.51.39", app.resolved_version)
+
+    def test_direct_url_uses_downloaded_manifest_to_resolve_latest_selector(self: Self) -> None:
+        """Direct APK URLs should get the same manifest fallback as source-backed downloads."""
+        app = APP.__new__(APP)
+        app.app_name = "YOUTUBE"
+        app.app_version = "latest"
+        app.resolved_version = None
+        app.download_dl = "https://example.test/YOUTUBE.apk"
+        config = cast("RevancedConfig", SimpleNamespace(temp_folder=Path("apks")))
+
+        with (
+            patch("src.downloader.download.Downloader.direct_download"),
+            patch("src.app.get_apk_version", return_value="20.51.39") as apk_version,
+        ):
+            app.download_apk_for_patching(config, {}, Lock())
+
+        self.assertEqual("latest", app.app_version)
+        self.assertEqual("20.51.39", app.resolved_version)
+        apk_version.assert_called_once_with(Path("apks/YOUTUBE.apk"))
 
 
 class AppCachingTests(TestCase):
@@ -37,6 +79,32 @@ class AppCachingTests(TestCase):
             str(Path("apks", "patch-source-temporary-files", "morpheapp.morphe.patches.youtube_morphe")),
             path,
         )
+
+    def test_apk_cache_restores_resolved_version_for_latest_selector(self: Self) -> None:
+        """A cached latest download must carry the concrete version discovered by the original source request."""
+        app = APP.__new__(APP)
+        app.app_name = "YOUTUBE"
+        app.app_version = "latest"
+        app.resolved_version = None
+        app.download_dl = ""
+        app.download_source = "https://example.test/youtube"
+        app.package_name = "com.google.android.youtube"
+        app.__dict__["_env_version_set"] = True
+        app.compatible_versions = set()
+        config = cast("RevancedConfig", SimpleNamespace(disable_caching=False))
+        cache = {
+            (app.download_source, "latest"): (
+                "YOUTUBE.apk",
+                "https://example.test/YOUTUBE.apk",
+                "20.51.39",
+            ),
+        }
+
+        app.download_apk_for_patching(config, cache, Lock())
+
+        self.assertEqual("latest", app.app_version)
+        self.assertEqual("20.51.39", app.resolved_version)
+        self.assertEqual("YOUTUBE.apk", app.download_file_name)
 
     def test_disabled_resource_cache_downloads_and_leaves_shared_cache_unchanged(self: Self) -> None:
         """Disabled cache mode should resolve resources freshly without mutating shared cache state."""

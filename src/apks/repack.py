@@ -7,6 +7,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 from loguru import logger
+from pyaxmlparser import APK
 from pyaxmlparser.axmlprinter import AXMLPrinter
 
 from src.apks.silence import silence_pyaxmlparser
@@ -55,6 +56,39 @@ def _should_keep(modifier: str, allowed_arch: set[str], allowed_dpi: set[str]) -
         # It is a language or feature module
         keep = True
     return keep
+
+
+def _normalized_version(version: object) -> str | None:
+    """Return a non-empty manifest version as text."""
+    normalized = str(version).strip() if version is not None else ""
+    return normalized or None
+
+
+def get_apk_version(file_path: Path) -> str | None:
+    """Read the version name from a downloaded APK or an APK inside a split bundle."""
+    if not file_path.exists():
+        return None
+
+    try:
+        with zipfile.ZipFile(file_path) as archive:
+            if "AndroidManifest.xml" in archive.namelist():
+                with silence_pyaxmlparser():
+                    return _normalized_version(APK(file_path).version_name)
+
+            apk_items = [item for item in archive.infolist() if item.filename.lower().endswith(".apk")]
+            for item in apk_items:
+                try:
+                    apk_data = archive.read(item)
+                    with silence_pyaxmlparser():
+                        version = _normalized_version(APK(apk_data, raw=True).version_name)
+                    if version:
+                        return version
+                except Exception as e:  # noqa: BLE001  # pyaxmlparser raises generic errors
+                    logger.debug("Failed to read version from inner APK {}: {}", item.filename, e)
+    except Exception as e:  # noqa: BLE001  # downloaded files and pyaxmlparser can fail in several ways
+        logger.warning("Failed to inspect downloaded APK version from {}: {}", file_path.name, e)
+
+    return None
 
 
 def _get_package_name(zin: zipfile.ZipFile) -> str | None:
