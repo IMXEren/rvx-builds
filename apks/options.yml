@@ -3,9 +3,9 @@ GmsCore support:
   checkGmsCore: true
 
 Spoof client:
-  OAuth client ID: "$__REDDIT_CLIENT_ID__"
-  Redirect URI: redreader://rr_oauth_redir
-  User agent: org.quantumbadger.redreader/1.25.1
+  client-id: "$__REDDIT_CLIENT_ID__"
+  redirect-uri: redreader://rr_oauth_redir
+  user-agent: org.quantumbadger.redreader/1.25.1
 
 Hex:
   replacements: null
