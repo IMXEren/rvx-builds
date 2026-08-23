@@ -1,7 +1,7 @@
 apify-fingerprint-datapoints==0.13.0
 browserforge==1.2.4
 cloakbrowser[geoip]==0.5.8
-curl_cffi==0.15.0
+curl_cffi==0.16.1
 environs==15.1.0
 google-play-scraper==1.2.7
 lastversion==3.6.17
