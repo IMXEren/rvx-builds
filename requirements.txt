@@ -16,4 +16,4 @@ requests==2.34.2
 ruamel.yaml==0.19.1
 semver==3.0.4
 tqdm==4.70.0
-turbohtml==1.5.0
+turbohtml==1.6.1
