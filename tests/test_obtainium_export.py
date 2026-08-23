@@ -8,7 +8,7 @@ from contextlib import chdir
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Self, cast
+from typing import Self, cast
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -19,9 +19,6 @@ from src.utils import (
     generate_per_app_changelog,
     write_per_app_changelogs,
 )
-
-if TYPE_CHECKING:
-    from src.config import RevancedConfig
 
 
 class _Env:

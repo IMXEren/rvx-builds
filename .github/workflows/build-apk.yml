@@ -101,18 +101,32 @@ concurrency:
   group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 jobs:
+  # Compute the release tag once up-front so build-artifact.yml can pass it into the Obtainium export before docker runs.
+  compute-tag:
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      RELEASE_TAG: ${{ steps.get-date.outputs.tag }}
+    steps:
+      - name: Get Date
+        id: get-date
+        run: |
+          echo "tag=Build-$(TZ='Asia/Kolkata' date +"%Y.%m.%d-%H.%M.%S")" >> $GITHUB_OUTPUT
+
   build-apk:
+    needs: compute-tag
     uses: ./.github/workflows/build-artifact.yml
     with:
       COMMIT_CHANGELOG: ${{ inputs.COMMIT_CHANGELOG }}
       PREFERRED_PATCH_APPS: ${{ inputs.PREFERRED_PATCH_APPS }}
+      RELEASE_TAG: ${{ needs.compute-tag.outputs.RELEASE_TAG }}
     secrets: inherit
 
   upload-to-github:
     name: GitHub Upload
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: build-apk
+    needs: [compute-tag, build-apk]
     if: inputs.GITHUB_UPLOAD
     outputs:
       release_url: ${{ steps.release.outputs.html_url }}
@@ -129,10 +143,8 @@ jobs:
         with:
           name: Patch-Updates
 
-      - name: Get Date
-        id: get-date
+      - name: Generate Patch Updates Changelog
         run: |
-          echo "date=$(TZ='Asia/Kolkata' date +"%Y.%m.%d-%H.%M.%S")" >> $GITHUB_OUTPUT
           if [ ! -f ./patch-updates.md ]; then
               cp ./changelog.md ./patch-updates.md
           fi
@@ -150,7 +162,7 @@ jobs:
         with:
           artifacts: "apks/*-output.apk,updates.json,changelog.json"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: Build-${{ steps.get-date.outputs.date }}
+          tag: ${{ needs.compute-tag.outputs.RELEASE_TAG }}
           bodyFile: patch-updates.md
           artifactErrorsFailBuild: true
           prerelease: ${{ inputs.PRE_RELEASE }}

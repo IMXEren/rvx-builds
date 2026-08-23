@@ -2,18 +2,18 @@ apify-fingerprint-datapoints==0.13.0
 browserforge==1.2.4
 cloakbrowser[geoip]==0.4.12
 curl_cffi==0.15.0
-environs==15.0.1
+environs==15.1.0
 google-play-scraper==1.2.7
-lastversion==3.6.12
+lastversion==3.6.17
 loguru==0.7.3
-packaging==26.2
-pre-commit==4.6.0
+packaging==26.3
+pre-commit==4.6.2
 pyaxmlparser==0.3.31
 pycryptodome==3.23.0
 pydoll-python @git+https://github.com/IMXEren/pydoll.git@2.24.1
-python-dotenv==1.2.2
+python-dotenv==1.2.3
 requests==2.34.2
 ruamel.yaml==0.19.1
 semver==3.0.4
-tqdm==4.68.1
+tqdm==4.70.0
 turbohtml==1.5.0

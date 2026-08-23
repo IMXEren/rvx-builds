@@ -11,6 +11,11 @@ on:
         required: false
         type: boolean
         default: false
+      CACHE_RELEASES:
+        description: "Persist older releases to not delete them on the run."
+        required: false
+        type: boolean
+        default: true
   schedule:
     - cron: "0 * * * *"
 jobs:
@@ -20,16 +25,20 @@ jobs:
     concurrency:
       group: ${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
+    env:
+      # Used to pass scheduled-run defaults to the build-release job.
+      SCHEDULED_TELEGRAM_NO_ROOT_UPLOAD: false
+      SCHEDULED_CACHE_RELEASES: true
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Update Env for custom build
         run: |
           echo "${{ secrets.ENVS }}" >> .env
 
       - name: Setup python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
 
@@ -55,6 +64,12 @@ jobs:
           should_build="$(grep -m1 '^PATCH_APPS=' <<< "$output" | cut -d= -f2- | tr -d '\r' || printf '')"
           echo "SHOULD_BUILD=$should_build" >> $GITHUB_OUTPUT
 
+      - name: Expose scheduled-run defaults
+        id: scheduled_defaults
+        run: |
+          echo "TELEGRAM_NO_ROOT_UPLOAD=$SCHEDULED_TELEGRAM_NO_ROOT_UPLOAD" >> "$GITHUB_OUTPUT"
+          echo "CACHE_RELEASES=$SCHEDULED_CACHE_RELEASES" >> "$GITHUB_OUTPUT"
+
       - name: Upload patch updates changelog
         uses: actions/upload-artifact@main
         if: ${{ steps.should_build.outputs.SHOULD_BUILD != '' }}
@@ -67,6 +82,8 @@ jobs:
 
     outputs:
       SHOULD_BUILD: ${{ steps.should_build.outputs.SHOULD_BUILD }}
+      SCHEDULED_TELEGRAM_NO_ROOT_UPLOAD: ${{ steps.scheduled_defaults.outputs.TELEGRAM_NO_ROOT_UPLOAD }}
+      SCHEDULED_CACHE_RELEASES: ${{ steps.scheduled_defaults.outputs.CACHE_RELEASES }}
 
   build-release:
     permissions: write-all
@@ -78,5 +95,14 @@ jobs:
       group: Auto-Release-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
     with:
-      TELEGRAM_NO_ROOT_UPLOAD: ${{ inputs.TELEGRAM_NO_ROOT_UPLOAD || false }}
       PREFERRED_PATCH_APPS: ${{ needs.release-check.outputs.SHOULD_BUILD }}
+      TELEGRAM_NO_ROOT_UPLOAD: >-
+        ${{
+          (github.event_name == 'schedule' && fromJSON(needs.release-check.outputs.SCHEDULED_TELEGRAM_NO_ROOT_UPLOAD))
+          || (github.event_name != 'schedule' && inputs.TELEGRAM_NO_ROOT_UPLOAD)
+        }}
+      CACHE_RELEASES: >-
+        ${{
+          (github.event_name == 'schedule' && fromJSON(needs.release-check.outputs.SCHEDULED_CACHE_RELEASES))
+          || (github.event_name != 'schedule' && inputs.CACHE_RELEASES)
+        }}
