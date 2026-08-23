@@ -61,9 +61,21 @@ def _make_running_loop() -> MagicMock:
 
 
 @pytest.fixture(autouse=True)
-def _prevent_real_signal_raise(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Prevent any production path from sending real signals to the test process."""
+def _prevent_real_signal_raise(monkeypatch: pytest.MonkeyPatch) -> Any:
+    """Prevent signal redelivery and isolate process handlers between tests."""
+    set_signal = signal.signal
+    prior_handlers = {signum: signal.getsignal(signum) for signum in process_signals.MANAGED_SIGNALS}
     monkeypatch.setattr(signal, "raise_signal", lambda signum: None)
+    monkeypatch.setattr(
+        process_signals.SignalCoordinator,
+        "_redeliver_after_pending_call",
+        staticmethod(lambda signum: None),
+    )
+
+    yield
+
+    for signum, handler in prior_handlers.items():
+        set_signal(signum, handler)
 
 
 @pytest.fixture(autouse=True)

@@ -18,6 +18,15 @@ import src.signals as process_signals
 _GATE_TIMEOUT = 10.0
 
 
+def _receive_windows_signal(connection: Any) -> None:
+    if os.name != "nt":
+        return
+    command, signum = connection.recv()
+    if command != "raise-signal":
+        os._exit(70)
+    signal.raise_signal(signum)
+
+
 def _child_main(connection: Any, prior_kind: str, *, second_signal_case: bool) -> None:
     """Child subprocess: install coordinator, register callback, wait for signal."""
     coordinator = process_signals.SignalCoordinator()
@@ -45,6 +54,7 @@ def _child_main(connection: Any, prior_kind: str, *, second_signal_case: bool) -
 
         coordinator.register(blocking_callback)
         connection.send(("handler-ready", os.getpid()))
+        _receive_windows_signal(connection)
 
         # Wait for first signal (signal_count advances from 0)
         deadline = time.monotonic() + _GATE_TIMEOUT
@@ -52,6 +62,8 @@ def _child_main(connection: Any, prior_kind: str, *, second_signal_case: bool) -
             if time.monotonic() >= deadline:
                 os._exit(71)
             time.sleep(0.005)
+
+        _receive_windows_signal(connection)
 
         # Wait for coordinator to fully finish after both signals
         deadline = time.monotonic() + _GATE_TIMEOUT
@@ -71,6 +83,7 @@ def _child_main(connection: Any, prior_kind: str, *, second_signal_case: bool) -
 
         coordinator.register(sync_callback)
         connection.send(("handler-ready", os.getpid()))
+        _receive_windows_signal(connection)
 
         # Wait for signal (signal_count advances from 0)
         deadline = time.monotonic() + _GATE_TIMEOUT
@@ -116,6 +129,15 @@ def _expect(connection: Any, name: str) -> object:
     return payload
 
 
+def _signal_child(pid: int, connection: Any, signum: signal.Signals) -> None:
+    if os.name == "nt":
+        # Windows os.kill() calls TerminateProcess for SIGINT/SIGTERM instead
+        # of dispatching them through Python's installed signal handlers.
+        connection.send(("raise-signal", signum))
+    else:
+        os.kill(pid, signum)
+
+
 def _force_reap(process: Any) -> None:
     if process.is_alive():
         process.kill()
@@ -140,7 +162,7 @@ def test_sig_dfl_terminates_after_callback_processing(children: list[Any]) -> No
     pid = _expect(connection, "handler-ready")
     assert isinstance(pid, int)
 
-    os.kill(pid, signal.SIGINT)
+    _signal_child(pid, connection, signal.SIGINT)
     _expect(connection, "cleanup-drained")
 
     process.join(timeout=_GATE_TIMEOUT)
@@ -154,7 +176,7 @@ def test_sig_ign_survives_and_reinstalls(children: list[Any]) -> None:
     pid = _expect(connection, "handler-ready")
     assert isinstance(pid, int)
 
-    os.kill(pid, signal.SIGINT)
+    _signal_child(pid, connection, signal.SIGINT)
     _expect(connection, "cleanup-drained")
 
     process.join(timeout=_GATE_TIMEOUT)
@@ -169,7 +191,7 @@ def test_callable_prior_runs_after_signal(children: list[Any]) -> None:
     pid = _expect(connection, "handler-ready")
     assert isinstance(pid, int)
 
-    os.kill(pid, signal.SIGTERM)
+    _signal_child(pid, connection, signal.SIGTERM)
     _expect(connection, "cleanup-drained")
     _expect(connection, "prior-called")
 
@@ -185,9 +207,9 @@ def test_second_signal_during_active_event_is_idempotent(children: list[Any]) ->
     pid = _expect(connection, "handler-ready")
     assert isinstance(pid, int)
 
-    os.kill(pid, signal.SIGINT)
+    _signal_child(pid, connection, signal.SIGINT)
     _expect(connection, "callback-fired")
-    os.kill(pid, signal.SIGINT)
+    _signal_child(pid, connection, signal.SIGINT)
     _expect(connection, "cleaned-up")
 
     process.join(timeout=_GATE_TIMEOUT)
