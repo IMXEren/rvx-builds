@@ -82,6 +82,21 @@ The patching is done using the CLI for all the builds. The `/apks` folder is use
 
 **Note: A possible error while installing the released patched apks can be due to signature mismatch of the apk and it's installed app. In this case, either provide the same the keystore file to sign apks in `/apks` folder in GitHub repository and add `GLOBAL_KEYSTORE_FILE_NAME=*.keystore` in `.env` file OR simply delete (make backup if possible; one-time process) those already installed non-patched (same package) or patched apps.**
 
+### Docker
+
+The builder image is self-contained and no longer ships a browser. Pages that block plain HTTP requests are replayed by [Prowl](https://github.com/IMXEren/prowl), a separate browser service that owns the browser, its persistent profile and the display.
+
+```bash
+cp .env.example .env
+docker compose up
+```
+
+`docker compose` builds the Prowl image locally from a pinned source tag by default; no Prowl image is pulled or published. Point the build at a local checkout with `PROWL_BUILD_CONTEXT=../prowl` in `.env`. The builder reaches the service at `PROWL_URL` (default `http://prowl:8191`) on the Compose network, so the service is not published to the host.
+
+The browser benefits from the private fingerprint font set. Run `scripts/build-prowl-local.sh` (or set `COMPOSE_FILE=docker-compose-local.yml` first for the VNC stack): it authenticates with `gh`, checks out the Git LFS archive, temporarily places `fonts.zip` under the existing `resources` directory, builds `prowl:local`, and removes the archive. BuildKit mounts `resources` read-only as a named context; the archive does not enter the rvx image.
+
+`docker-compose-local.yml` adds a VNC/noVNC display so you can watch the browser work, mainly for debugging a site that will not clear its challenge.
+
 ## Updates & Changelogs
 
 The `RVX-Builds - Project Updates` profile will let you know of any updates I push so, make sure it's enabled.
