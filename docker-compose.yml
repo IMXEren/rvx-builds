@@ -4,14 +4,44 @@ services:
     container_name: revanced-builder
     pull_policy: always
     depends_on:
-      display:
+      prowl:
         condition: service_healthy
     environment:
-      - DISPLAY=display:0
+      - PROWL_URL=http://prowl:8191
     env_file:
       - .env
     volumes:
       - .:/app:z
+
+  prowl:
+    build:
+      context: ${PROWL_BUILD_CONTEXT:-https://github.com/IMXEren/prowl.git#v1.0.0}
+      additional_contexts:
+        windows_fonts: ${PROWL_FONTS_CONTEXT:-./resources}
+    image: prowl:local
+    container_name: prowl
+    restart: unless-stopped
+    depends_on:
+      display:
+        condition: service_healthy
+    environment:
+      - DISPLAY=display:0
+      - PROWL_PROFILE_DIR=/state/profile
+      - PROWL_PROFILE_ARCHIVE=/state/browser-profile.zip
+      - PROWL_PORT=8191
+    expose:
+      - "8191"
+    volumes:
+      - prowl-state:/state
+    # Chromium needs a large /dev/shm; Docker's 64MB default starves it.
+    shm_size: "2gb"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8191/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
   display:
     image: ghcr.io/imxeren/xvfb:main
     restart: unless-stopped
@@ -24,3 +54,6 @@ services:
       timeout: 2s
       retries: 10
       start_period: 2s
+
+volumes:
+  prowl-state:
