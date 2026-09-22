@@ -37,7 +37,6 @@ jobs:
     with:
       IMAGE_TAG: ${{ needs.image-tag.outputs.IMAGE_TAG }}
       FILE: Dockerfile-base
-      EXTRA_FONTS: false
 
   cleanup:
     needs: ghcr-push

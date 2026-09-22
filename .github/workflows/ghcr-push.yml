@@ -9,10 +9,6 @@ on:
       FILE:
         required: false
         type: string
-      EXTRA_FONTS:
-        required: false
-        default: true
-        type: boolean
 
 permissions:
   contents: read
@@ -35,14 +31,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Fetch extra fonts
-        if: inputs.EXTRA_FONTS
-        env:
-          GH_TOKEN: ${{ secrets.SECRET_GITHUB_PAT }}
-        run: |
-          gh api repos/IMXEren/extra-fonts/contents/fonts.zip \
-            --jq '.content' | base64 -d > fonts.zip
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
