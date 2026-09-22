@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -22,8 +22,7 @@ from environs import Env
 from loguru import logger
 from requests import Response
 
-from src.browser.cookies import Cookies
-from src.browser.site import Source, load_page_in_browser
+from src.prowl_client import ProwlResponse, fetch_via_prowl, to_cookie_jar
 from src.signals import get_process_cancel_token
 
 if TYPE_CHECKING:
@@ -35,7 +34,7 @@ from src.downloader.sources import APK_MIRROR_APK_CHECK
 from src.exceptions import ScrapingError
 from src.metadata import SourceMetadata
 
-type ResponseType = Response | CurlResponse | Source
+type ResponseType = Response | CurlResponse | ProwlResponse
 default_build = [
     "youtube",
     "youtube_music",
@@ -84,19 +83,15 @@ pbundles_norm_hashes_key = "pbundles_norm_hashes"
 pbundles_norm_hashes: dict[str, str] = {}
 
 
-def update_session_data(user_agent: str | None = None) -> None:
-    """Update the session related data such as user-agent, headers, cookies.
-
-    Aimed to be used in conjuction with browser. For example,
-    browser would store cookies which can be reused in `Session`.
-    """
+def update_session_data(user_agent: str | None = None, cookies: list[dict[str, Any]] | None = None) -> None:
+    """Apply browser identity and cookies to the direct request session."""
     if user_agent:
         _headers.update({"User-Agent": user_agent})
     _headers.pop("Accept-Encoding", None)
     request_header.update(_headers)
     session.headers.update(_headers)
-    cookie_jar = Cookies().load_to_cookie_jar()
-    session.cookies.update(cookie_jar)
+    if cookies:
+        session.cookies.update(to_cookie_jar(cookies))
 
 
 def update_changelog(name: str, response: dict[str, str]) -> None:
@@ -225,13 +220,12 @@ def make_request(
                 token.raise_if_cancelled()
             response = _direct()
         else:
-            # Browser-based retry.
-            response = load_page_in_browser(url, timeout=request_timeout)
+            response = fetch_via_prowl(url, timeout=request_timeout, headers=headers)
             if response:
-                update_session_data(response.user_agent)
+                update_session_data(response.user_agent, response.cookies)
 
         if _is_ok(response) or not _is_retriable(response):
-            return cast("ResponseType", response)
+            return response
 
     # One final direct attempt after exhausting retries.
     return _direct()
@@ -243,7 +237,8 @@ def handle_request_response(response: ResponseType, url: str) -> None:
     Parameters
     ----------
     response : ResponseType
-        The parameter `response` is of type `ResponseType`, which is a union of `Response`, `CurlResponse` and `Source`.
+        The parameter `response` is of type `ResponseType`, a union of `Response`, `CurlResponse` and
+        `ProwlResponse`.
         This object typically contains information about the response received from the server,
         such as the status code, headers, and response body.
     url: str
