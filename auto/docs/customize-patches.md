@@ -26,8 +26,9 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
 | [GITHUB_PAT](#personal-access-token)                      |             GitHub Token to be used               | None                                                                                                     |
 | [GITLAB_PAT](#personal-access-token)                      |             GitLab Token to be used               | None                                                                                                     |
 | [PROWL_URL](#prowl-browser-service)                       |        Prowl browser-service endpoint              | http://prowl:8191                                                                                        |
-| [PROWL_BUILD_CONTEXT](#prowl-browser-service)             |        Prowl source used by Compose                | https://github.com/IMXEren/prowl.git#main                                                                |
-| [PROWL_FONTS_CONTEXT](#prowl-browser-service)             |        Directory containing `fonts.zip`            | ./resources                                                                                              |
+| [PROWL_IMAGE](#prowl-browser-service)                     |        Private Prowl image to pull                 | ghcr.io/imxeren/prowl:latest                                                                             |
+| [PROWL_BUILD_CONTEXT](#prowl-browser-service)             |        Prowl source fallback                       | the pinned ref in `.prowl-version`                                                                      |
+| [PROWL_FONTS_CONTEXT](#prowl-browser-service)             |     Directory containing `fonts.zip`               | None                                                                                                     |
 | [APKEEP_DEVICE_NAME\*](#apkeep-device-configuration)      |  Device profile for APKEEP Google Play downloads  | None                                                                                                     |
 | [APKEEP_DEVICE_FILE\*](#apkeep-device-configuration)      |     Custom device properties file for APKEEP      | None                                                                                                     |
 | DRY_RUN                                                   |                   Do a dry run                    | False                                                                                                    |
@@ -563,17 +564,19 @@ secrets` in the format -
 
     Set `PROWL_URL` to another absolute HTTP or HTTPS origin only when Prowl runs outside the Compose network.
 
-    Compose builds Prowl locally from a pinned source tag. Override the source with a Git URL, tag, or local checkout:
+    `scripts/prepare-prowl.sh` pulls the private image first and tags it as `prowl:local`. If the pull fails, it builds the public source at the ref pinned in `.prowl-version`. Override either source when needed:
 
     ```ini
-    PROWL_BUILD_CONTEXT=https://github.com/IMXEren/prowl.git#main
+    PROWL_IMAGE=ghcr.io/imxeren/prowl:latest
+    # Or point at a tag, branch, or commit instead of the pinned ref
+    PROWL_BUILD_CONTEXT=https://github.com/IMXEren/prowl.git#<ref>
     # PROWL_BUILD_CONTEXT=../prowl
     ```
 
-    The local build helper downloads the private Git LFS font archive into `resources/fonts.zip`, passes `resources` as Prowl's read-only font build context, and removes a temporary archive after the build:
+    Set `PROWL_FONTS_CONTEXT` to a directory containing `fonts.zip` to install the extra Windows font set into that fallback build:
 
     ```ini
     PROWL_FONTS_CONTEXT=./resources
     ```
 
-    Run `bash scripts/build-prowl-local.sh` to perform that build. The resulting `prowl:local` image stays local and is never published by rvx-builds.
+    Run `./run.sh`; the resulting `prowl:local` image stays local and is never published by rvx-builds.

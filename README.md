@@ -88,14 +88,12 @@ The builder image is self-contained and no longer ships a browser. Pages that bl
 
 ```bash
 cp .env.example .env
-docker compose up
+./run.sh
 ```
 
-`docker compose` builds the Prowl image locally from a pinned source tag by default; no Prowl image is pulled or published. Point the build at a local checkout with `PROWL_BUILD_CONTEXT=../prowl` in `.env`. The builder reaches the service at `PROWL_URL` (default `http://prowl:8191`) on the Compose network, so the service is not published to the host.
+The runner first pulls the private `ghcr.io/imxeren/prowl:latest` image and tags it as `prowl:local`. If the image is unavailable, it builds `prowl:local` from the public source at the ref pinned in `.prowl-version`. Set `PROWL_IMAGE` to use another published image, `PROWL_BUILD_CONTEXT=../prowl` to build a local checkout, or `PROWL_FONTS_CONTEXT` to a directory containing `fonts.zip` to add the extra Windows font set to that build. The builder reaches Prowl at `PROWL_URL` (default `http://prowl:8191`) on the Compose network; Prowl is not included in the rvx image or published to the host.
 
-The browser benefits from the private fingerprint font set. Run `scripts/build-prowl-local.sh` (or set `COMPOSE_FILE=docker-compose-local.yml` first for the VNC stack): it authenticates with `gh`, checks out the Git LFS archive, temporarily places `fonts.zip` under the existing `resources` directory, builds `prowl:local`, and removes the archive. BuildKit mounts `resources` read-only as a named context; the archive does not enter the rvx image.
-
-`docker-compose-local.yml` adds a VNC/noVNC display so you can watch the browser work, mainly for debugging a site that will not clear its challenge.
+Set `COMPOSE_FILE=docker-compose-local.yml` when running `./run.sh` to add a VNC/noVNC display for debugging a site that will not clear its challenge.
 
 ## Updates & Changelogs
 
