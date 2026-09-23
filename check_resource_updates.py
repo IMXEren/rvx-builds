@@ -241,15 +241,10 @@ def _fetch_metadata(url: str, config: RevancedConfig) -> SourceMetadata:
 
 def _fetch_github_metadata(url: str, token: str | None) -> SourceMetadata:
     """Fetch release metadata from a GitHub tool URL."""
-    owner, repo_name, release_tag = Github._extract_repo_owner_and_tag(url)  # noqa: SLF001
+    owner, repo_name, release_tag = Github._extract_repo_owner_and_tag(url, token)  # noqa: SLF001
     repo_url = f"https://api.github.com/repos/{owner}/{repo_name}/releases/{release_tag}"
-    headers = {
-        "Content-Type": "application/vnd.github.v3+json",
-    }
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
     logger.debug(f"Fetching metadata from {repo_url}")
-    response = requests.get(repo_url, headers=headers, timeout=request_timeout)
+    response = requests.get(repo_url, headers=Github._get_headers(token), timeout=request_timeout)  # noqa: SLF001
     handle_request_response(response, repo_url)
     return SourceMetadata.for_response(response.json())
 
