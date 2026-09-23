@@ -36,8 +36,9 @@ PROWL_COMMAND_PATH: Final[str] = "/v1"
 # Seconds allowed for reaching the service before a fetch is written off.
 PROWL_CONNECT_TIMEOUT: Final[float] = 10.0
 
-# Floor for the read budget so a zero timeout cannot disable the call.
-PROWL_MIN_READ_TIMEOUT: Final[float] = 1.0
+# A browser navigation is far slower than a direct HTTP request because it may
+# have to clear a challenge first, so the service gets at least this budget.
+PROWL_MIN_MAX_TIMEOUT: Final[float] = 120.0
 
 # Upper bound on a service error message echoed back to the caller.
 PROWL_ERROR_MESSAGE_LIMIT: Final[int] = 200
@@ -46,26 +47,6 @@ HTTP_STATUS_MIN: Final[int] = 100
 HTTP_STATUS_MAX: Final[int] = 599
 
 _ALLOWED_SCHEMES: Final[frozenset[str]] = frozenset({"http", "https"})
-
-#: Headers owned by the browser. The service rejects them, and the browser sets
-#: its own values anyway, so they are dropped from the outgoing payload instead
-#: of failing the whole fetch.
-_BROWSER_OWNED_HEADERS: Final[frozenset[str]] = frozenset(
-    {
-        "connection",
-        "content-encoding",
-        "content-length",
-        "cookie",
-        "expect",
-        "host",
-        "keep-alive",
-        "proxy-authorization",
-        "te",
-        "trailer",
-        "transfer-encoding",
-        "upgrade",
-    },
-)
 
 
 class ProwlError(Exception):
@@ -191,28 +172,19 @@ def resolve_prowl_url(base_url: str | None = None) -> str:
     return candidate
 
 
-def build_fetch_payload(
-    url: str,
-    *,
-    timeout_seconds: float,
-    headers: dict[str, str] | None = None,
-) -> dict[str, Any]:
+def build_fetch_payload(url: str, *, timeout_seconds: float) -> dict[str, Any]:
     """Build the ``request.get`` payload for *url*.
 
-    Browser-owned headers are dropped because the service rejects them. The
-    caller's own values are never logged.
+    No request headers are sent. The browser owns its own headers, and
+    overriding them contradicts its fingerprint and makes Chromium preflight
+    cross-origin subresources, which stops challenge widgets from loading.
     """
-    payload: dict[str, Any] = {
+    return {
         "cmd": "request.get",
         "url": url,
-        "maxTimeout": max(1, int(timeout_seconds)) * 1000,
+        "maxTimeout": int(max(float(timeout_seconds), PROWL_MIN_MAX_TIMEOUT) * 1000),
         "returnOnlyCookies": False,
     }
-    if headers:
-        forwarded = {name: value for name, value in headers.items() if name.lower() not in _BROWSER_OWNED_HEADERS}
-        if forwarded:
-            payload["headers"] = forwarded
-    return payload
 
 
 def solution_from_envelope(envelope: Any) -> ProwlResponse:
@@ -295,7 +267,6 @@ def fetch_via_prowl(
     url: str,
     *,
     timeout: float,
-    headers: dict[str, str] | None = None,
     base_url: str | None = None,
 ) -> ProwlResponse | None:
     """Replay *url* through the browser service and return its solution.
@@ -310,8 +281,10 @@ def fetch_via_prowl(
         logger.warning(f"Prowl is not configured correctly: {error}")
         return None
 
-    payload = build_fetch_payload(url, timeout_seconds=timeout, headers=headers)
-    read_timeout = max(PROWL_MIN_READ_TIMEOUT, float(timeout)) + PROWL_CONNECT_TIMEOUT
+    payload = build_fetch_payload(url, timeout_seconds=timeout)
+    read_timeout = (payload["maxTimeout"] / 1000) + PROWL_CONNECT_TIMEOUT
+    logger.info(f"Prowl browser fallback for url -> {url}: Fetching with browser service...")
+    logger.info("Waiting for Prowl to load the requested page...")
     try:
         response = requests.post(
             endpoint,
@@ -330,7 +303,10 @@ def fetch_via_prowl(
         return None
 
     try:
-        return solution_from_envelope(envelope)
-    except ProwlError:
-        logger.warning("Prowl could not fetch the page")
+        solution = solution_from_envelope(envelope)
+    except ProwlError as error:
+        logger.warning(f"Prowl could not fetch the page: {error}")
         return None
+
+    logger.success(f"Prowl response found: {solution.status_code} -> {solution.url}")
+    return solution

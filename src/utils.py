@@ -18,6 +18,7 @@ import curl_cffi
 from browserforge.headers import Browser, HeaderGenerator
 from curl_cffi import Response as CurlResponse
 from curl_cffi import Session
+from curl_cffi.requests.exceptions import RequestException as CurlRequestException
 from environs import Env
 from loguru import logger
 from requests import Response
@@ -191,8 +192,12 @@ def make_request(
     """
     token = get_process_cancel_token()
 
-    def _direct() -> ResponseType:
-        return session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
+    def _direct() -> ResponseType | None:
+        try:
+            return session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
+        except CurlRequestException as error:
+            logger.warning(f"Direct request to {url} failed: {error}")
+            return None
 
     def _is_ok(response: ResponseType | None) -> bool:
         return bool(response and response.status_code in ok_statuses)
@@ -204,7 +209,7 @@ def make_request(
 
     # Initial attempt: direct HTTP.
     response = _direct()
-    if _is_ok(response) or not _is_retriable(response):
+    if response is not None and (_is_ok(response) or not _is_retriable(response)):
         return response
 
     # Retry loop.
@@ -220,15 +225,19 @@ def make_request(
                 token.raise_if_cancelled()
             response = _direct()
         else:
-            response = fetch_via_prowl(url, timeout=request_timeout, headers=headers)
+            response = fetch_via_prowl(url, timeout=request_timeout)
             if response:
                 update_session_data(response.user_agent, response.cookies)
 
-        if _is_ok(response) or not _is_retriable(response):
+        if response is not None and (_is_ok(response) or not _is_retriable(response)):
             return response
 
     # One final direct attempt after exhausting retries.
-    return _direct()
+    response = _direct()
+    if response is None:
+        msg = f"Unable to reach {url} after {request_retries} retries"
+        raise ScrapingError(msg, url=url)
+    return response
 
 
 def handle_request_response(response: ResponseType, url: str) -> None:

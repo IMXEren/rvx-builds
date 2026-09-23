@@ -117,25 +117,17 @@ class ProwlPayloadTests(TestCase):
 
     def test_payload_uses_get_command_and_millisecond_timeout(self: Self) -> None:
         """A fetch is a ``request.get`` with the timeout converted to milliseconds."""
-        payload = build_fetch_payload(_URL, timeout_seconds=60)
+        payload = build_fetch_payload(_URL, timeout_seconds=300)
         self.assertEqual(payload["cmd"], "request.get")
         self.assertEqual(payload["url"], _URL)
-        self.assertEqual(payload["maxTimeout"], 60000)
+        self.assertEqual(payload["maxTimeout"], 300000)
         self.assertFalse(payload["returnOnlyCookies"])
         self.assertNotIn("headers", payload)
 
-    def test_browser_owned_headers_are_dropped(self: Self) -> None:
-        """Headers the browser owns are filtered out instead of failing the call."""
-        payload = build_fetch_payload(
-            _URL,
-            timeout_seconds=60,
-            headers={"User-Agent": "ua", "Cookie": "a=b", "Host": "example.test"},
-        )
-        self.assertEqual(payload["headers"], {"User-Agent": "ua"})
-
-    def test_non_positive_timeout_still_sends_a_positive_budget(self: Self) -> None:
-        """A zero timeout cannot produce a budget the service would reject."""
-        self.assertEqual(build_fetch_payload(_URL, timeout_seconds=0)["maxTimeout"], 1000)
+    def test_short_timeout_is_lifted_to_the_browser_floor(self: Self) -> None:
+        """A direct-HTTP timeout is too short for a challenge, so it is raised."""
+        self.assertEqual(build_fetch_payload(_URL, timeout_seconds=60)["maxTimeout"], 120000)
+        self.assertEqual(build_fetch_payload(_URL, timeout_seconds=0)["maxTimeout"], 120000)
 
 
 class ProwlSolutionTests(TestCase):
@@ -252,11 +244,16 @@ class ProwlFetchTests(TestCase):
 
     def test_successful_fetch_returns_the_solution(self: Self) -> None:
         """A valid envelope becomes a response against the configured endpoint."""
-        with patch("src.prowl_client.requests.post", return_value=_StubHttpResponse(_ok_envelope())) as post:
+        with (
+            patch("src.prowl_client.requests.post", return_value=_StubHttpResponse(_ok_envelope())) as post,
+            patch("src.prowl_client.logger") as logger,
+        ):
             response = cast("ProwlResponse", fetch_via_prowl(_URL, timeout=30))
         self.assertEqual(response.status_code, _OK)
         self.assertEqual(post.call_args.args[0], f"{DEFAULT_PROWL_URL}/v1")
         self.assertEqual(post.call_args.kwargs["json"]["cmd"], "request.get")
+        self.assertIn(_URL, str(logger.info.call_args_list))
+        logger.success.assert_called_once_with(f"Prowl response found: 200 -> {_URL}")
 
     def test_transport_failure_returns_none(self: Self) -> None:
         """An unreachable service yields ``None`` so the retry loop continues."""
@@ -282,17 +279,9 @@ class ProwlFetchTests(TestCase):
             patch("src.prowl_client.logger") as logger,
         ):
             fetch_via_prowl(_URL, timeout=30)
-        self.assertNotIn("SECRET", str(logger.warning.call_args_list))
-
-    def test_request_headers_are_never_logged(self: Self) -> None:
-        """Caller credentials must not spill into the logs either."""
-        headers = {"Authorization": "Basic super-secret"}
-        with (
-            patch("src.prowl_client.requests.post", side_effect=requests.ConnectionError("boom")),
-            patch("src.prowl_client.logger") as logger,
-        ):
-            fetch_via_prowl(_URL, timeout=30, headers=headers)
-        self.assertNotIn("super-secret", str(logger.warning.call_args_list))
+        warnings = str(logger.warning.call_args_list)
+        self.assertIn("Challenge could not be solved", warnings)
+        self.assertNotIn("SECRET", warnings)
 
     def test_misconfigured_endpoint_returns_none(self: Self) -> None:
         """A malformed ``PROWL_URL`` disables the fallback instead of crashing."""
@@ -315,7 +304,7 @@ class MakeRequestProwlIntegrationTests(TestCase):
 
         self.assertIs(result, response)
         direct.assert_called()
-        loader.assert_called_once_with(_URL, timeout=utils.request_timeout, headers=None)
+        loader.assert_called_once_with(_URL, timeout=utils.request_timeout)
         session_data.assert_any_call(response.user_agent, response.cookies)
 
     def test_service_failure_falls_back_to_a_direct_request(self: Self) -> None:
