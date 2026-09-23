@@ -14,11 +14,8 @@ services:
       - .:/app:z
 
   prowl:
-    build:
-      context: ${PROWL_BUILD_CONTEXT:-https://github.com/IMXEren/prowl.git#v1.0.0}
-      additional_contexts:
-        windows_fonts: ${PROWL_FONTS_CONTEXT:-./resources}
     image: prowl:local
+    pull_policy: never
     container_name: prowl
     restart: unless-stopped
     depends_on:
