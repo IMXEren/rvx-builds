@@ -10,6 +10,8 @@ on:
         required: false
       DOCKER_PY_REVANCED_SECRETS:
         required: false
+      SECRET_GITHUB_PAT:
+        required: false
     inputs:
       CI_TEST:
         required: false
@@ -97,13 +99,15 @@ jobs:
 
       - name: Build Revanced APKs
         if: ${{ true && !inputs.DEBUG_ENABLED }}
+        env:
+          PROWL_GHCR_TOKEN: ${{ secrets.SECRET_GITHUB_PAT }}
         run: |
           if [[ "${{ inputs.CI_TEST }}" =~ ^(true|True|1)$ ]]; then
               echo "In CI Testing. Using local compose file."
-              docker compose -f docker-compose-local.yml up --build revanced
+              COMPOSE_FILE=docker-compose-local.yml ./run.sh
           else
               echo "Using Prod compose file."
-              docker compose up --build revanced
+              ./run.sh
           fi
 
       - name: Verify at least one APK was patched
