@@ -1,0 +1,34 @@
+{
+    "MorpheApp/MicroG-RE": {
+        "name": "MorpheApp/MicroG-RE",
+        "tag": "7.1.1",
+        "body": "### Bug fixes\r\n* Remove RECEIVE_SMS permission that may cause Play Protect to block installation ( https://github.com/MorpheApp/MicroG-RE/commit/c84d63cbaaaeb984c54b7470b1233ad4c12920c6 )\r\n\r\n\r\n**Full Changelog**: https://github.com/MorpheApp/MicroG-RE/compare/7.1.0...7.1.1",
+        "html_url": "https://github.com/MorpheApp/MicroG-RE/releases/tag/7.1.1",
+        "published_at": "2026-09-10T07:20:24+00:00",
+        "source_type": "github"
+    },
+    "REAndroid/APKEditor": {
+        "name": "REAndroid/APKEditor",
+        "tag": "V1.4.9",
+        "body": "## What's Changed\r\n* Fix: Merging issue #228 \r\n* Fix: Smali wide register handling #229 \r\n\r\n\r\n**Full Changelog**: https://github.com/REAndroid/APKEditor/compare/V1.4.8...V1.4.9",
+        "html_url": "https://github.com/REAndroid/APKEditor/releases/tag/V1.4.9",
+        "published_at": "2026-05-19T11:25:01+00:00",
+        "source_type": "github"
+    },
+    "MorpheApp/morphe-desktop": {
+        "name": "MorpheApp/morphe-desktop",
+        "tag": "v1.17.0",
+        "body": "# [1.17.0](https://github.com/MorpheApp/morphe-desktop/compare/v1.16.0...v1.17.0) (2026-09-24)\n\n\n### Bug Fixes\n\n* Decouple UI localization from console logging and exceptions ([#318](https://github.com/MorpheApp/morphe-desktop/issues/318)) ([5ff50ee](https://github.com/MorpheApp/morphe-desktop/commit/5ff50eed110e0df7be8af660e22a8bd73a47a068))\n* GUI improvements ([#319](https://github.com/MorpheApp/morphe-desktop/issues/319)) ([ee78d88](https://github.com/MorpheApp/morphe-desktop/commit/ee78d88aa281b074bca34005c0ce0883c6323bce))\n* Strip escaped apostrophes from Crowdin translations ([#320](https://github.com/MorpheApp/morphe-desktop/issues/320)) ([ffffe57](https://github.com/MorpheApp/morphe-desktop/commit/ffffe575b2f90db9f8b500bb6fd50d736b5991d2))\n* Trigger background completion effect on Expert Mode ([#323](https://github.com/MorpheApp/morphe-desktop/issues/323)) ([3f06f3e](https://github.com/MorpheApp/morphe-desktop/commit/3f06f3e7605985585ce3ac8d9e626a24c9e64607))\n* Update to latest Patcher ([b63abb5](https://github.com/MorpheApp/morphe-desktop/commit/b63abb5c6c6f15b3ac9424461850457af0cd4014))\n* Update to latest Patcher ([1f3c796](https://github.com/MorpheApp/morphe-desktop/commit/1f3c7962ccc832579042c942c945c1a2dd02282b))\n* Update to latest Patcher ([6cc9b28](https://github.com/MorpheApp/morphe-desktop/commit/6cc9b28295d1b7cd65fd77271bb709e030cf28d2))\n\n\n### Features\n\n* Add Crowdin support ([#273](https://github.com/MorpheApp/morphe-desktop/issues/273)) ([b5b0243](https://github.com/MorpheApp/morphe-desktop/commit/b5b0243104620450da0097f8d0b7affa54f0afde))\n* Add GitHub Pull Request patch sources and PAT configuration ([#322](https://github.com/MorpheApp/morphe-desktop/issues/322)) ([47a70db](https://github.com/MorpheApp/morphe-desktop/commit/47a70db674325eba0bf7dac3c605da54596220fe))\n* Modernize patch selection layout and add category grouping ([#315](https://github.com/MorpheApp/morphe-desktop/issues/315)) ([1c60dc0](https://github.com/MorpheApp/morphe-desktop/commit/1c60dc014766adc879e6692d9d3d30a512243df6))\n",
+        "html_url": "https://github.com/MorpheApp/morphe-desktop/releases/tag/v1.17.0",
+        "published_at": "2026-09-24T07:43:18+00:00",
+        "source_type": "github"
+    },
+    "MorpheApp/morphe-patches": {
+        "name": "MorpheApp/morphe-patches",
+        "tag": "v1.45.0-dev.17",
+        "body": "## [1.45.0-dev.17](https://github.com/MorpheApp/morphe-patches/compare/v1.45.0-dev.16...v1.45.0-dev.17) (2026-09-26)\n\n### \ud83d\ude80 Updated App Support\n\n* **YouTube:** Add experimental support for `21.39.522` ([#3290](https://github.com/MorpheApp/morphe-patches/issues/3290)) ([5687e86](https://github.com/MorpheApp/morphe-patches/commit/5687e86075418094937fbb7449e79406f7400ca9))\n",
+        "html_url": "https://github.com/MorpheApp/morphe-patches/releases/tag/v1.45.0-dev.17",
+        "published_at": "2026-09-26T08:15:05+00:00",
+        "source_type": "github"
+    }
+}
