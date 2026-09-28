@@ -363,10 +363,23 @@ def load_older_updates(env: Env) -> dict[str, Any]:
         return {}
 
 
+def get_build_revision(previous: dict[str, Any] | None, version: str, build_hash: str) -> int:
+    """Count distinct builds within the current upstream app version."""
+    if not previous or previous.get(app_version_key) != version:
+        return 0
+    revision = previous.get("build_revision", 0)
+    if not isinstance(revision, int) or revision < 0:
+        revision = 0
+    if previous.get("app_dump", {}).get("build_hash") == build_hash:
+        return revision
+    return revision + 1
+
+
 def save_patch_info(app: "APP", updates_info: dict[str, Any]) -> dict[str, Any]:
     """Save version info a patching resources used to a file."""
     updates_info[app.app_name] = {
         app_version_key: app.get_effective_version(),
+        "build_revision": app.build_revision,
         patches_versions_key: app.get_patch_bundles_versions(),
         cli_version_key: app.resource["cli"]["version"],
         "ms_epoch_since_patched": datetime_to_ms_epoch(datetime.now(ZoneInfo(time_zone))),
@@ -441,8 +454,8 @@ def _write_obtainium_json_config(
         "exemptFromBackgroundUpdates": False,
         "skipUpdateNotifications": False,
         "versionStringSource": "assetName",
-        "versionExtractionRegEx": r"Version(.*?)-PatchVersion.*BuildHash(.{6})",
-        "matchGroupToUse": "$1-$2",
+        "versionExtractionRegEx": r"Version(.*?)-PatchVersion.*-BuildRevision([0-9]+)-BuildHash([0-9a-f]{6})",
+        "matchGroupToUse": "$1-$2+$3",
         "versionDetection": "pseudo",
         "apkFilterRegEx": app_name,
         "invertAPKFilter": False,
@@ -503,10 +516,12 @@ def generate_per_app_changelog(app_data: dict[str, Any]) -> str:
     app_dump = app_data.get("app_dump", {})
     app_version = app_data.get("app_version")
 
-    lines: list[str] = [f"**App Version:** {app_version}", ""]
+    lines: list[str] = [f"**App Version:** {app_version}"]
+    if "build_revision" in app_data:
+        lines.append(f"**Build Revision:** {app_data['build_revision']}")
     if build_hash := app_dump.get("build_hash"):
-        lines.pop()
-        lines.extend([f"**Build Hash:** {build_hash}", ""])
+        lines.append(f"**Build Hash:** {build_hash}")
+    lines.append("")
 
     # Collect all tool URLs (CLI + patches) into a flat list
     cli_url = app_dump.get("cli_dl", "")

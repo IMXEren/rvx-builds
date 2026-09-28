@@ -548,7 +548,8 @@ secrets` in the format -
 
      **JSON Configs** — Per-app JSON configs (e.g., `youtube.json`) are generated alongside the
      HTML sources. These configs use Obtainium's GitHub source type with per-app release filtering
-     (`filterReleaseTitlesByRegEx`, `apkFilterRegEx`) and `BuildHash` pseudo-versioning. Add the
+     (`filterReleaseTitlesByRegEx`, `apkFilterRegEx`) and a pseudo-version combining the upstream version,
+     a per-version build revision (starting at 0), and six characters of `BuildHash`. Add the
      private repo to Obtainium as a GitHub source — Obtainium's built-in authentication handles
      private repo access automatically.
 

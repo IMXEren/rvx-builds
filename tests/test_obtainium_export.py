@@ -4,11 +4,14 @@
 # unittest keeps this file aligned with the rest of the repository test suite.
 # ruff: noqa: PT009
 
+import json
+import re
 from contextlib import chdir
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
-from typing import Self, cast
+from typing import TYPE_CHECKING, Self, cast
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -17,8 +20,12 @@ from src.metadata import GithubSourceMetadata, SourceMetadata  # noqa: F401
 from src.utils import (
     generate_obtainium_export,
     generate_per_app_changelog,
+    get_build_revision,
     write_per_app_changelogs,
 )
+
+if TYPE_CHECKING:
+    from src.config import RevancedConfig
 
 
 class _Env:
@@ -61,6 +68,7 @@ class ObtainiumExportTests(TestCase):
         self.assertIn("PatchVersionv1.0.0.v2.0.0", first_name)
         self.assertIn("PatchVersionv1.0.0.v3.0.0", second_name)
         self.assertNotEqual(first_name, second_name)
+        self.assertIn("-BuildRevision0-BuildHash", first_name)
 
     def test_output_file_name_collapses_repeated_dots(self: Self) -> None:
         """Generated release asset names should match GitHub's uploaded asset names."""
@@ -77,6 +85,49 @@ class ObtainiumExportTests(TestCase):
 
         self.assertIn("Version20.51.39", app.get_output_file_name())
         self.assertEqual("latest", app.app_version)
+
+    def test_build_revision_resets_and_advances_only_for_changed_hash(self: Self) -> None:
+        """The counter is scoped to the resolved upstream version, not the app lifetime."""
+        self.assertEqual(get_build_revision(None, "20.1", "abc123"), 0)
+        previous = {"app_version": "20.1", "build_revision": 3, "app_dump": {"build_hash": "abc123"}}
+        self.assertEqual(get_build_revision(previous, "20.1", "abc123"), 3)
+        self.assertEqual(get_build_revision(previous, "20.1", "def456"), 4)
+        self.assertEqual(get_build_revision(previous, "20.2", "def456"), 0)
+        legacy = {"app_version": "20.1", "app_dump": {"build_hash": "abc123"}}
+        self.assertEqual(get_build_revision(legacy, "20.1", "abc123"), 0)
+        self.assertEqual(get_build_revision(legacy, "20.1", "def456"), 1)
+
+    def test_private_obtainium_version_extracts_separate_revision_and_hash(self: Self) -> None:
+        """GitHub asset versions retain upstream version and add a per-version revision."""
+        with TemporaryDirectory() as temp_dir, chdir(temp_dir):
+            config = cast(
+                "RevancedConfig",
+                SimpleNamespace(
+                    obtainium_export=True,
+                    obtainium_gh_private_export="owner/index",
+                    obtainium_github_tag="latest",
+                    env=_Env("owner/repo"),
+                ),
+            )
+            app = _app_with_patch_bundles("v2.0.0")
+            app.build_revision = 2
+            name = app.get_output_file_name()
+            updates = {
+                "youtube": {
+                    "app_version": "20.47.62",
+                    "output_file_name": name,
+                    "app_dump": {"package_name": "com.google.android.youtube"},
+                },
+            }
+            generate_obtainium_export(updates, config)
+            app_config = json.loads(Path("obtainium_sources/json/youtube.json").read_text(encoding="utf_8"))
+            settings = json.loads(app_config["apps"][0]["additionalSettings"])
+            match = re.search(settings["versionExtractionRegEx"], name)
+            self.assertIsNotNone(match)
+            version = settings["matchGroupToUse"]
+            for index, group in enumerate(cast("re.Match[str]", match).groups(), 1):
+                version = version.replace(f"${index}", group)
+            self.assertEqual(version, f"20.47.62-2+{app.build_hash[:6]}")
 
     def test_generate_obtainium_export_encodes_url_and_slugifies_html_name(self: Self) -> None:
         """Generated HTML should be safe to serve and should link to the exact encoded release asset."""
@@ -113,8 +164,6 @@ class ChangelogGeneratorTests(TestCase):
 
     def test_generate_per_app_changelog_with_changelogs(self: Self) -> None:
         """Changelog with GitHub-sourced tools should render full Markdown."""
-        from datetime import UTC, datetime
-
         cli_meta = GithubSourceMetadata(
             name="revanced/revanced-cli",
             tag="v6.0.0",
@@ -136,8 +185,10 @@ class ChangelogGeneratorTests(TestCase):
 
         app_data = {
             "app_version": "20.47.62",
+            "build_revision": 0,
             "output_file_name": "some.apk",
             "app_dump": {
+                "build_hash": "abc123def456",
                 "app_name": "YouTube",
                 "cli_dl": "https://github.com/revanced/revanced-cli/releases/latest",
                 "patches_dl_list": ["https://github.com/revanced/revanced-patches/releases/latest"],
@@ -147,7 +198,7 @@ class ChangelogGeneratorTests(TestCase):
         with patch.dict("src.utils.changelogs", changelogs, clear=True):
             result = generate_per_app_changelog(app_data)
 
-        self.assertIn("**App Version:** 20.47.62", result)
+        self.assertIn("**App Version:** 20.47.62\n**Build Revision:** 0\n**Build Hash:** abc123def456\n", result)
         self.assertIn("## revanced/revanced-patches", result)
         self.assertIn(
             "***Release Version: [v5.0.0](https://github.com/revanced/revanced-patches/releases/tag/v5.0.0)***",
@@ -187,8 +238,6 @@ class ChangelogGeneratorTests(TestCase):
 
     def test_generate_per_app_changelog_multiple_patches(self: Self) -> None:
         """Multiple patch bundles should be numbered Patches-1, Patches-2, etc."""
-        from datetime import UTC, datetime
-
         meta = GithubSourceMetadata(
             name="revanced/revanced-cli",
             tag="v6.0.0",
@@ -218,9 +267,7 @@ class ChangelogGeneratorTests(TestCase):
         self.assertNotIn("Patches-2", result)
 
     def test_write_per_app_changelogs_creates_files(self: Self) -> None:
-        """write_per_app_changelogs should create obtainium_sources/changelogs/<name>.md per app with output_file_name."""
-        from datetime import UTC, datetime
-
+        """Create per-app changelog files for apps with output filenames."""
         with TemporaryDirectory() as temp_dir, chdir(temp_dir):
             meta = GithubSourceMetadata(
                 name="revanced/revanced-cli",

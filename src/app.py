@@ -94,6 +94,7 @@ class APP(object):
         )
         # Obtainium metadata reuses the computed output name, so cache the value with an explicit string type.
         self._cached_output_file_name: str = ""
+        self.build_revision = 0
 
         self.apkeep_device_name = config.env.str(f"{app_name}_APKEEP_DEVICE_NAME".upper(), config.apkeep_device_name)
         self.apkeep_device_file = config.env.str(f"{app_name}_APKEEP_DEVICE_FILE".upper(), config.apkeep_device_file)
@@ -291,6 +292,12 @@ class APP(object):
 
         return "|".join(parts)
 
+    def get_build_hash(self: Self) -> str:
+        """Return the stable fingerprint of the inputs used for this build."""
+        if not getattr(self, "build_hash", None):
+            self.build_hash = hashlib.sha256(self._build_identity().encode()).hexdigest()[:12]
+        return self.build_hash
+
     def get_output_file_name(self: Self) -> str:
         """The function returns a string representing the output file name.
 
@@ -301,9 +308,7 @@ class APP(object):
         if self._cached_output_file_name:
             return self._cached_output_file_name
 
-        build_identity = self._build_identity()
-        # A short digest keeps the release asset name readable while still changing when any input changes.
-        self.build_hash = hashlib.sha256(build_identity.encode()).hexdigest()[:12]
+        build_hash = self.get_build_hash()
         # The visible version segment remains useful for humans, but includes every bundle version now.
         patch_bundle_versions = "-".join(bundle["version"] for bundle in self.patch_bundles) or "unknown"
         current_date = datetime.now(ZoneInfo(time_zone))
@@ -311,7 +316,7 @@ class APP(object):
         self._cached_output_file_name = (
             f"Re{self.app_name}-Version{slugify(self.get_effective_version())}"
             f"-PatchVersion{slugify(patch_bundle_versions)}"
-            f"-BuildHash{self.build_hash}-{formatted_date}-output.apk"
+            f"-BuildRevision{getattr(self, 'build_revision', 0)}-BuildHash{build_hash}-{formatted_date}-output.apk"
         )
         return self._cached_output_file_name
 

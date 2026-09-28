@@ -19,6 +19,7 @@ from src.utils import (
     check_java,
     delete_old_changelog,
     generate_obtainium_export,
+    get_build_revision,
     load_older_updates,
     save_patch_info,
     write_changelog_to_file,
@@ -52,6 +53,7 @@ def process_single_app(
     app_name: str,
     config: RevancedConfig,
     caches: AppCaches,
+    previous: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Process a single app and return its update info."""
     download_cache, resource_cache, download_lock, resource_lock, resource_dl_locks, resource_dl_locks_lock = caches
@@ -76,6 +78,7 @@ def process_single_app(
         app.download_apk_for_patching(config, download_cache, download_lock)
 
         parser.include_exclude_patch(app, app_all_patches, patcher.patches_dict)
+        app.build_revision = get_build_revision(previous, app.get_effective_version(), app.get_build_hash())
         logger.info(app)
         app_update_info = save_patch_info(app, {})
         parser.patch_app(app)
@@ -121,7 +124,7 @@ def _process_apps_sequentially(
     """Process apps one-by-one for single-app and CI-test runs."""
     for app_name in config.apps:
         try:
-            app_updates = process_single_app(app_name, config, caches)
+            app_updates = process_single_app(app_name, config, caches, updates_info.get(app_name))
             updates_info.update(app_updates)
         except Exception as e:  # noqa: BLE001
             _record_failed_app(app_name, e, failed_apps)
@@ -142,7 +145,7 @@ def _process_apps_in_parallel(
         # Submitting everything first lets independent apps finish even if one app fails early.
         future_to_app = {}
         for app_name in config.apps:
-            future = executor.submit(process_single_app, app_name, config, caches)
+            future = executor.submit(process_single_app, app_name, config, caches, updates_info.get(app_name))
             future_to_app[future] = app_name
         total_apps = len(config.apps)
 
