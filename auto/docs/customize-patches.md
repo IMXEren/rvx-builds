@@ -26,7 +26,7 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
 | [GITHUB_PAT](#personal-access-token)                      |             GitHub Token to be used               | None                                                                                                     |
 | [GITLAB_PAT](#personal-access-token)                      |             GitLab Token to be used               | None                                                                                                     |
 | [PROWL_URL](#prowl-browser-service)                       |        Prowl browser-service endpoint              | http://prowl:8191                                                                                        |
-| [PROWL_IMAGE](#prowl-browser-service)                     |        Private Prowl image to pull                 | ghcr.io/imxeren/prowl:latest                                                                             |
+| [PROWL_IMAGE](#prowl-browser-service)                     |        Private Prowl image to pull                 | `.prowl-version` without leading `v`                                                                    |
 | [PROWL_BUILD_CONTEXT](#prowl-browser-service)             |        Prowl source fallback                       | the pinned ref in `.prowl-version`                                                                      |
 | [PROWL_FONTS_CONTEXT](#prowl-browser-service)             |     Directory containing `fonts.zip`               | None                                                                                                     |
 | [APKEEP_DEVICE_NAME\*](#apkeep-device-configuration)      |  Device profile for APKEEP Google Play downloads  | None                                                                                                     |
@@ -565,10 +565,10 @@ secrets` in the format -
 
     Set `PROWL_URL` to another absolute HTTP or HTTPS origin only when Prowl runs outside the Compose network.
 
-    `scripts/prepare-prowl.sh` pulls the private image first and tags it as `prowl:local`. If the pull fails, it builds the public source at the ref pinned in `.prowl-version`. Override either source when needed:
+    `scripts/prepare-prowl.sh` pulls the private image tagged with the ref in `.prowl-version` without the version's leading `v` (e.g., `v1.1.0` → `1.1.0`) and tags it as `prowl:local`. If that tag is unavailable, it builds the public source at the same ref. `PROWL_REF` overrides both defaults for a one-off run; override either source explicitly when needed:
 
     ```ini
-    PROWL_IMAGE=ghcr.io/imxeren/prowl:latest
+    PROWL_IMAGE=ghcr.io/imxeren/prowl:<ref>
     # Or point at a tag, branch, or commit instead of the pinned ref
     PROWL_BUILD_CONTEXT=https://github.com/IMXEren/prowl.git#<ref>
     # PROWL_BUILD_CONTEXT=../prowl

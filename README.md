@@ -91,7 +91,7 @@ cp .env.example .env
 ./run.sh
 ```
 
-The runner first pulls the private `ghcr.io/imxeren/prowl:latest` image and tags it as `prowl:local`. If the image is unavailable, it builds `prowl:local` from the public source at the ref pinned in `.prowl-version`. Set `PROWL_IMAGE` to use another published image, `PROWL_BUILD_CONTEXT=../prowl` to build a local checkout, or `PROWL_FONTS_CONTEXT` to a directory containing `fonts.zip` to add the extra Windows font set to that build. The builder reaches Prowl at `PROWL_URL` (default `http://prowl:8191`) on the Compose network; Prowl is not included in the rvx image or published to the host.
+The runner first pulls `ghcr.io/imxeren/prowl` tagged with the ref in `.prowl-version` minus its leading `v` (for example, `v1.1.0` → `1.1.0`) and tags it as `prowl:local`. If that image is unavailable, it builds `prowl:local` from the public source at the same ref. Set `PROWL_REF` to override both defaults, `PROWL_IMAGE` to use another published image, `PROWL_BUILD_CONTEXT=../prowl` to build a local checkout, or `PROWL_FONTS_CONTEXT` to a directory containing `fonts.zip` to add the extra Windows font set to that build. The builder reaches Prowl at `PROWL_URL` (default `http://prowl:8191`) on the Compose network; Prowl is not included in the rvx image or published to the host.
 
 Set `COMPOSE_FILE=docker-compose-local.yml` when running `./run.sh` to add a VNC/noVNC display for debugging a site that will not clear its challenge.
 

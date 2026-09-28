@@ -43,10 +43,18 @@ fi
 # PROWL_REF overrides the ref for a one-off run, and PROWL_BUILD_CONTEXT
 # overrides the whole source location, which also covers a local checkout.
 pinned_ref="$(head -n1 "$repo_root/.prowl-version" 2>/dev/null || true)"
-[[ -n "$pinned_ref" ]] || pinned_ref="main"
+if [[ -z "$pinned_ref" ]]; then
+  echo "Missing Prowl ref in .prowl-version." >&2
+  exit 1
+fi
+prowl_ref="${PROWL_REF:-$pinned_ref}"
+image_tag="$prowl_ref"
+if [[ "$prowl_ref" == v[0-9]* ]]; then
+  image_tag="${prowl_ref#v}"
+fi
 
-source_image="${PROWL_IMAGE:-ghcr.io/imxeren/prowl:latest}"
-build_context="${PROWL_BUILD_CONTEXT:-https://github.com/IMXEren/prowl.git#${PROWL_REF:-$pinned_ref}}"
+source_image="${PROWL_IMAGE:-ghcr.io/imxeren/prowl:$image_tag}"
+build_context="${PROWL_BUILD_CONTEXT:-https://github.com/IMXEren/prowl.git#$prowl_ref}"
 fonts_context="${PROWL_FONTS_CONTEXT:-}"
 target_image="prowl:local"
 
