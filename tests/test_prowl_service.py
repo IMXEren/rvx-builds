@@ -23,6 +23,7 @@ from src.prowl_client import (
     solution_from_envelope,
     to_cookie_jar,
 )
+from src.signals import CancellationToken, OperationCancelledError
 from src.utils import make_request
 
 _OK = 200
@@ -309,17 +310,127 @@ class MakeRequestProwlIntegrationTests(TestCase):
 
     def test_service_failure_falls_back_to_a_direct_request(self: Self) -> None:
         """A service that cannot help must not abort the whole request."""
+        token = CancellationToken()
         with (
+            patch.object(utils, "get_process_cancel_token", return_value=token),
+            patch.object(token, "wait", return_value=False) as wait,
             patch.object(utils, "update_session_data"),
-            patch.object(utils, "request_retries", 2),
             patch.object(utils.session, "get", return_value=_DirectResponse(_FORBIDDEN)) as direct,
             patch.object(utils, "fetch_via_prowl", return_value=None) as loader,
         ):
             result = make_request(_URL)
 
         self.assertEqual(result.status_code, _FORBIDDEN)
-        self.assertEqual(loader.call_count, 2)
+        self.assertEqual(loader.call_count, utils.browser_attempts)
+        wait.assert_called_once_with(1.0)
         self.assertEqual(direct.call_count, 2)
+
+    def test_prowl_recovers_on_second_attempt(self: Self) -> None:
+        """A transient browser failure gets one more attempt before falling back to direct."""
+        token = CancellationToken()
+        response = solution_from_envelope(_ok_envelope())
+        with (
+            patch.object(utils, "get_process_cancel_token", return_value=token),
+            patch.object(token, "wait", return_value=False) as wait,
+            patch.object(utils, "update_session_data") as session_data,
+            patch.object(utils.session, "get", return_value=_DirectResponse(_FORBIDDEN)) as direct,
+            patch.object(utils, "fetch_via_prowl", side_effect=[None, response]) as browser,
+        ):
+            result = make_request(_URL)
+
+        self.assertIs(result, response)
+        self.assertEqual(browser.call_count, 2)
+        direct.assert_called_once()
+        wait.assert_called_once_with(1.0)
+        session_data.assert_any_call(response.user_agent, response.cookies)
+
+    def test_non_retriable_browser_status_is_not_retried(self: Self) -> None:
+        """A browser response outside the retry set returns immediately."""
+        response = ProwlResponse(status_code=429, text="limited")
+        with (
+            patch.object(utils, "update_session_data"),
+            patch.object(utils.session, "get", return_value=_DirectResponse(_FORBIDDEN)) as direct,
+            patch.object(utils, "fetch_via_prowl", return_value=response) as browser,
+        ):
+            result = make_request(_URL)
+
+        self.assertIs(result, response)
+        direct.assert_called_once()
+        browser.assert_called_once()
+
+    def test_non_retriable_status_skips_backoff_and_browser(self: Self) -> None:
+        """A caller-visible failure returns immediately when it is not retriable."""
+        response = _DirectResponse(429)
+        with (
+            patch.object(utils, "update_session_data"),
+            patch.object(utils.session, "get", return_value=response) as direct,
+            patch.object(utils, "fetch_via_prowl") as browser,
+        ):
+            result = make_request(_URL)
+
+        self.assertIs(result, response)
+        direct.assert_called_once()
+        browser.assert_not_called()
+
+    def test_transient_direct_failures_back_off_before_browser_fallback(self: Self) -> None:
+        """Only transient failures repeat the direct request, with cancellable backoff."""
+        token = CancellationToken()
+        transient = _DirectResponse(503)
+        with (
+            patch.object(utils, "get_process_cancel_token", return_value=token),
+            patch.object(token, "wait", return_value=False) as wait,
+            patch.object(utils, "update_session_data"),
+            patch.object(utils.session, "get", return_value=transient) as direct,
+            patch.object(utils, "fetch_via_prowl", return_value=None) as browser,
+        ):
+            result = make_request(_URL)
+
+        self.assertIs(result, transient)
+        self.assertEqual(direct.call_count, utils.request_attempts + 1)
+        self.assertEqual([call.args for call in wait.call_args_list], [(1.0,), (2.0,), (1.0,)])
+        self.assertEqual(browser.call_count, utils.browser_attempts)
+
+    def test_cancellation_during_backoff_stops_retries(self: Self) -> None:
+        """A cancelled wait must not trigger the next network request."""
+        token = CancellationToken()
+
+        def cancel_on_wait(_delay: float) -> bool:
+            token.cancel()
+            return True
+
+        with (
+            patch.object(utils, "get_process_cancel_token", return_value=token),
+            patch.object(token, "wait", side_effect=cancel_on_wait),
+            patch.object(utils, "update_session_data"),
+            patch.object(utils.session, "get", return_value=_DirectResponse(503)) as direct,
+            patch.object(utils, "fetch_via_prowl") as browser,
+            pytest.raises(OperationCancelledError),
+        ):
+            make_request(_URL)
+
+        direct.assert_called_once()
+        browser.assert_not_called()
+
+    def test_cancellation_during_browser_backoff_stops_retry(self: Self) -> None:
+        """A cancelled browser wait prevents the second browser call and final direct request."""
+        token = CancellationToken()
+
+        def cancel_on_wait(_delay: float) -> bool:
+            token.cancel()
+            return True
+
+        with (
+            patch.object(utils, "get_process_cancel_token", return_value=token),
+            patch.object(token, "wait", side_effect=cancel_on_wait),
+            patch.object(utils, "update_session_data"),
+            patch.object(utils.session, "get", return_value=_DirectResponse(_FORBIDDEN)) as direct,
+            patch.object(utils, "fetch_via_prowl", return_value=None) as browser,
+            pytest.raises(OperationCancelledError),
+        ):
+            make_request(_URL)
+
+        direct.assert_called_once()
+        browser.assert_called_once()
 
     def test_service_identity_is_applied_to_the_direct_session(self: Self) -> None:
         """The browser user agent and cookies are replayed on the HTTP session."""

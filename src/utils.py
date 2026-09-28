@@ -9,8 +9,9 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
+from http import HTTPStatus
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeGuard
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -22,6 +23,7 @@ from curl_cffi.requests.exceptions import RequestException as CurlRequestExcepti
 from environs import Env
 from loguru import logger
 from requests import Response
+from tenacity import retry, retry_if_result, stop_after_attempt, wait_exponential
 
 from src.prowl_client import ProwlResponse, fetch_via_prowl, to_cookie_jar
 from src.signals import get_process_cancel_token
@@ -57,7 +59,8 @@ default_patches = "https://api.revanced.app/v5/patches.rvp"
 changelog_file = "changelog.md"
 changelog_json_file = "changelog.json"
 request_timeout = 60
-request_retries = 15
+request_attempts = 3
+browser_attempts = 2
 
 session = Session(impersonate="chrome146")
 _browsers = [Browser("chrome", min_version=142, max_version=147)]
@@ -169,6 +172,13 @@ def get_parent_repo() -> str:
     return f"[Docker-py-revanced]({project_url})"
 
 
+def _browser_retry(url: str) -> ProwlResponse | None:
+    response = fetch_via_prowl(url, timeout=request_timeout)
+    if response:
+        update_session_data(response.user_agent, response.cookies)
+    return response
+
+
 def make_request(
     url: str,
     headers: dict[str, str] | None = None,
@@ -176,66 +186,68 @@ def make_request(
     ok_statuses: frozenset[int] = frozenset({200, 404}),
     retriable_statuses: frozenset[int] = frozenset({403, *range(500, 600)}),
 ) -> ResponseType:
-    """Make a GET request with browser-based fallback for retriable failures.
+    """Retry transient direct failures, then retry through the browser.
 
-    Only connection errors and status codes in *retriable_statuses* (default
-    ``{403, 500..599}``) trigger retries. All other codes return immediately.
-
-    Retry strategy (up to ``request_retries`` attempts):
-    - First attempt: direct HTTP via session.
-    - On failure, alternate between browser-based retry (4 attempts) and a
-      paced direct retry (every 5th attempt, with increasing sleep).
-    - Final fallback: one last direct HTTP attempt.
-
-    The process-wide ``CancellationToken`` is honoured between retries so
-    that a signal-initiated shutdown cancels pending requests promptly.
+    A blocked (403) direct request goes straight to Prowl. Other retriable
+    statuses and connection errors get bounded exponential-backoff retries.
+    Non-retriable responses return without invoking the browser.
     """
     token = get_process_cancel_token()
 
     def _direct() -> ResponseType | None:
+        token.raise_if_cancelled()
         try:
             return session.get(url, headers=headers, allow_redirects=True, timeout=request_timeout)
         except CurlRequestException as error:
             logger.warning(f"Direct request to {url} failed: {error}")
             return None
 
-    def _is_ok(response: ResponseType | None) -> bool:
-        return bool(response and response.status_code in ok_statuses)
+    def _is_terminal(response: ResponseType | None) -> TypeGuard[ResponseType]:
+        return response is not None and (
+            response.status_code in ok_statuses or response.status_code not in retriable_statuses
+        )
 
-    def _is_retriable(response: ResponseType | None) -> bool:
-        return not response or response.status_code in retriable_statuses
+    def _wait(delay: float) -> None:
+        token.wait(delay)
+        token.raise_if_cancelled()
+
+    @retry(
+        retry=retry_if_result(
+            lambda response: (
+                not _is_terminal(response) and (response is None or response.status_code != HTTPStatus.FORBIDDEN)
+            ),
+        ),
+        stop=stop_after_attempt(request_attempts),
+        wait=wait_exponential(multiplier=1, min=1, max=4),
+        sleep=_wait,
+        retry_error_callback=lambda state: state.outcome.result() if state.outcome is not None else None,
+    )
+    def _direct_with_retries() -> ResponseType | None:
+        return _direct()
+
+    @retry(
+        retry=retry_if_result(lambda response: not _is_terminal(response)),
+        stop=stop_after_attempt(browser_attempts),
+        wait=wait_exponential(multiplier=1, min=1, max=4),
+        sleep=_wait,
+        retry_error_callback=lambda state: state.outcome.result() if state.outcome is not None else None,
+    )
+    def _browser_with_retries() -> ProwlResponse | None:
+        token.raise_if_cancelled()
+        return _browser_retry(url)
 
     update_session_data()
-
-    # Initial attempt: direct HTTP.
-    response = _direct()
-    if response is not None and (_is_ok(response) or not _is_retriable(response)):
+    response = _direct_with_retries()
+    if _is_terminal(response):
         return response
 
-    # Retry loop.
-    for attempt in range(1, request_retries + 1):
-        token.raise_if_cancelled()
-        logger.info(f"Retrying ({attempt})...")
+    response = _browser_with_retries()
+    if _is_terminal(response):
+        return response
 
-        if attempt % 5 == 0:
-            # Paced direct retry.
-            delay = 15 * (attempt // 5)
-            logger.info(f"Sleeping for {delay}s...")
-            if token.wait(delay):
-                token.raise_if_cancelled()
-            response = _direct()
-        else:
-            response = fetch_via_prowl(url, timeout=request_timeout)
-            if response:
-                update_session_data(response.user_agent, response.cookies)
-
-        if response is not None and (_is_ok(response) or not _is_retriable(response)):
-            return response
-
-    # One final direct attempt after exhausting retries.
     response = _direct()
     if response is None:
-        msg = f"Unable to reach {url} after {request_retries} retries"
+        msg = f"Unable to reach {url} after direct and browser retries"
         raise ScrapingError(msg, url=url)
     return response
 
