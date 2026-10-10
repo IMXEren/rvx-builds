@@ -1,0 +1,34 @@
+{
+    "MorpheApp/MicroG-RE": {
+        "name": "MorpheApp/MicroG-RE",
+        "tag": "7.2.1",
+        "body": "### Bug fixes\r\n\r\n* Normalize client_sig and callerSig to SHA-1 hex digest ( https://github.com/MorpheApp/MicroG-RE/pull/262 )\r\n* Rework the update dialogs, list row heights and the GCM status card ( https://github.com/MorpheApp/MicroG-RE/pull/269 )\r\n* Use TLS protocol version 1.2 for improved device compatibility (  https://github.com/MorpheApp/MicroG-RE/pull/273 )\r\n* Add armeabi-v7a builds, show warning for installations of arm64-v8a on 32-bit phone ROM ( https://github.com/MorpheApp/MicroG-RE/pull/274 )\r\n* Preserve local caller identity and support Google Maps location settings ( https://github.com/MorpheApp/MicroG-RE/pull/272 )\r\n* Restore incognito, device attestation and module resource handling ( https://github.com/MorpheApp/MicroG-RE/pull/289 )\r\n* Look up silent sign-in under the installed package ( https://github.com/MorpheApp/MicroG-RE/pull/290 )\r\n* Fix Spatula headers for notification registration ( https://github.com/MorpheApp/MicroG-RE/pull/293 )\r\n\r\n\r\n### Features\r\n* Sync upstream microG changes ( https://github.com/MorpheApp/MicroG-RE/pull/291 )\r\n\r\n**Full Changelog**: https://github.com/MorpheApp/MicroG-RE/compare/7.1.1...7.2.1",
+        "html_url": "https://github.com/MorpheApp/MicroG-RE/releases/tag/7.2.1",
+        "published_at": "2026-10-04T10:02:40+00:00",
+        "source_type": "github"
+    },
+    "REAndroid/APKEditor": {
+        "name": "REAndroid/APKEditor",
+        "tag": "V1.4.9",
+        "body": "## What's Changed\r\n* Fix: Merging issue #228 \r\n* Fix: Smali wide register handling #229 \r\n\r\n\r\n**Full Changelog**: https://github.com/REAndroid/APKEditor/compare/V1.4.8...V1.4.9",
+        "html_url": "https://github.com/REAndroid/APKEditor/releases/tag/V1.4.9",
+        "published_at": "2026-05-19T11:25:01+00:00",
+        "source_type": "github"
+    },
+    "MorpheApp/morphe-desktop": {
+        "name": "MorpheApp/morphe-desktop",
+        "tag": "v1.18.1",
+        "body": "## [1.18.1](https://github.com/MorpheApp/morphe-desktop/compare/v1.18.0...v1.18.1) (2026-10-05)\r\n\r\n### Performance Improvements\r\n\r\n* Use multi-threaded file cleanup ([6976ee6](https://github.com/MorpheApp/morphe-desktop/commit/6976ee6795d316b93a9a9ab3b6e4e7637b4999a2))\r\n",
+        "html_url": "https://github.com/MorpheApp/morphe-desktop/releases/tag/v1.18.1",
+        "published_at": "2026-10-05T11:51:56+00:00",
+        "source_type": "github"
+    },
+    "MorpheApp/morphe-patches": {
+        "name": "MorpheApp/morphe-patches",
+        "tag": "v1.47.0-dev.20",
+        "body": "## [1.47.0-dev.20](https://github.com/MorpheApp/morphe-patches/compare/v1.47.0-dev.19...v1.47.0-dev.20) (2026-10-10)\n\n### \ud83d\udc1b Bug Fixes\n\n* **YouTube - Skip silence:** Adapt the silence threshold to the audio level ([672830e](https://github.com/MorpheApp/morphe-patches/commit/672830e18c8fe47aedd6079bd8eb7b3441e0939d))\n",
+        "html_url": "https://github.com/MorpheApp/morphe-patches/releases/tag/v1.47.0-dev.20",
+        "published_at": "2026-10-10T19:30:26+00:00",
+        "source_type": "github"
+    }
+}
