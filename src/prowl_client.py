@@ -181,6 +181,7 @@ def build_fetch_payload(url: str, *, timeout_seconds: float) -> dict[str, Any]:
     """
     return {
         "cmd": "request.get",
+        "mode": "browser",
         "url": url,
         "maxTimeout": int(max(float(timeout_seconds), PROWL_MIN_MAX_TIMEOUT) * 1000),
         "returnOnlyCookies": False,

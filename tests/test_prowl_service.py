@@ -120,6 +120,7 @@ class ProwlPayloadTests(TestCase):
         """A fetch is a ``request.get`` with the timeout converted to milliseconds."""
         payload = build_fetch_payload(_URL, timeout_seconds=300)
         self.assertEqual(payload["cmd"], "request.get")
+        self.assertEqual(payload["mode"], "browser")
         self.assertEqual(payload["url"], _URL)
         self.assertEqual(payload["maxTimeout"], 300000)
         self.assertFalse(payload["returnOnlyCookies"])
