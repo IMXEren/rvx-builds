@@ -1,5 +1,5 @@
 browserforge==1.2.4
-curl_cffi==0.16.1
+curl_cffi==0.16.3
 environs==15.1.0
 google-play-scraper==1.2.7
 lastversion==3.6.17
