@@ -6,6 +6,7 @@ lastversion==3.6.17
 loguru==0.7.3
 packaging==26.3
 pre-commit==4.6.2
+# prowl: v2.0.0-dev.5
 pyaxmlparser==0.3.31
 python-dotenv==1.2.3
 requests==2.34.2
