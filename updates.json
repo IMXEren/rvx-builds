@@ -1,1 +1,1071 @@
-{}
+{
+    "sync": {
+        "app_version": "v23.06.30-13:39",
+        "build_revision": 4,
+        "patches_versions": [
+            "v1.4.0",
+            "v1.9.0-dev.3",
+            "v1.8.0"
+        ],
+        "cli_version": "v1.18.1",
+        "ms_epoch_since_patched": 1791860818173,
+        "date_patched": "2026-10-13 03:06:58.173230+05:30",
+        "app_dump": {
+            "app_name": "sync",
+            "app_version": "v23.06.30-13:39",
+            "resolved_version": "v23.06.30-13:39",
+            "_env_version_set": false,
+            "experiment": false,
+            "cli_dl": "https://github.com/MorpheApp/morphe-desktop/releases/latest",
+            "patches_dl_list": [
+                "https://github.com/wchill/patcheddit/releases/latest",
+                "https://gitlab.com/IMXEren/mix-patches/releases/latest-prerelease",
+                "https://github.com/humzakh/HK-Morphe-Patches/releases/latest"
+            ],
+            "patches_dl": "https://github.com/wchill/patcheddit/releases/latest,\nhttps://gitlab.com/IMXEren/mix-patches/releases/latest-prerelease,\nhttps://github.com/humzakh/HK-Morphe-Patches/releases/latest",
+            "exclude_request": [
+                "1:fix-redgifs-api",
+                "1:spoof-client",
+                "3:fix-other-discussions",
+                "3:predictive-back-gesture-reddit-sync",
+                "3:spoof-client"
+            ],
+            "include_request": [],
+            "resource": {
+                "cli": {
+                    "file_name": "0d80a7f0eb409b64fd6d9cef00c9a01750e0698428032f5d73037186daeb90b6.jar",
+                    "version": "v1.18.1"
+                }
+            },
+            "patch_bundles": [
+                {
+                    "name": "patches_1",
+                    "file_name": "eae42a3a218029f9883950f1fa0e6efbdaff814cf49e9c254b21e5828da2057a.mpp",
+                    "version": "v1.4.0"
+                },
+                {
+                    "name": "patches_2",
+                    "file_name": "cae28f68574f680f588c5d1edeb71002f7ad62d5cdac0c9b0a52d942532da076.mpp",
+                    "version": "v1.9.0-dev.3"
+                },
+                {
+                    "name": "patches_3",
+                    "file_name": "3426c0af4a81baf8bae40b42627f2c414e8dff1700ed981afb021cf52ff7f95d.mpp",
+                    "version": "v1.8.0"
+                }
+            ],
+            "no_of_patches": 27,
+            "keystore_name": "revanced.keystore",
+            "archs_to_build": [
+                "arm64-v8a"
+            ],
+            "options_file": "options.yml",
+            "options_raw": "",
+            "download_file_name": "sync.apk",
+            "download_dl": "https://www.apkmirror.com/wp-content/themes/APKMirror/download.php?id=4985243&key=3aeed824b7f4f97f7fc9b78e4f830f542c482151&forcebaseapk=true",
+            "download_source": "https://www.apkmirror.com/apk/red-apps-ltd/sync-for-reddit/sync-for-reddit",
+            "package_name": "com.laurencedawson.reddit_sync",
+            "old_key": true,
+            "patches": [],
+            "compatible_versions": "{'v23.06.30-13:39'}",
+            "normalize_patch_names": true,
+            "cli_argsf": "morphe-cli",
+            "effective_cli_argsf": "morphe-cli",
+            "cli_lpargs": "",
+            "cli_pargs": "",
+            "cli_lp_args": {
+                "CMD": [
+                    "list-patches"
+                ],
+                "DESCRIPTIONS": [],
+                "FILTER_PACKAGE_NAME": [],
+                "INDEX": [
+                    "-i"
+                ],
+                "OPTIONS": [
+                    "-o"
+                ],
+                "PACKAGES": [
+                    "-p"
+                ],
+                "PATCHES": [
+                    "--patches"
+                ],
+                "PATCHES_POST": [],
+                "UNIVERSAL": [
+                    "-u"
+                ],
+                "VERSIONS": [
+                    "-v"
+                ]
+            },
+            "cli_p_args": {
+                "APK": [
+                    "__POSITIONAL__"
+                ],
+                "CMD": [
+                    "patch"
+                ],
+                "CONTINUE_ON_ERROR": [
+                    "--continue-on-error"
+                ],
+                "DISABLED": [
+                    "-d"
+                ],
+                "ENABLED": [
+                    "-e"
+                ],
+                "EXCLUSIVE": [
+                    "--exclusive"
+                ],
+                "FORCE": [
+                    "--force"
+                ],
+                "KEYSTORE": [
+                    "--keystore"
+                ],
+                "KEYSTORE_OLD": [
+                    "--keystore-entry-alias=alias",
+                    "--keystore-entry-password=ReVanced",
+                    "--keystore-password=ReVanced"
+                ],
+                "OPTIONS": [
+                    "-O"
+                ],
+                "OUTPUT": [
+                    "-o"
+                ],
+                "PATCHES": [
+                    "-p"
+                ],
+                "PATCHES_POST": [],
+                "PURGE": [],
+                "RIP_LIB": [],
+                "STRIPLIBS": [
+                    "--striplibs"
+                ],
+                "TEMPORARY_FILES_PATH": [
+                    "-t"
+                ],
+                "BYTECODE_MODE": []
+            },
+            "_cached_output_file_name": "Resync-Versionv23.06.30.13.39-PatchVersionv1.4.0.v1.9.0.dev.3.v1.8.0-BuildRevision4-BuildHashf7bde5989a74-2026OCT13.0306AM-output.apk",
+            "build_revision": 4,
+            "apkeep_device_name": null,
+            "apkeep_device_file": null,
+            "build_hash": "f7bde5989a74",
+            "pbundles_norm_hashes": [
+                "9936794614b9baca42215e177559db072d88812cf7cf145f578c35240727d063",
+                "75b5e722fd75739b0be2e36fb5aff2e363053fc161091b3ed2648806d7a72efa",
+                "229e22fa8599b5bfe3126711570ea43d38e5f49432ccc0c2764a607f2c66ee75"
+            ]
+        },
+        "output_file_name": "Resync-Versionv23.06.30.13.39-PatchVersionv1.4.0.v1.9.0.dev.3.v1.8.0-BuildRevision4-BuildHashf7bde5989a74-2026OCT13.0306AM-output.apk"
+    },
+    "trakt": {
+        "app_version": "2.2.1",
+        "build_revision": 0,
+        "patches_versions": [
+            "v1.1.0"
+        ],
+        "cli_version": "v1.5.0",
+        "ms_epoch_since_patched": 1790583912890,
+        "date_patched": "2026-09-28 08:25:12.890079+05:30",
+        "app_dump": {
+            "app_name": "trakt",
+            "app_version": "2.2.1",
+            "resolved_version": "2.2.1",
+            "_env_version_set": false,
+            "experiment": false,
+            "cli_dl": "https://github.com/MorpheApp/morphe-cli/releases/tag/v1.5.0",
+            "patches_dl_list": [
+                "https://github.com/IMXEren/mix-patches/releases/tag/v1.1.0"
+            ],
+            "patches_dl": "https://github.com/IMXEren/mix-patches/releases/tag/v1.1.0",
+            "exclude_request": [],
+            "include_request": [],
+            "resource": {
+                "cli": {
+                    "file_name": "57f3ad91cd844a120aa9d9a3bebc4d1ef89aed8e34b98a737ccbfc653c394e5f.jar",
+                    "version": "v1.5.0"
+                },
+                "patches": {
+                    "file_name": "9264fd17137dae52b033f8500785e2d29cd1bcd299718e9231f66a8c0c20522f.mpp",
+                    "version": "v1.1.0"
+                }
+            },
+            "patch_bundles": [
+                {
+                    "name": "patches",
+                    "file_name": "9264fd17137dae52b033f8500785e2d29cd1bcd299718e9231f66a8c0c20522f.mpp",
+                    "version": "v1.1.0"
+                }
+            ],
+            "no_of_patches": 1,
+            "keystore_name": "revanced.keystore",
+            "archs_to_build": [
+                "arm64-v8a"
+            ],
+            "options_file": "options.yml",
+            "options_raw": "",
+            "download_file_name": "trakt-repack.apkm",
+            "download_dl": "https://www.apkmirror.com/wp-content/themes/APKMirror/download.php?id=11866601&key=c0036d617f1af94ef5d5922a8c1f2f59d8dc0365",
+            "download_source": "https://www.apkmirror.com/apk/trakt/trakt/trakt-tv-shows-movies",
+            "package_name": "tv.trakt.trakt",
+            "old_key": true,
+            "patches": [],
+            "compatible_versions": "{'2.2.1'}",
+            "normalize_patch_names": true,
+            "cli_argsf": "morphe-cli",
+            "effective_cli_argsf": "morphe-cli",
+            "cli_lpargs": "",
+            "cli_pargs": "",
+            "cli_lp_args": {
+                "CMD": [
+                    "list-patches"
+                ],
+                "DESCRIPTIONS": [],
+                "FILTER_PACKAGE_NAME": [],
+                "INDEX": [
+                    "-i"
+                ],
+                "OPTIONS": [
+                    "-o"
+                ],
+                "PACKAGES": [
+                    "-p"
+                ],
+                "PATCHES": [
+                    "--patches"
+                ],
+                "PATCHES_POST": [],
+                "UNIVERSAL": [
+                    "-u"
+                ],
+                "VERSIONS": [
+                    "-v"
+                ]
+            },
+            "cli_p_args": {
+                "APK": [
+                    "__POSITIONAL__"
+                ],
+                "CMD": [
+                    "patch"
+                ],
+                "CONTINUE_ON_ERROR": [
+                    "--continue-on-error"
+                ],
+                "DISABLED": [
+                    "-d"
+                ],
+                "ENABLED": [
+                    "-e"
+                ],
+                "EXCLUSIVE": [
+                    "--exclusive"
+                ],
+                "FORCE": [
+                    "--force"
+                ],
+                "KEYSTORE": [
+                    "--keystore"
+                ],
+                "KEYSTORE_OLD": [
+                    "--keystore-entry-alias=alias",
+                    "--keystore-entry-password=ReVanced",
+                    "--keystore-password=ReVanced"
+                ],
+                "OPTIONS": [
+                    "-O"
+                ],
+                "OUTPUT": [
+                    "-o"
+                ],
+                "PATCHES": [
+                    "-p"
+                ],
+                "PATCHES_POST": [],
+                "PURGE": [],
+                "RIP_LIB": [],
+                "STRIPLIBS": [
+                    "--striplibs"
+                ],
+                "TEMPORARY_FILES_PATH": [
+                    "-t"
+                ],
+                "BYTECODE_MODE": []
+            },
+            "_cached_output_file_name": "Retrakt-Version2.2.1-PatchVersionv1.1.0-BuildRevision0-BuildHashe99a2c1617d0-2026SEP28.0825AM-output.apk",
+            "build_revision": 0,
+            "apkeep_device_name": null,
+            "apkeep_device_file": null,
+            "build_hash": "e99a2c1617d0",
+            "pbundles_norm_hashes": [
+                "9a3be76f0645bf7ed0326e90dc1995d9d2cb1c6026e71060944bde2027865020"
+            ]
+        },
+        "output_file_name": "Retrakt-Version2.2.1-PatchVersionv1.1.0-BuildRevision0-BuildHashe99a2c1617d0-2026SEP28.0825AM-output.apk"
+    },
+    "reddit": {
+        "app_version": "2026.24.0",
+        "build_revision": 2,
+        "patches_versions": [
+            "v1.47.0"
+        ],
+        "cli_version": "v1.18.1",
+        "ms_epoch_since_patched": 1791761410773,
+        "date_patched": "2026-10-11 23:30:10.772620+05:30",
+        "app_dump": {
+            "app_name": "reddit",
+            "app_version": "2026.24.0",
+            "resolved_version": "2026.24.0",
+            "_env_version_set": false,
+            "experiment": false,
+            "cli_dl": "https://github.com/MorpheApp/morphe-desktop/releases/latest",
+            "patches_dl_list": [
+                "https://github.com/MorpheApp/morphe-patches/releases/latest"
+            ],
+            "patches_dl": "https://github.com/MorpheApp/morphe-patches/releases/latest",
+            "exclude_request": [
+                "custom-branding-name-for-reddit"
+            ],
+            "include_request": [
+                "disable-play-store-updates"
+            ],
+            "resource": {
+                "cli": {
+                    "file_name": "0d80a7f0eb409b64fd6d9cef00c9a01750e0698428032f5d73037186daeb90b6.jar",
+                    "version": "v1.18.1"
+                },
+                "patches": {
+                    "file_name": "c132b24432875583f44ae54ee9c9cfe02eda650eb13317ad07195ebefbff8c88.mpp",
+                    "version": "v1.47.0"
+                }
+            },
+            "patch_bundles": [
+                {
+                    "name": "patches",
+                    "file_name": "c132b24432875583f44ae54ee9c9cfe02eda650eb13317ad07195ebefbff8c88.mpp",
+                    "version": "v1.47.0"
+                }
+            ],
+            "no_of_patches": 20,
+            "keystore_name": "revanced.keystore",
+            "archs_to_build": [
+                "arm64-v8a"
+            ],
+            "options_file": "options.yml",
+            "options_raw": "",
+            "download_file_name": "reddit-repack.apkm",
+            "download_dl": "https://www.apkmirror.com/wp-content/themes/APKMirror/download.php?id=14331894&key=d14008af2a0459d334c72ac97e368041e9930dda",
+            "download_source": "https://www.apkmirror.com/apk/redditinc/reddit/reddit",
+            "package_name": "com.reddit.frontpage",
+            "old_key": true,
+            "patches": [],
+            "compatible_versions": "{'2024.02.0', '2026.24.0', '2026.10.0'}",
+            "normalize_patch_names": true,
+            "cli_argsf": "morphe-cli",
+            "effective_cli_argsf": "morphe-cli",
+            "cli_lpargs": "",
+            "cli_pargs": "",
+            "cli_lp_args": {
+                "CMD": [
+                    "list-patches"
+                ],
+                "DESCRIPTIONS": [],
+                "FILTER_PACKAGE_NAME": [],
+                "INDEX": [
+                    "-i"
+                ],
+                "OPTIONS": [
+                    "-o"
+                ],
+                "PACKAGES": [
+                    "-p"
+                ],
+                "PATCHES": [
+                    "--patches"
+                ],
+                "PATCHES_POST": [],
+                "UNIVERSAL": [
+                    "-u"
+                ],
+                "VERSIONS": [
+                    "-v"
+                ]
+            },
+            "cli_p_args": {
+                "APK": [
+                    "__POSITIONAL__"
+                ],
+                "CMD": [
+                    "patch"
+                ],
+                "CONTINUE_ON_ERROR": [
+                    "--continue-on-error"
+                ],
+                "DISABLED": [
+                    "-d"
+                ],
+                "ENABLED": [
+                    "-e"
+                ],
+                "EXCLUSIVE": [
+                    "--exclusive"
+                ],
+                "FORCE": [
+                    "--force"
+                ],
+                "KEYSTORE": [
+                    "--keystore"
+                ],
+                "KEYSTORE_OLD": [
+                    "--keystore-entry-alias=alias",
+                    "--keystore-entry-password=ReVanced",
+                    "--keystore-password=ReVanced"
+                ],
+                "OPTIONS": [
+                    "-O"
+                ],
+                "OUTPUT": [
+                    "-o"
+                ],
+                "PATCHES": [
+                    "-p"
+                ],
+                "PATCHES_POST": [],
+                "PURGE": [],
+                "RIP_LIB": [],
+                "STRIPLIBS": [
+                    "--striplibs"
+                ],
+                "TEMPORARY_FILES_PATH": [
+                    "-t"
+                ],
+                "BYTECODE_MODE": []
+            },
+            "_cached_output_file_name": "Rereddit-Version2026.24.0-PatchVersionv1.47.0-BuildRevision2-BuildHashd52d116d6cd9-2026OCT11.1130PM-output.apk",
+            "build_revision": 2,
+            "apkeep_device_name": null,
+            "apkeep_device_file": null,
+            "build_hash": "d52d116d6cd9",
+            "pbundles_norm_hashes": [
+                "f6a12b229a056e4157aaca0017c9b4137a769fe4082bac9a08fef9fffc050d3c"
+            ]
+        },
+        "output_file_name": "Rereddit-Version2026.24.0-PatchVersionv1.47.0-BuildRevision2-BuildHashd52d116d6cd9-2026OCT11.1130PM-output.apk"
+    },
+    "instagram": {
+        "app_version": "447.0.0.55.81",
+        "build_revision": 4,
+        "patches_versions": [
+            "v3.10.0"
+        ],
+        "cli_version": "v1.18.1",
+        "ms_epoch_since_patched": 1792035333498,
+        "date_patched": "2026-10-15 03:35:33.497985+05:30",
+        "app_dump": {
+            "app_name": "instagram",
+            "app_version": "447.0.0.55.81",
+            "resolved_version": "447.0.0.55.81",
+            "_env_version_set": false,
+            "experiment": false,
+            "cli_dl": "https://github.com/MorpheApp/morphe-desktop/releases/latest",
+            "patches_dl_list": [
+                "https://github.com/crimera/piko/releases/latest-prerelease"
+            ],
+            "patches_dl": "https://github.com/crimera/piko/releases/latest-prerelease",
+            "exclude_request": [
+                "clone",
+                "disable-double-tap-like",
+                "save-media-comment"
+            ],
+            "include_request": [],
+            "resource": {
+                "cli": {
+                    "file_name": "0d80a7f0eb409b64fd6d9cef00c9a01750e0698428032f5d73037186daeb90b6.jar",
+                    "version": "v1.18.1"
+                },
+                "patches": {
+                    "file_name": "a9386763a0fc2de86ade1e7a342f312af46a9846661aae4214893abcf8055dd1.mpp",
+                    "version": "v3.10.0"
+                }
+            },
+            "patch_bundles": [
+                {
+                    "name": "patches",
+                    "file_name": "a9386763a0fc2de86ade1e7a342f312af46a9846661aae4214893abcf8055dd1.mpp",
+                    "version": "v3.10.0"
+                }
+            ],
+            "no_of_patches": 62,
+            "keystore_name": "revanced.keystore",
+            "archs_to_build": [
+                "arm64-v8a"
+            ],
+            "options_file": "options.yml",
+            "options_raw": "",
+            "download_file_name": "instagram.apk",
+            "download_dl": "https://www.apkmirror.com/wp-content/themes/APKMirror/download.php?id=16109088&key=d19c19a6bbf15bede54a88e0b68d19af0d4350af&forcebaseapk=true",
+            "download_source": "https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram",
+            "package_name": "com.instagram.android",
+            "old_key": true,
+            "patches": [],
+            "compatible_versions": "{'447.0.0.55.81', 'ARM64_V8A=385311895', 'codes:', '447.0.0.55.81:', 'Version'}",
+            "normalize_patch_names": true,
+            "cli_argsf": "morphe-cli",
+            "effective_cli_argsf": "morphe-cli",
+            "cli_lpargs": "",
+            "cli_pargs": "",
+            "cli_lp_args": {
+                "CMD": [
+                    "list-patches"
+                ],
+                "DESCRIPTIONS": [],
+                "FILTER_PACKAGE_NAME": [],
+                "INDEX": [
+                    "-i"
+                ],
+                "OPTIONS": [
+                    "-o"
+                ],
+                "PACKAGES": [
+                    "-p"
+                ],
+                "PATCHES": [
+                    "--patches"
+                ],
+                "PATCHES_POST": [],
+                "UNIVERSAL": [
+                    "-u"
+                ],
+                "VERSIONS": [
+                    "-v"
+                ]
+            },
+            "cli_p_args": {
+                "APK": [
+                    "__POSITIONAL__"
+                ],
+                "CMD": [
+                    "patch"
+                ],
+                "CONTINUE_ON_ERROR": [
+                    "--continue-on-error"
+                ],
+                "DISABLED": [
+                    "-d"
+                ],
+                "ENABLED": [
+                    "-e"
+                ],
+                "EXCLUSIVE": [
+                    "--exclusive"
+                ],
+                "FORCE": [
+                    "--force"
+                ],
+                "KEYSTORE": [
+                    "--keystore"
+                ],
+                "KEYSTORE_OLD": [
+                    "--keystore-entry-alias=alias",
+                    "--keystore-entry-password=ReVanced",
+                    "--keystore-password=ReVanced"
+                ],
+                "OPTIONS": [
+                    "-O"
+                ],
+                "OUTPUT": [
+                    "-o"
+                ],
+                "PATCHES": [
+                    "-p"
+                ],
+                "PATCHES_POST": [],
+                "PURGE": [],
+                "RIP_LIB": [],
+                "STRIPLIBS": [
+                    "--striplibs"
+                ],
+                "TEMPORARY_FILES_PATH": [
+                    "-t"
+                ],
+                "BYTECODE_MODE": []
+            },
+            "_cached_output_file_name": "Reinstagram-Version447.0.0.55.81-PatchVersionv3.10.0-BuildRevision4-BuildHashd581ad498ed9-2026OCT15.0335AM-output.apk",
+            "build_revision": 4,
+            "apkeep_device_name": null,
+            "apkeep_device_file": null,
+            "build_hash": "d581ad498ed9",
+            "pbundles_norm_hashes": [
+                "0abe4d096d67b9624a5096530dd0a507fb069ed285b6280dcc47c9d5f9f8a97b"
+            ]
+        },
+        "output_file_name": "Reinstagram-Version447.0.0.55.81-PatchVersionv3.10.0-BuildRevision4-BuildHashd581ad498ed9-2026OCT15.0335AM-output.apk"
+    },
+    "youtube_music": {
+        "app_version": "9.20.53",
+        "build_revision": 24,
+        "patches_versions": [
+            "v1.48.0-dev.11"
+        ],
+        "cli_version": "v1.18.1",
+        "ms_epoch_since_patched": 1792284240762,
+        "date_patched": "2026-10-18 00:44:00.762351+05:30",
+        "app_dump": {
+            "app_name": "youtube_music",
+            "app_version": "9.20.53",
+            "resolved_version": "9.20.53",
+            "_env_version_set": false,
+            "experiment": false,
+            "cli_dl": "https://github.com/MorpheApp/morphe-desktop/releases/latest",
+            "patches_dl_list": [
+                "https://github.com/MorpheApp/morphe-patches/releases/latest-prerelease"
+            ],
+            "patches_dl": "https://github.com/MorpheApp/morphe-patches/releases/latest-prerelease",
+            "exclude_request": [],
+            "include_request": [
+                "clone-app",
+                "disable-play-store-updates"
+            ],
+            "resource": {
+                "cli": {
+                    "file_name": "0d80a7f0eb409b64fd6d9cef00c9a01750e0698428032f5d73037186daeb90b6.jar",
+                    "version": "v1.18.1"
+                },
+                "patches": {
+                    "file_name": "a016afdb61d02a26375ed3e6b5b2ed4dd109f7fdc13ef3735031aa11e23c4347.mpp",
+                    "version": "v1.48.0-dev.11"
+                }
+            },
+            "patch_bundles": [
+                {
+                    "name": "patches",
+                    "file_name": "a016afdb61d02a26375ed3e6b5b2ed4dd109f7fdc13ef3735031aa11e23c4347.mpp",
+                    "version": "v1.48.0-dev.11"
+                }
+            ],
+            "no_of_patches": 49,
+            "keystore_name": "revanced.keystore",
+            "archs_to_build": [
+                "arm64-v8a"
+            ],
+            "options_file": "options.yml",
+            "options_raw": "\nClone app:\n  packageName: app.morphe.android.apps.youtube.music\nCustom branding:\n  customName: YT Music\n  customIcon: resources/youtube_music/branding/mmt\n",
+            "download_file_name": "youtube_music.apk",
+            "download_dl": "https://www.apkmirror.com/wp-content/themes/APKMirror/download.php?id=14008913&key=0f1d2dcf1a8fe1469aeb39d6619febf7756d897d&forcebaseapk=true",
+            "download_source": "https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music",
+            "package_name": "com.google.android.apps.youtube.music",
+            "old_key": true,
+            "patches": [],
+            "compatible_versions": "{'9.15.51', '9.20.53'}",
+            "normalize_patch_names": true,
+            "cli_argsf": "morphe-cli",
+            "effective_cli_argsf": "morphe-cli",
+            "cli_lpargs": "",
+            "cli_pargs": "",
+            "cli_lp_args": {
+                "CMD": [
+                    "list-patches"
+                ],
+                "DESCRIPTIONS": [],
+                "FILTER_PACKAGE_NAME": [],
+                "INDEX": [
+                    "-i"
+                ],
+                "OPTIONS": [
+                    "-o"
+                ],
+                "PACKAGES": [
+                    "-p"
+                ],
+                "PATCHES": [
+                    "--patches"
+                ],
+                "PATCHES_POST": [],
+                "UNIVERSAL": [
+                    "-u"
+                ],
+                "VERSIONS": [
+                    "-v"
+                ]
+            },
+            "cli_p_args": {
+                "APK": [
+                    "__POSITIONAL__"
+                ],
+                "CMD": [
+                    "patch"
+                ],
+                "CONTINUE_ON_ERROR": [
+                    "--continue-on-error"
+                ],
+                "DISABLED": [
+                    "-d"
+                ],
+                "ENABLED": [
+                    "-e"
+                ],
+                "EXCLUSIVE": [
+                    "--exclusive"
+                ],
+                "FORCE": [
+                    "--force"
+                ],
+                "KEYSTORE": [
+                    "--keystore"
+                ],
+                "KEYSTORE_OLD": [
+                    "--keystore-entry-alias=alias",
+                    "--keystore-entry-password=ReVanced",
+                    "--keystore-password=ReVanced"
+                ],
+                "OPTIONS": [
+                    "-O"
+                ],
+                "OUTPUT": [
+                    "-o"
+                ],
+                "PATCHES": [
+                    "-p"
+                ],
+                "PATCHES_POST": [],
+                "PURGE": [],
+                "RIP_LIB": [],
+                "STRIPLIBS": [
+                    "--striplibs"
+                ],
+                "TEMPORARY_FILES_PATH": [
+                    "-t"
+                ],
+                "BYTECODE_MODE": []
+            },
+            "_cached_output_file_name": "Reyoutube_music-Version9.20.53-PatchVersionv1.48.0.dev.11-BuildRevision24-BuildHash43c0fa1709b0-2026OCT18.1244AM-output.apk",
+            "build_revision": 24,
+            "apkeep_device_name": null,
+            "apkeep_device_file": null,
+            "build_hash": "43c0fa1709b0",
+            "pbundles_norm_hashes": [
+                "3b9d891bb71ebef0e669f45ec920872c93a70398855542ae09c4316cd37b6549"
+            ]
+        },
+        "output_file_name": "Reyoutube_music-Version9.20.53-PatchVersionv1.48.0.dev.11-BuildRevision24-BuildHash43c0fa1709b0-2026OCT18.1244AM-output.apk"
+    },
+    "youtube": {
+        "app_version": "21.20.405",
+        "build_revision": 14,
+        "patches_versions": [
+            "v1.48.0-dev.11"
+        ],
+        "cli_version": "v1.18.1",
+        "ms_epoch_since_patched": 1792284240768,
+        "date_patched": "2026-10-18 00:44:00.768010+05:30",
+        "app_dump": {
+            "app_name": "youtube",
+            "app_version": "21.20.405",
+            "resolved_version": "21.20.405",
+            "_env_version_set": false,
+            "experiment": false,
+            "cli_dl": "https://github.com/MorpheApp/morphe-desktop/releases/latest",
+            "patches_dl_list": [
+                "https://github.com/MorpheApp/morphe-patches/releases/latest-prerelease"
+            ],
+            "patches_dl": "https://github.com/MorpheApp/morphe-patches/releases/latest-prerelease",
+            "exclude_request": [
+                "materialyou",
+                "change-header"
+            ],
+            "include_request": [
+                "clone-app",
+                "disable-play-store-updates"
+            ],
+            "resource": {
+                "cli": {
+                    "file_name": "0d80a7f0eb409b64fd6d9cef00c9a01750e0698428032f5d73037186daeb90b6.jar",
+                    "version": "v1.18.1"
+                },
+                "patches": {
+                    "file_name": "a016afdb61d02a26375ed3e6b5b2ed4dd109f7fdc13ef3735031aa11e23c4347.mpp",
+                    "version": "v1.48.0-dev.11"
+                }
+            },
+            "patch_bundles": [
+                {
+                    "name": "patches",
+                    "file_name": "a016afdb61d02a26375ed3e6b5b2ed4dd109f7fdc13ef3735031aa11e23c4347.mpp",
+                    "version": "v1.48.0-dev.11"
+                }
+            ],
+            "no_of_patches": 100,
+            "keystore_name": "revanced.keystore",
+            "archs_to_build": [
+                "arm64-v8a"
+            ],
+            "options_file": "options.yml",
+            "options_raw": "\nClone app:\n  packageName: app.morphe.android.youtube\nCustom branding:\n  customName: YouTube\n  customIcon: resources/youtube/branding/mmt\n",
+            "download_file_name": "youtube.apk",
+            "download_dl": "https://www.apkmirror.com/wp-content/themes/APKMirror/download.php?id=14033084&key=3c62270b00c0909353aca84bfd7ffddc4b0fc665&forcebaseapk=true",
+            "download_source": "https://www.apkmirror.com/apk/google-inc/youtube/youtube",
+            "package_name": "com.google.android.youtube",
+            "old_key": true,
+            "patches": [],
+            "compatible_versions": "{'20.21.37', '20.51.39', '21.20.405', '21.16.256'}",
+            "normalize_patch_names": true,
+            "cli_argsf": "morphe-cli",
+            "effective_cli_argsf": "morphe-cli",
+            "cli_lpargs": "",
+            "cli_pargs": "",
+            "cli_lp_args": {
+                "CMD": [
+                    "list-patches"
+                ],
+                "DESCRIPTIONS": [],
+                "FILTER_PACKAGE_NAME": [],
+                "INDEX": [
+                    "-i"
+                ],
+                "OPTIONS": [
+                    "-o"
+                ],
+                "PACKAGES": [
+                    "-p"
+                ],
+                "PATCHES": [
+                    "--patches"
+                ],
+                "PATCHES_POST": [],
+                "UNIVERSAL": [
+                    "-u"
+                ],
+                "VERSIONS": [
+                    "-v"
+                ]
+            },
+            "cli_p_args": {
+                "APK": [
+                    "__POSITIONAL__"
+                ],
+                "CMD": [
+                    "patch"
+                ],
+                "CONTINUE_ON_ERROR": [
+                    "--continue-on-error"
+                ],
+                "DISABLED": [
+                    "-d"
+                ],
+                "ENABLED": [
+                    "-e"
+                ],
+                "EXCLUSIVE": [
+                    "--exclusive"
+                ],
+                "FORCE": [
+                    "--force"
+                ],
+                "KEYSTORE": [
+                    "--keystore"
+                ],
+                "KEYSTORE_OLD": [
+                    "--keystore-entry-alias=alias",
+                    "--keystore-entry-password=ReVanced",
+                    "--keystore-password=ReVanced"
+                ],
+                "OPTIONS": [
+                    "-O"
+                ],
+                "OUTPUT": [
+                    "-o"
+                ],
+                "PATCHES": [
+                    "-p"
+                ],
+                "PATCHES_POST": [],
+                "PURGE": [],
+                "RIP_LIB": [],
+                "STRIPLIBS": [
+                    "--striplibs"
+                ],
+                "TEMPORARY_FILES_PATH": [
+                    "-t"
+                ],
+                "BYTECODE_MODE": []
+            },
+            "_cached_output_file_name": "Reyoutube-Version21.20.405-PatchVersionv1.48.0.dev.11-BuildRevision14-BuildHashb344cccb9f53-2026OCT18.1244AM-output.apk",
+            "build_revision": 14,
+            "apkeep_device_name": null,
+            "apkeep_device_file": null,
+            "build_hash": "b344cccb9f53",
+            "pbundles_norm_hashes": [
+                "3b9d891bb71ebef0e669f45ec920872c93a70398855542ae09c4316cd37b6549"
+            ]
+        },
+        "output_file_name": "Reyoutube-Version21.20.405-PatchVersionv1.48.0.dev.11-BuildRevision14-BuildHashb344cccb9f53-2026OCT18.1244AM-output.apk"
+    },
+    "twitter": {
+        "app_version": "12.19.1-release.0",
+        "build_revision": 7,
+        "patches_versions": [
+            "v1.7.0",
+            "v3.10.0-dev.14"
+        ],
+        "cli_version": "v1.18.1",
+        "ms_epoch_since_patched": 1791640426554,
+        "date_patched": "2026-10-10 13:53:46.553713+05:30",
+        "app_dump": {
+            "app_name": "twitter",
+            "app_version": "12.19.1-release.0",
+            "resolved_version": "12.19.1-release.0",
+            "_env_version_set": false,
+            "experiment": false,
+            "cli_dl": "https://github.com/MorpheApp/morphe-desktop/releases/latest",
+            "patches_dl_list": [
+                "https://gitlab.com/inotia00/x-shim",
+                "https://github.com/crimera/piko/releases/latest-prerelease"
+            ],
+            "patches_dl": "https://gitlab.com/inotia00/x-shim,\nhttps://github.com/crimera/piko/releases/latest-prerelease",
+            "exclude_request": [
+                "disunify-xchat-system",
+                "dynamic-color",
+                "hide-recommended-users",
+                "hide-immersive-player",
+                "remove-view-count",
+                "hide-fab",
+                "hide-fab-menu-buttons",
+                "disable-chirp-font",
+                "hide-bookmark-icon-in-timeline",
+                "remove-detailed-posts",
+                "hide-community-notes",
+                "disable-auto-timeline-scroll-on-launch",
+                "enable-debug-menu-for-posts",
+                "bring-back-twitter"
+            ],
+            "include_request": [],
+            "resource": {
+                "cli": {
+                    "file_name": "0d80a7f0eb409b64fd6d9cef00c9a01750e0698428032f5d73037186daeb90b6.jar",
+                    "version": "v1.18.1"
+                }
+            },
+            "patch_bundles": [
+                {
+                    "name": "patches_1",
+                    "file_name": "ca2f5fdcb4cdec2879aa8af9276159b4788c4b3e194fcefbdc71fbbdc4bf6909.mpp",
+                    "version": "v1.7.0"
+                },
+                {
+                    "name": "patches_2",
+                    "file_name": "4b54076ff5ba7583646a03f92deb8bf4c9bde6d1f5fb8174ab1b7e8309c54657.mpp",
+                    "version": "v3.10.0-dev.14"
+                }
+            ],
+            "no_of_patches": 78,
+            "keystore_name": "revanced.keystore",
+            "archs_to_build": [
+                "arm64-v8a"
+            ],
+            "options_file": "options.yml",
+            "options_raw": "",
+            "download_file_name": "twitter-repack.apkm",
+            "download_dl": "https://www.apkmirror.com/wp-content/themes/APKMirror/download.php?id=15554722&key=8966af97ab5cb465cdbb3d8587f36e17c8326d02",
+            "download_source": "https://www.apkmirror.com/apk/x-corp/twitter/x",
+            "package_name": "com.twitter.android",
+            "old_key": true,
+            "patches": [],
+            "compatible_versions": "{'12.19.1-release.0'}",
+            "normalize_patch_names": true,
+            "cli_argsf": "morphe-cli",
+            "effective_cli_argsf": "morphe-cli",
+            "cli_lpargs": "",
+            "cli_pargs": "",
+            "cli_lp_args": {
+                "CMD": [
+                    "list-patches"
+                ],
+                "DESCRIPTIONS": [],
+                "FILTER_PACKAGE_NAME": [],
+                "INDEX": [
+                    "-i"
+                ],
+                "OPTIONS": [
+                    "-o"
+                ],
+                "PACKAGES": [
+                    "-p"
+                ],
+                "PATCHES": [
+                    "--patches"
+                ],
+                "PATCHES_POST": [],
+                "UNIVERSAL": [
+                    "-u"
+                ],
+                "VERSIONS": [
+                    "-v"
+                ]
+            },
+            "cli_p_args": {
+                "APK": [
+                    "__POSITIONAL__"
+                ],
+                "CMD": [
+                    "patch"
+                ],
+                "CONTINUE_ON_ERROR": [
+                    "--continue-on-error"
+                ],
+                "DISABLED": [
+                    "-d"
+                ],
+                "ENABLED": [
+                    "-e"
+                ],
+                "EXCLUSIVE": [
+                    "--exclusive"
+                ],
+                "FORCE": [
+                    "--force"
+                ],
+                "KEYSTORE": [
+                    "--keystore"
+                ],
+                "KEYSTORE_OLD": [
+                    "--keystore-entry-alias=alias",
+                    "--keystore-entry-password=ReVanced",
+                    "--keystore-password=ReVanced"
+                ],
+                "OPTIONS": [
+                    "-O"
+                ],
+                "OUTPUT": [
+                    "-o"
+                ],
+                "PATCHES": [
+                    "-p"
+                ],
+                "PATCHES_POST": [],
+                "PURGE": [],
+                "RIP_LIB": [],
+                "STRIPLIBS": [
+                    "--striplibs"
+                ],
+                "TEMPORARY_FILES_PATH": [
+                    "-t"
+                ],
+                "BYTECODE_MODE": []
+            },
+            "_cached_output_file_name": "Retwitter-Version12.19.1.release.0-PatchVersionv1.7.0.v3.10.0.dev.14-BuildRevision7-BuildHash74bbb2c06e67-2026OCT10.0153PM-output.apk",
+            "build_revision": 7,
+            "apkeep_device_name": null,
+            "apkeep_device_file": null,
+            "build_hash": "74bbb2c06e67",
+            "pbundles_norm_hashes": [
+                "ddd0cfa20892218e93ce8f1a9e3be0bd6857cdf6aac1cac2f36c34b44ce21e31",
+                "0abe4d096d67b9624a5096530dd0a507fb069ed285b6280dcc47c9d5f9f8a97b"
+            ]
+        },
+        "output_file_name": "Retwitter-Version12.19.1.release.0-PatchVersionv1.7.0.v3.10.0.dev.14-BuildRevision7-BuildHash74bbb2c06e67-2026OCT10.0153PM-output.apk"
+    }
+}
