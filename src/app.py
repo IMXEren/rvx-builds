@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 
 from loguru import logger
 
+from src._bundle_selector import parse_patch_selection
 from src.apks.repack import get_apk_version
 from src.cli_args import merge_cli_arg_maps
 from src.config import RevancedConfig
@@ -57,8 +58,8 @@ class APP(object):
         # Keep backward compatibility
         self.patches_dl = patches_dl_raw
 
-        self.exclude_request: list[str] = config.env.list(f"{app_name}_EXCLUDE_PATCH".upper(), [])
-        self.include_request: list[str] = config.env.list(f"{app_name}_INCLUDE_PATCH".upper(), [])
+        self.patch_selection = config.env.str(f"{app_name}_PATCH_SELECTION".upper(), "DEFAULT")
+        self.selection_base, self.selection_overrides = parse_patch_selection(self.patch_selection)
         self.resource: dict[str, dict[str, str]] = {}
         self.patch_bundles: list[dict[str, str]] = []  # Store multiple patch bundles
         self.no_of_patches: int = 0
@@ -234,7 +235,7 @@ class APP(object):
     def _build_identity(self: Self) -> str:
         """Build a stable identity string for fingerprinting the build configuration.
 
-        Captures CLI, patch bundles, include/exclude lists, options,
+        Captures CLI, ordered patch bundles, patch selection, options,
         architectures, and CLI argument config so any input change produces
         a different output filename and Obtainium detects an update.
 
@@ -256,16 +257,11 @@ class APP(object):
 
         # Patch bundles
         parts.append(
-            "|".join(norm_hash for norm_hash in self.compute_pb_norm_hashes(sort=True)),
+            "|".join(self.compute_pb_norm_hashes()),
         )
 
-        # Patch include / exclude
-        include_request: list[str] = getattr(self, "include_request", []) or []
-        exclude_request: list[str] = getattr(self, "exclude_request", []) or []
-        if include_request:
-            parts.append(f"include:{','.join(sorted(include_request))}")
-        if exclude_request:
-            parts.append(f"exclude:{','.join(sorted(exclude_request))}")
+        # Patch selection
+        parts.append(f"selection:{getattr(self, 'patch_selection', 'DEFAULT')}")
 
         # Patch options
         options_raw: str = getattr(self, "options_raw", "") or ""

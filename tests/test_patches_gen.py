@@ -2,7 +2,7 @@
 
 # These samples mirror the three live CLI dialects the builder supports today.
 # unittest keeps this parser coverage aligned with the existing project test style.
-# ruff: noqa: PT009
+# ruff: noqa: PT009, SLF001
 
 from contextlib import chdir
 from tempfile import TemporaryDirectory
@@ -141,6 +141,11 @@ class PatchesGenParserTests(TestCase):
         self.assertEqual(EXPECTED_REVANCED_OPTION_COUNT, len(build_info["options"]))
         self.assertEqual("Application client ID", spoof_client["options"][0]["key"])
         self.assertEqual(["redreader-client-id (RedReader)"], spoof_client["options"][0]["possible_values"])
+        self.assertFalse(build_info["use"])
+        self.assertTrue(spoof_client["use"])
+        owner = Patches.__new__(Patches)
+        self.assertFalse(owner._create_patch_dict(build_info, "com.google.android.youtube", "20.47.62").get("enabled"))
+        self.assertTrue(owner._create_patch_dict(spoof_client, "com.onelouder.baconreader", "all").get("enabled"))
 
     def test_morphe_title_key_options_preserve_multiline_description(self: Self) -> None:
         """Morphe options expose a title plus explicit key and can include multiline descriptions."""
@@ -186,7 +191,7 @@ Compatible packages:
         ))
         patches = Patches.__new__(Patches)
         patches.patches_dict = {"twitter": []}
-        patches._process_app_specific_patch(  # noqa: SLF001
+        patches._process_app_specific_patch(
             {"name": "Example", "description": "", "options": [], "compatiblePackages": [package]}, app,
         )
         self.assertEqual(["12.41.0-prod.01", "12.43.0-prod.01"], Patches.get_compatible_versions(app))
@@ -200,7 +205,7 @@ Compatible packages:
         patches = Patches.__new__(Patches)
         patches.patches_dict = {"twitter": []}
         for name, version in (("Legacy", "12.19.1-release.0"), ("NewX", "12.43.0-prod.01")):
-            patches._process_app_specific_patch(  # noqa: SLF001
+            patches._process_app_specific_patch(
                 {"name": name, "description": "", "options": [],
                  "compatiblePackages": [{"name": app.package_name, "versions": [version]}]}, app,
             )

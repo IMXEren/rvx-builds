@@ -76,19 +76,14 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
 | [**APP_NAME**\_CLI_ARGSF](#cli-arg-compatibility)               |          CLI argument profile for **APP_NAME**.           | GLOBAL_CLI_ARGSF               |
 | [**APP_NAME**\_CLI_LPARGS](#cli-arg-compatibility)              |     Override map for **APP_NAME** list-patches args.      | GLOBAL_CLI_LPARGS              |
 | [**APP_NAME**\_CLI_PARGS](#cli-arg-compatibility)               |         Override map for **APP_NAME** patch args.         | GLOBAL_CLI_PARGS               |
-| [_APP_NAME_\_NORMALIZE_PATCH_NAMES](#custom-exclude-patching)   |   Normalize patch names for **APP_NAME**.                 | GLOBAL_NORMALIZE_PATCH_NAMES    |
-| [_APP_NAME_\_EXCLUDE_PATCH\*](#custom-exclude-patching)         |      Patches to exclude while patching **APP_NAME**.      | []                             |
-| [_APP_NAME_\_INCLUDE_PATCH\*\*](#custom-include-patching)       |      Patches to include while patching **APP_NAME**.      | []                             |
+| [_APP_NAME_\_NORMALIZE_PATCH_NAMES](#patch-selection)           |   Normalize patch names for **APP_NAME**.                 | GLOBAL_NORMALIZE_PATCH_NAMES    |
+| [_APP_NAME_\_PATCH_SELECTION](#patch-selection)                 |      Patch base and overrides for **APP_NAME**.           | DEFAULT                        |
 | [_APP_NAME_\_VERSION](#app-version)                             |         Version to use for download for patching.         | Recommended by patch resources |
-| [_APP_NAME_\_PACKAGE_NAME\*\*\*](#any-patch-apps)               |           Package name of the app to be patched           | None                           |
-| [_APP_NAME_\_DL_SOURCE\*\*\*](#any-patch-apps)                  |     Download source of any of the supported scrapper      | None                           |
+| [_APP_NAME_\_PACKAGE_NAME\*](#any-patch-apps)                  |           Package name of the app to be patched           | None                           |
+| [_APP_NAME_\_DL_SOURCE\*](#any-patch-apps)                     |     Download source of any of the supported scrapper      | None                           |
 | APP_NAME_APKEEP_DEVICE_NAME                                     |          APKEEP device profile for **APP_NAME**.          | APKEEP_DEVICE_NAME             |
 | APP_NAME_APKEEP_DEVICE_FILE                                     |      APKEEP device properties file for **APP_NAME**.      | APKEEP_DEVICE_FILE             |
-| [_APP_NAME_\_DL\*\*\*](#app-dl)                                 |            Direct download Link for clean apk             | None                           |
-
-`*` - By default all patches for a given app are included.<br>
-`**` - Can be used to included universal patch.<br>
-`***` - Can be used for unavailable apps in the repository (unofficial apps).
+| [_APP_NAME_\_DL\*](#app-dl)                                    |            Direct download Link for clean apk             | None                           |
 
 ## Customization
 
@@ -372,80 +367,38 @@ secrets` in the format -
     ```ini
      EXTRA_FILES=https://github.com/inotia00/mMicroG/releases/latest@Mmicrog.apk,https://github.com/inotia00/VancedMicroG/releases/tag/v0.2.27.230755@Vmicrog.apk
     ```
-12. <a id="custom-exclude-patching"></a>If you want to exclude any patch. Set comma separated patch in `.env` file
-    or in `ENVS` in `GitHub secrets` in the format -
+12. <a id="patch-selection"></a>Select patches with `<APP_NAME>_PATCH_SELECTION` in `.env` or `ENVS`:
     ```ini
-    <APP_NAME>_EXCLUDE_PATCH=<PATCH_TO_EXCLUDE-1,PATCH_TO_EXCLUDE-2,...>
+    YOUTUBE_PATCH_SELECTION=DEFAULT,+clone-app,-dynamic-color
     ```
-    Example:
-    ```ini
-     YOUTUBE_EXCLUDE_PATCH=custom-branding,hide-get-premium
-     YOUTUBE_MUSIC_EXCLUDE_PATCH=yt-music-is-shit
-    ```
-    <br>**Bundle-scoped exclusions** — When using multiple patch bundles, you can target a specific bundle
-    by prefixing the patch name with a selector and colon:
-    ```ini
-     YOUTUBE_EXCLUDE_PATCH=2:disable-ads,^1-3:disable-analytics
-    ```
-    Where the selector before the colon is:
-    - `N` — bundle index (1-indexed) only
-    - `N-M` — bundle range
-    - `^selector` — negation (except)
-    - `*` — all bundles (same as bare patch name)
+    The first clause sets the base for **all bundles**: `DEFAULT` selects patches marked enabled
+    by their maintainers, `ALL` selects every listed patch, and `NONE` selects none. Omitting the
+    variable uses `DEFAULT`. The remaining comma-separated clauses add (`+`) or remove (`-`)
+    matching patches. When several clauses match, the last one wins. A leading base clause is
+    optional, so `+clone-app` also starts from `DEFAULT`.
 
-     <br>**Allowlist mode** — Prefix the first entry with ``EXCEPT::`` to flip the list from
-     "deny these" to "keep only these":
-     ```ini
-      # Only keep custom-branding, deny everything else
-      YOUTUBE_EXCLUDE_PATCH=EXCEPT::custom-branding
-      # Only keep custom-branding from bundle 2 and ads from bundle 1
-      YOUTUBE_EXCLUDE_PATCH=EXCEPT::2:custom-branding,1:disable-ads
-     ```
+    Universal patches usually are not enabled by default, so they need `ALL` or an explicit
+    `+patch-name` clause. `NONE,+patch-name` selects only the named patch.
 
-     <br>**Name normalization** — Patch names are automatically normalized to lowercase
-     dash-separated form. This lets you write names without worrying about the exact
-     formatting used by the patch source:
-     ```
-     "Fix /s/ links"                  →  fix-s-links
-     "Enable Android debugging"       →  enable-android-debugging
-     "Custom Branding Icon (fork)"    →  custom-branding-icon-fork
-     "Hide 'premium' banner!"         →  hide-premium-banner
-     ```
-     Set ``GLOBAL_NORMALIZE_PATCH_NAMES=False`` or
-     ``<APP_NAME>_NORMALIZE_PATCH_NAMES=False`` to disable normalization and
-     match patch names exactly as they appear in the source.
-
-    Note -
-    1. **All** the patches for an app are **included** by default.<br>
-    2. Some patch sources use **-** separated names while others use space-separated names.
-       Set `<APP_NAME>_NORMALIZE_PATCH_NAMES=False` to match patch names exactly as they appear in the source.
-    3. Some patches are provided as space separated, make sure you type those in lowercase and **-** (hyphen or dash) separated here.
-       It means a patch named `Hey There` must be entered as `hey-there` in the above example.
-13. <a id="custom-include-patching"></a>If you want to include any universal patch. Set comma separated patch in `.env`
-    file or in `ENVS` in `GitHub secrets` in the format -
+    Overrides without a bundle selector apply to every bundle with a matching patch name. To
+    target one bundle, prefix its 1-based position and a colon after `+` or `-`:
     ```ini
-    <APP_NAME>_INCLUDE_PATCH=<PATCH_TO_INCLUDE-1,PATCH_TO_INCLUDE-2>
+    YOUTUBE_PATCH_SELECTION=DEFAULT,+2:clone-app,-1-3:disable-ads,+^1:some-patch
     ```
-    Example:
-    ```ini
-     YOUTUBE_INCLUDE_PATCH=remove-screenshot-restriction
-    ```
+    Selectors support `N` (one bundle), `N-M` (inclusive range), `^` (all except the
+    selected bundles), and `*` (all bundles). The base clause always applies to the entire app.
+    Bundle-scoped base clauses such as `2:DEFAULT` are not supported.
 
-    The same [bundle-scoped selectors](#custom-exclude-patching) and name normalization
-    from ``EXCLUDE_PATCH`` also apply here. For example, to include a universal patch
-    only from bundle 2:
-    ```ini
-     YOUTUBE_INCLUDE_PATCH=2:some-universal-patch
+    Patch names are normalized to lowercase dash-separated form by default:
     ```
-
-    Note -
-    1. Some of the patch sources (like inotia00) may provide **-** seperated patches while some (ReVanced) shifted to
-       Space formatted patches. Set `<APP_NAME>_NORMALIZE_PATCH_NAMES=False` to match patch names exactly as they appear in the source, if different from global.
-    2. Some patches are provided as space separated, make sure you type those in lowercase and **-** (hyphen or dash) separated here.
-       It means a patch named `Hey There` must be entered as `hey-there` in the above example.
-    3. Not all patch sources provide universal patches.
-    4. Go with `EXCLUDE_PATCH` if you didn't understand `INCLUDE_PATCH` purpose as that requires only regular patches.
-14. <a id="app-version"></a>If you want to build a specific version or latest version. Add `version` in `.env` file
+    "Fix /s/ links"                  →  fix-s-links
+    "Enable Android debugging"       →  enable-android-debugging
+    "Custom Branding Icon (fork)"    →  custom-branding-icon-fork
+    "Hide 'premium' banner!"         →  hide-premium-banner
+    ```
+    Set `GLOBAL_NORMALIZE_PATCH_NAMES=False` or `<APP_NAME>_NORMALIZE_PATCH_NAMES=False`
+    to match the source's exact names instead.
+13. <a id="app-version"></a>If you want to build a specific version or latest version. Add `version` in `.env` file
     or in `ENVS` in `GitHub secrets` in the format -
     ```ini
     <APP_NAME>_VERSION=<VERSION>
@@ -456,7 +409,7 @@ secrets` in the format -
     YOUTUBE_MUSIC_VERSION=X.X.X
     TWITTER_VERSION=latest # whatever latest is available (including beta)
     ```
-15. <a id="app-dl"></a>If you have your personal source for apk to be downloaded. You can also provide that and tool
+14. <a id="app-dl"></a>If you have your personal source for apk to be downloaded. You can also provide that and tool
     will not scrape links from apk sources. Add `dl` in `.env` file or in `ENVS` in `GitHub secrets` in
     the format -
     ```ini
@@ -467,7 +420,7 @@ secrets` in the format -
     YOUTUBE_DL=https://d.apkpure.com/b/APK/com.google.android.youtube?version=latest
     ```
     Note that they are supposed to be direct DLs.
-16. <a id="telegram-support"></a>For Telegram Upload.
+15. <a id="telegram-support"></a>For Telegram Upload.
     1. Set up a telegram channel, send a message to it and forward the message to
        this telegram [bot](https://t.me/username_to_id_bot)
     2. Copy `id` and save it to `TELEGRAM_CHAT_ID`<br>
@@ -481,35 +434,35 @@ secrets` in the format -
        <img src="https://i.imgur.com/7n5k1mp.png" width="300" style="left"><br>
     6. After Everything done successfully a part of the actions secrets of the repository may look like<br>
        <img src="https://i.imgur.com/Cjifz1M.png" width="400">
-17. Configuration defined in `ENVS` in `GitHub secrets` will override the configuration in `.env` file. You can use this
+16. Configuration defined in `ENVS` in `GitHub secrets` will override the configuration in `.env` file. You can use this
     fact to define your normal configurations in `.env` file and sometimes if you want to build something different just
     once, add it in `GitHub secrets`.<br>
     Or you can ignore what I wrote in above configs and always use `GitHub secrets`.<br><br>
     **Note - If you want to use or will be using `Automated` method to patch, please do not define anything inside `ENVS`.**
-18. <a id="virus-total"></a>You can scan your built apks files with VirusTotal. For that, Add `VT_API_KEY` in `[custom GitHub secrets](extras.md#custom-secrets)`.
-19. <a id="reddit-client"></a>If you want to patch reddit apps using your own Client ID. You can provide your Client ID
+17. <a id="virus-total"></a>You can scan your built apks files with VirusTotal. For that, Add `VT_API_KEY` in `[custom GitHub secrets](extras.md#custom-secrets)`.
+18. <a id="reddit-client"></a>If you want to patch reddit apps using your own Client ID. You can provide your Client ID
     as secret `REDDIT_CLIENT_ID` in `[custom GitHub secrets](extras.md#custom-secrets)`.
-20. <a id="apprise"></a>[Apprise](https://github.com/caronc/apprise)<br>
+19. <a id="apprise"></a>[Apprise](https://github.com/caronc/apprise)<br>
     We also have apprise support to upload built apk anywhere. To use apprise, add below envs in `[custom GitHub secrets](extras.md#custom-secrets)`.
     ```ini
     APPRISE_URL=tgram://bot-token/chat-id
     APPRISE_NOTIFICATION_BODY=What a great Body
     APPRISE_NOTIFICATION_TITLE=What a great title
     ```
-21. <a id="sample-env"></a>Sample Envs
+20. <a id="sample-env"></a>Sample Envs
 
     <img src="https://i.imgur.com/FxOtiGs.png" width="600" style="left">
 
     Here's the [another sample](/.env.example) in file format.<br>
     `#` are used to comment out lines. For example, `# APP_NAME_VERSION=latest_supported` is simply used to depict the latest supported the patch version.
 
-22. <a id="workflow-permission"></a>Make your Action has write access. If not click here: https://github.com/OWNER/REPO/settings/actions. In the bottom give read and write access to Actions.
+21. <a id="workflow-permission"></a>Make your Action has write access. If not click here: https://github.com/OWNER/REPO/settings/actions. In the bottom give read and write access to Actions.
 
     <img src="https://i.imgur.com/STSv2D3.png" width="400">
 
     You may also require to [enable scheduled workflows](extras.md#scheduled-workflows) for the first time.
 
-23. <a id="obtainium"></a>[Obtainium](https://github.com/ImranR98/Obtainium)<br>
+22. <a id="obtainium"></a>[Obtainium](https://github.com/ImranR98/Obtainium)<br>
     We support generating HTML files for Obtainium to scrape and download the latest patched APKs directly from your
     GitHub Releases. Enable this only when you are comfortable exposing a public APK discovery URL for your fork or
     self-hosted setup. Add below envs in `.env` file or in `ENVS` in `GitHub secrets` in the format
@@ -555,7 +508,7 @@ secrets` in the format -
 
      A `combined.json` aggregates all apps into one file for bulk import.
 
-24. <a id="prowl-browser-service"></a>Prowl browser service
+23. <a id="prowl-browser-service"></a>Prowl browser service
 
     Browser-backed retries run through the separate Prowl service. Compose supplies the default endpoint:
 

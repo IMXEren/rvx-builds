@@ -391,138 +391,29 @@ class Parser(object):
             return self._bundle_index_map[bundle_file]
         return None
 
-    def _matches_exclude(self: Self, entry: str, patch_name: str, bundle_index: int | None) -> bool:
-        """Check if an exclude entry applies to a given patch and bundle.
-
-        Delegates to :func:`src._bundle_selector.entry_matches`.
-        """
-        return _entry_matches_fn(entry, patch_name, bundle_index)
-
-    def _should_include_regular_patch(self: Self, patch: PatchInfo, normalized_name: str, app: APP) -> bool:
-        """Determine if a regular patch should be included.
-
-        Parameters
-        ----------
-        patch : PatchInfo
-            The patch dict
-        normalized_name : str
-            The normalized patch name
-        app : APP
-            The app instance
-
-        Returns
-        -------
-        bool
-            True if patch should be included
-        """
-        check_name = normalized_name if app.normalize_patch_names else patch["name"]
+    def _should_select_patch(self: Self, patch: PatchInfo, app: APP) -> bool:
+        """Apply the app-wide base and ordered overrides to one bundle patch."""
+        base = app.selection_base
+        selected = base == "ALL" or (base == "DEFAULT" and patch.get("enabled", False))
+        name = self._normalize_patch_name(patch["name"], normalize=app.normalize_patch_names)
         bundle_index = self._get_bundle_index(patch)
-        return self._check_exclude_request(app.exclude_request, check_name, bundle_index)
+        for enable, entry in app.selection_overrides:
+            if _entry_matches_fn(entry, name, bundle_index):
+                selected = enable
+        return selected
 
-    def _check_exclude_request(
-        self: Self,
-        exclude_request: list[str],
-        check_name: str,
-        bundle_index: int | None,
-    ) -> bool:
-        """Check exclude entries, supporting ``EXCEPT``-prefixed allowlist mode.
-
-        Normal mode (no ``EXCEPT::`` entries): return False if any entry matches.
-        Allowlist mode (first entry starts with ``EXCEPT::``): return True only if
-        an entry (after stripping the ``EXCEPT::`` prefix) matches.
-        """
-        # Check if the first entry uses EXCEPT allowlist prefix
-        except_prefix = "EXCEPT::"
-        has_allowlist = any(e.startswith(except_prefix) for e in exclude_request)
-
-        if has_allowlist:
-            return any(
-                self._matches_exclude(
-                    e.removeprefix(except_prefix),
-                    check_name,
-                    bundle_index,
-                )
-                for e in exclude_request
-            )
-
-        return not any(self._matches_exclude(e, check_name, bundle_index) for e in exclude_request)
-
-    def _should_include_universal_patch(self: Self, patch: PatchInfo, normalized_name: str, app: APP) -> bool:
-        """Determine if a universal patch should be included.
-
-        Parameters
-        ----------
-        patch : PatchInfo
-            The patch dict
-        normalized_name : str
-            The normalized patch name
-        app : APP
-            The app instance
-
-        Returns
-        -------
-        bool
-            True if patch should be included
-        """
-        patch_name = patch["name"]
-        bundle_index = self._get_bundle_index(patch)
-        check_name = normalized_name if app.normalize_patch_names else patch_name
-        include_list = app.include_request
-        return check_name in include_list and self._check_exclude_request(
-            app.exclude_request,
-            check_name,
-            bundle_index,
-        )
-
-    def _process_regular_patches(
+    def _process_patches(
         self: Self,
         patches: list[PatchInfo],
         app: APP,
         options_list: list[LoadedPatchOption],
     ) -> None:
-        """Process regular patches for include/exclude.
-
-        Parameters
-        ----------
-        patches : list[PatchInfo]
-            List of regular patches
-        app : APP
-            The app instance
-        options_list : list[LoadedPatchOption]
-            List of patch options
-        """
+        """Emit an explicit choice for each patch, including universal patches."""
         for patch in patches:
-            patch_name = patch["name"]
-            normalized_name = self._normalize_patch_name(patch_name, normalize=app.normalize_patch_names)
-
-            if self._should_include_regular_patch(patch, normalized_name, app):
+            if self._should_select_patch(patch, app):
                 self.include(patch, options_list)
             else:
                 self.exclude(patch)
-
-    def _process_universal_patches(
-        self: Self,
-        universal_patches: list[PatchInfo],
-        app: APP,
-        options_list: list[LoadedPatchOption],
-    ) -> None:
-        """Process universal patches for include.
-
-        Parameters
-        ----------
-        universal_patches : list[PatchInfo]
-            List of universal patches
-        app : APP
-            The app instance
-        options_list : list[LoadedPatchOption]
-            List of patch options
-        """
-        for patch in universal_patches:
-            patch_name = patch["name"]
-            normalized_name = self._normalize_patch_name(patch_name, normalize=app.normalize_patch_names)
-
-            if self._should_include_universal_patch(patch, normalized_name, app):
-                self.include(patch, options_list)
 
     def include_exclude_patch(
         self: Self,
@@ -541,8 +432,8 @@ class Parser(object):
             self._bundle_index_map[bundle["file_name"]] = idx + 1
         options_list = self._load_patch_options(app)
 
-        self._process_regular_patches(patches, app, options_list)
-        self._process_universal_patches(patches_dict["universal_patch"], app, options_list)
+        self._process_patches(patches, app, options_list)
+        self._process_patches(patches_dict["universal_patch"], app, options_list)
 
     def _build_base_args(self: Self, app: APP) -> list[str]:
         """Build base arguments for ReVanced CLI."""
@@ -682,9 +573,10 @@ class Parser(object):
         start = perf_counter()
         logger.debug(f"Sending request to revanced cli for building with args java {args}")
         cancel_token = get_process_cancel_token()
+        process_done = threading.Event()
+        output = None
         try:
             # stderr is merged into stdout so CLI failures are visible in the existing build log stream.
-            process_done = threading.Event()
             process = Popen(["java", *args], stdout=PIPE, stderr=STDOUT)
             cancel_token.wait_for_event_in_daemon(
                 completed=process_done,

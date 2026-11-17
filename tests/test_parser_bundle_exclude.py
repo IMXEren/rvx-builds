@@ -1,15 +1,13 @@
-"""Tests for bundle-aware exclude with [selector:]patch_name syntax.
+"""Tests for bundle-aware patch selection and [selector:]patch_name matching.
 
-The exclude_request list supports:
-  - ``2:patch_name`` — exclude from bundle N only (1-indexed)
-  - ``1-3:patch_name`` — exclude from bundles N through M
-  - ``^1-3:patch_name`` — exclude from bundles NOT matching selector
-  - ``*:patch_name`` — exclude from all bundles
-  - ``patch_name`` (bare) — exclude from all bundles (legacy)
-  - ``EXCEPT::`` prefix — allowlist mode
-  - ``EXCEPT::2:patch_name`` — allowlist, keep from bundle 2 only
+Selectors support:
+  - ``2:patch_name`` matches only bundle N (1-indexed)
+  - ``1-3:patch_name`` matches bundles N through M
+  - ``^1-3:patch_name`` matches bundles outside the selector
+  - ``*:patch_name`` matches all bundles
+  - ``patch_name`` (bare) matches all bundles
 
-Core matching logic lives in :mod:`src._exclude_matcher` (lightweight, no parser imports).
+Core matching logic lives in :mod:`src._bundle_selector`.
 """
 
 # ruff: noqa: SLF001, D102, S101
@@ -18,15 +16,16 @@ from typing import Self
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-from src._bundle_selector import entry_matches as matches_exclude
-from src._bundle_selector import selector_matches
+import pytest
+
+from src._bundle_selector import entry_matches, parse_patch_selection, selector_matches
 from src.parser import Parser
 from src.structs.patches import PatchInfo
 
 BUNDLE_2_IDX = 2
 
 
-def _make_patch(name: str, bundle_file: str | None = None) -> PatchInfo:
+def _make_patch(name: str, bundle_file: str | None = None, *, enabled: bool = False) -> PatchInfo:
     return PatchInfo(
         name=name,
         description="test patch",
@@ -34,6 +33,7 @@ def _make_patch(name: str, bundle_file: str | None = None) -> PatchInfo:
         version="1.0.0",
         options=[],
         bundle_file=bundle_file,
+        enabled=enabled,
     )
 
 
@@ -46,12 +46,12 @@ def _make_parser() -> Parser:
 
 
 # ---------------------------------------------------------------------------
-# selector_matches() — standalone, no Parser needed
+# selector_matches() without Parser
 # ---------------------------------------------------------------------------
 
 
 class SelectorMatchesTests(TestCase):
-    """Tests for :func:`src._exclude_matcher.selector_matches`."""
+    """Tests for :func:`src._bundle_selector.selector_matches`."""
 
     def test_asterisk_matches_any(self: Self) -> None:
         assert selector_matches("*", 1)
@@ -92,56 +92,118 @@ class SelectorMatchesTests(TestCase):
 
 
 # ---------------------------------------------------------------------------
-# matches_exclude() — standalone, no Parser needed
+# entry_matches() without Parser
 # ---------------------------------------------------------------------------
 
 
-class MatchesExcludeTests(TestCase):
-    """Tests for :func:`src._exclude_matcher.matches_exclude`."""
+class EntryMatchesTests(TestCase):
+    """Tests for :func:`src._bundle_selector.entry_matches`."""
 
     def test_legacy_bare_name(self: Self) -> None:
-        assert matches_exclude("disable-ads", "disable-ads", None)
-        assert matches_exclude("disable-ads", "disable-ads", 1)
-        assert matches_exclude("disable-ads", "disable-ads", 2)
-        assert not matches_exclude("disable-ads", "other-patch", 1)
+        assert entry_matches("disable-ads", "disable-ads", None)
+        assert entry_matches("disable-ads", "disable-ads", 1)
+        assert entry_matches("disable-ads", "disable-ads", 2)
+        assert not entry_matches("disable-ads", "other-patch", 1)
 
     def test_single_bundle_exclude(self: Self) -> None:
-        assert matches_exclude("2:disable-ads", "disable-ads", 2)
-        assert not matches_exclude("2:disable-ads", "disable-ads", 1)
-        assert not matches_exclude("2:disable-ads", "disable-ads", 3)
+        assert entry_matches("2:disable-ads", "disable-ads", 2)
+        assert not entry_matches("2:disable-ads", "disable-ads", 1)
+        assert not entry_matches("2:disable-ads", "disable-ads", 3)
 
     def test_range_bundle_exclude(self: Self) -> None:
-        assert matches_exclude("1-3:disable-ads", "disable-ads", 1)
-        assert matches_exclude("1-3:disable-ads", "disable-ads", 2)
-        assert matches_exclude("1-3:disable-ads", "disable-ads", 3)
-        assert not matches_exclude("1-3:disable-ads", "disable-ads", 4)
+        assert entry_matches("1-3:disable-ads", "disable-ads", 1)
+        assert entry_matches("1-3:disable-ads", "disable-ads", 2)
+        assert entry_matches("1-3:disable-ads", "disable-ads", 3)
+        assert not entry_matches("1-3:disable-ads", "disable-ads", 4)
 
     def test_negate_bundle_exclude(self: Self) -> None:
-        assert not matches_exclude("^1-3:disable-ads", "disable-ads", 1)
-        assert not matches_exclude("^1-3:disable-ads", "disable-ads", 2)
-        assert matches_exclude("^1-3:disable-ads", "disable-ads", 4)
-        assert matches_exclude("^1-3:disable-ads", "disable-ads", 5)
+        assert not entry_matches("^1-3:disable-ads", "disable-ads", 1)
+        assert not entry_matches("^1-3:disable-ads", "disable-ads", 2)
+        assert entry_matches("^1-3:disable-ads", "disable-ads", 4)
+        assert entry_matches("^1-3:disable-ads", "disable-ads", 5)
 
     def test_all_bundles_exclude(self: Self) -> None:
-        assert matches_exclude("*:disable-ads", "disable-ads", 1)
-        assert matches_exclude("*:disable-ads", "disable-ads", 5)
+        assert entry_matches("*:disable-ads", "disable-ads", 1)
+        assert entry_matches("*:disable-ads", "disable-ads", 5)
 
     def test_patch_name_mismatch(self: Self) -> None:
-        assert not matches_exclude("2:disable-ads", "other-patch", 2)
+        assert not entry_matches("2:disable-ads", "other-patch", 2)
 
     def test_unknown_bundle_index_fallback(self: Self) -> None:
-        assert not matches_exclude("2:disable-ads", "disable-ads", None)
-        assert not matches_exclude("1-3:disable-ads", "disable-ads", None)
-        assert matches_exclude("*:disable-ads", "disable-ads", None)
+        assert not entry_matches("2:disable-ads", "disable-ads", None)
+        assert not entry_matches("1-3:disable-ads", "disable-ads", None)
+        assert entry_matches("*:disable-ads", "disable-ads", None)
 
     def test_malformed_entry(self: Self) -> None:
-        assert not matches_exclude("::nope", "nope", 1)
-        assert not matches_exclude("::::", "", 1)
+        assert not entry_matches("::nope", "nope", 1)
+        assert not entry_matches("::::", "", 1)
 
 
 # ---------------------------------------------------------------------------
-# Parser integration — _get_bundle_index, _should_include_*
-# ---------------------------------------------------------------------------
+# Parser integration: selection base, overrides, and bundle scope
+
+
+class PatchSelectionTests(TestCase):
+    """Evaluate patch selection against individual bundle entries."""
+
+    def setUp(self: Self) -> None:
+        self.parser = _make_parser()
+        self.parser._bundle_index_map = {"bundle1.rvp": 1, "bundle2.rvp": 2}
+
+    def _app(self: Self, selection: str = "DEFAULT", *, normalize: bool = True) -> MagicMock:
+        app = MagicMock()
+        app.normalize_patch_names = normalize
+        app.selection_base, app.selection_overrides = parse_patch_selection(selection)
+        return app
+
+    def test_default_uses_maintainer_enabled_state(self: Self) -> None:
+        app = self._app()
+        assert self.parser._should_select_patch(_make_patch("Enabled", "bundle1.rvp", enabled=True), app)
+        assert not self.parser._should_select_patch(_make_patch("Disabled", "bundle2.rvp"), app)
+
+    def test_all_and_none_override_metadata(self: Self) -> None:
+        patch = _make_patch("My Patch", "bundle1.rvp")
+        assert self.parser._should_select_patch(patch, self._app("ALL"))
+        enabled = _make_patch("My Patch", "bundle1.rvp", enabled=True)
+        assert not self.parser._should_select_patch(enabled, self._app("NONE"))
+
+    def test_scoped_operations_and_last_wins(self: Self) -> None:
+        app = self._app("NONE,+my-patch,-2:my-patch,+2:my-patch,-1:my-patch")
+        assert not self.parser._should_select_patch(_make_patch("My Patch", "bundle1.rvp"), app)
+        assert self.parser._should_select_patch(_make_patch("My Patch", "bundle2.rvp"), app)
+
+    def test_scope_ranges_and_negation(self: Self) -> None:
+        app = self._app("ALL,-^1:my-patch")
+        assert self.parser._should_select_patch(_make_patch("My Patch", "bundle1.rvp"), app)
+        assert not self.parser._should_select_patch(_make_patch("My Patch", "bundle2.rvp"), app)
+
+    def test_exact_names_when_normalization_disabled(self: Self) -> None:
+        app = self._app("NONE,+My Patch", normalize=False)
+        assert self.parser._should_select_patch(_make_patch("My Patch"), app)
+
+    def test_default_base_can_be_implicit(self: Self) -> None:
+        app = self._app("+my-patch")
+        assert self.parser._should_select_patch(_make_patch("My Patch"), app)
+        assert not self.parser._should_select_patch(_make_patch("Other"), app)
+
+    def test_reject_scoped_base_and_malformed_override(self: Self) -> None:
+        for value in ("ALL,2:DEFAULT", "DEFAULT,", "DEFAULT,+", "DEFAULT,-bad:patch"):
+            with self.subTest(value=value), pytest.raises(ValueError, match="Invalid patch selection clause"):
+                parse_patch_selection(value)
+
+    def test_universal_patch_uses_same_selection(self: Self) -> None:
+        patch = _make_patch("Universal Patch", "bundle1.rvp")
+        assert not self.parser._should_select_patch(patch, self._app())
+        assert self.parser._should_select_patch(patch, self._app("ALL"))
+        assert self.parser._should_select_patch(patch, self._app("NONE,+universal-patch"))
+
+    def test_emits_bundle_specific_flags(self: Self) -> None:
+        app = self._app("DEFAULT,-2:my-patch")
+        first = _make_patch("My Patch", "bundle1.rvp", enabled=True)
+        second = _make_patch("My Patch", "bundle2.rvp", enabled=True)
+        self.parser._process_patches([first, second], app, [])
+        assert self.parser._BUNDLE_PATCHES["bundle1.rvp"] == [["-e"], "My Patch"]
+        assert self.parser._BUNDLE_PATCHES["bundle2.rvp"] == [["-d"], "My Patch"]
 
 
 class GetBundleIndexTests(TestCase):
@@ -149,7 +211,7 @@ class GetBundleIndexTests(TestCase):
 
     def setUp(self: Self) -> None:
         self.parser = _make_parser()
-        self.parser._bundle_index_map = {"bundle1.rvp": 1, "bundle2.rvp": 2, "bundle3.rvp": 3}
+        self.parser._bundle_index_map = {"bundle1.rvp": 1, "bundle2.rvp": 2}
 
     def test_known_bundle(self: Self) -> None:
         assert self.parser._get_bundle_index(_make_patch("p", "bundle2.rvp")) == BUNDLE_2_IDX
@@ -159,218 +221,3 @@ class GetBundleIndexTests(TestCase):
 
     def test_no_bundle_file(self: Self) -> None:
         assert self.parser._get_bundle_index(_make_patch("p")) is None
-
-
-class ShouldIncludeRegularPatchTests(TestCase):
-    """Tests for _should_include_regular_patch with bundle-aware excludes."""
-
-    def setUp(self: Self) -> None:
-        self.parser = _make_parser()
-        self.parser._bundle_index_map = {"bundle1.rvp": 1, "bundle2.rvp": 2}
-
-    def _app(self, exclude: list[str] | None = None) -> MagicMock:
-        app = MagicMock()
-        app.normalize_patch_names = False
-        app.exclude_request = exclude or []
-        return app
-
-    def test_not_in_exclude_list(self: Self) -> None:
-        app = self._app(["other-patch"])
-        assert self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle1.rvp"),
-            "my-patch",
-            app,
-        )
-
-    def test_legacy_global_exclude(self: Self) -> None:
-        app = self._app(["my-patch"])
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle1.rvp"),
-            "my-patch",
-            app,
-        )
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle2.rvp"),
-            "my-patch",
-            app,
-        )
-
-    def test_bundle_scoped_exclude_matches(self: Self) -> None:
-        app = self._app(["2:my-patch"])
-        assert self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle1.rvp"),
-            "my-patch",
-            app,
-        )
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle2.rvp"),
-            "my-patch",
-            app,
-        )
-
-    def test_negate_range_exclude(self: Self) -> None:
-        app = self._app(["^1:my-patch"])
-        assert self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle1.rvp"),
-            "my-patch",
-            app,
-        )
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle2.rvp"),
-            "my-patch",
-            app,
-        )
-
-    def test_mixed_bare_and_scoped(self: Self) -> None:
-        app = self._app(["2:scoped-patch", "global-patch"])
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("scoped-patch", "bundle2.rvp"),
-            "scoped-patch",
-            app,
-        )
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("global-patch", "bundle1.rvp"),
-            "global-patch",
-            app,
-        )
-
-    def test_different_patch_name_not_excluded(self: Self) -> None:
-        app = self._app(["2:some-patch"])
-        assert self.parser._should_include_regular_patch(
-            _make_patch("other-patch", "bundle2.rvp"),
-            "other-patch",
-            app,
-        )
-
-    def test_asterisk_all_bundles(self: Self) -> None:
-        app = self._app(["*:my-patch"])
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle1.rvp"),
-            "my-patch",
-            app,
-        )
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("my-patch", "bundle2.rvp"),
-            "my-patch",
-            app,
-        )
-
-    def test_space_formatted(self: Self) -> None:
-        app = self._app(["my-patch"])
-        app.normalize_patch_names = True
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("My Patch"),
-            "my-patch",
-            app,
-        )
-
-    # --- Allowlist mode (EXCEPT:: prefix) ---
-
-    def test_allowlist_keeps_matching_patch(self: Self) -> None:
-        """EXCEPT:: prefix flips to allowlist mode."""
-        app = self._app(["EXCEPT::2:keep-me"])
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("keep-me", "bundle1.rvp"),
-            "keep-me",
-            app,
-        )
-        assert self.parser._should_include_regular_patch(
-            _make_patch("keep-me", "bundle2.rvp"),
-            "keep-me",
-            app,
-        )
-
-    def test_allowlist_excludes_unlisted_patches(self: Self) -> None:
-        """Patches not in any EXCEPT entry are excluded."""
-        app = self._app(["EXCEPT::2:keep-me"])
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("other-patch", "bundle2.rvp"),
-            "other-patch",
-            app,
-        )
-
-    def test_allowlist_bare_name(self: Self) -> None:
-        """EXCEPT:: with bare name keeps from all bundles."""
-        app = self._app(["EXCEPT::keep-me"])
-        assert self.parser._should_include_regular_patch(
-            _make_patch("keep-me", "bundle1.rvp"),
-            "keep-me",
-            app,
-        )
-        assert self.parser._should_include_regular_patch(
-            _make_patch("keep-me", "bundle2.rvp"),
-            "keep-me",
-            app,
-        )
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("other", "bundle1.rvp"),
-            "other",
-            app,
-        )
-
-    def test_allowlist_all_bundles(self: Self) -> None:
-        """EXCEPT::*:patch keeps from all bundles."""
-        app = self._app(["EXCEPT::*:keep-me"])
-        assert self.parser._should_include_regular_patch(
-            _make_patch("keep-me", "bundle1.rvp"),
-            "keep-me",
-            app,
-        )
-
-    def test_denylist_still_works_without_except(self: Self) -> None:
-        """Exclude list without EXCEPT entries still works as deny."""
-        app = self._app(["skip-me"])
-        assert not self.parser._should_include_regular_patch(
-            _make_patch("skip-me", "bundle1.rvp"),
-            "skip-me",
-            app,
-        )
-        assert self.parser._should_include_regular_patch(
-            _make_patch("other", "bundle1.rvp"),
-            "other",
-            app,
-        )
-
-
-class ShouldIncludeUniversalPatchTests(TestCase):
-    """Tests for _should_include_universal_patch with bundle-aware excludes."""
-
-    def setUp(self: Self) -> None:
-        self.parser = _make_parser()
-        self.parser._bundle_index_map = {"bundle1.rvp": 1, "bundle2.rvp": 2}
-
-    def _app(self, exclude: list[str] | None = None, include: list[str] | None = None) -> MagicMock:
-        app = MagicMock()
-        app.normalize_patch_names = False
-        app.exclude_request = exclude or []
-        app.include_request = include or []
-        return app
-
-    def test_not_in_include_list(self: Self) -> None:
-        app = self._app(include=["other-patch"])
-        assert not self.parser._should_include_universal_patch(
-            _make_patch("my-patch", "bundle1.rvp"),
-            "my-patch",
-            app,
-        )
-
-    def test_in_include_list_and_not_excluded(self: Self) -> None:
-        app = self._app(exclude=["other-patch"], include=["my-patch"])
-        assert self.parser._should_include_universal_patch(
-            _make_patch("my-patch", "bundle1.rvp"),
-            "my-patch",
-            app,
-        )
-
-    def test_in_include_but_excluded_from_bundle(self: Self) -> None:
-        app = self._app(exclude=["2:my-patch"], include=["my-patch"])
-        assert self.parser._should_include_universal_patch(
-            _make_patch("my-patch", "bundle1.rvp"),
-            "my-patch",
-            app,
-        )
-        assert not self.parser._should_include_universal_patch(
-            _make_patch("my-patch", "bundle2.rvp"),
-            "my-patch",
-            app,
-        )

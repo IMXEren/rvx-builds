@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from threading import Lock
-from typing import cast
 
 import requests
 from environs import Env
@@ -183,18 +182,10 @@ def check_if_build_is_required() -> bool:
         old_norm_hashes = github_manager.get_last_version_source(app_obj, pbundles_norm_hashes_key)
         if old_norm_hashes == "0" or isinstance(old_norm_hashes, str):
             old_norm_hashes = []
-        elif isinstance(old_norm_hashes, list):
-            old_patch_bundles = cast(
-                "list[dict[str, str]]",
-                github_manager.get_last_version_source(app_obj, "patch_bundles"),
-            )
-            sorted_indices = sorted(range(len(old_patch_bundles)), key=lambda k: old_patch_bundles[k]["file_name"])
-            old_norm_hashes[:] = [old_norm_hashes[i] for i in sorted_indices]
 
         new_patches_versions = app_obj.get_patch_bundles_versions()
         new_patches_sources = app_obj.patches_dl_list
-        # Sort bundles by file_name for order-independent comparison
-        new_norm_hashes = app_obj.compute_pb_norm_hashes(sort=True)
+        new_norm_hashes = app_obj.compute_pb_norm_hashes()
 
         # Detect why build is needed
         old_snapshot = PatchBundleSnapshot(

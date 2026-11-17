@@ -1,6 +1,6 @@
 """Patches types."""
 
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 
 class OptionInfo(TypedDict):
@@ -24,6 +24,7 @@ class PatchInfo(TypedDict):
     version: str  ## preferred version
     options: list[OptionInfo]
     bundle_file: str | None  ## source patch bundle filename
+    enabled: NotRequired[bool]  ## CLI default enabled state
 
 
 type LoadedOptionValue = str | bool | int | float | list[Any] | None

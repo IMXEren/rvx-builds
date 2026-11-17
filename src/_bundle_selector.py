@@ -1,10 +1,10 @@
-"""Bundle-scoped patch selection for include/exclude by bundle index.
+"""Bundle-scoped patch selection by bundle index.
 
-Provides the ``[!][selector:]patch_name`` syntax where ``selector`` is one of:
-  - ``*`` — all bundles
-  - ``N`` — single bundle (1-indexed)
-  - ``N-M`` — inclusive range
-  - ``^selector`` — negation (NOT)
+Provides the ``[selector:]patch_name`` syntax where ``selector`` is one of:
+  - ``*`` matches all bundles
+  - ``N`` matches one bundle (1-indexed)
+  - ``N-M`` matches an inclusive range
+  - ``^selector`` matches bundles outside the selector
 """
 
 import re
@@ -64,18 +64,16 @@ def entry_matches(entry: str, patch_name: str, bundle_index: int | None) -> bool
     """Check if a selector entry matches a given patch and bundle.
 
     Entry format: ``[selector:]patch_name``
-      - ``2:patch_name`` — matches only bundle 2
-      - ``1-3:patch_name`` — matches bundles 1 through 3
-      - ``^1-3:patch_name`` — matches bundles NOT 1-3
-      - ``*:patch_name`` — matches all bundles
-      - ``patch_name`` (no colon) — matches all bundles (legacy)
-
-    The ``!`` allowlist prefix is stripped by the caller before calling this.
+      - ``2:patch_name`` matches only bundle 2
+      - ``1-3:patch_name`` matches bundles 1 through 3
+      - ``^1-3:patch_name`` matches bundles outside 1-3
+      - ``*:patch_name`` matches all bundles
+      - ``patch_name`` (no colon) matches all bundles
 
     Parameters
     ----------
     entry : str
-        The selector entry (without ``!`` prefix).
+        The selector entry.
     patch_name : str
         The patch name to check.
     bundle_index : int | None
@@ -96,5 +94,28 @@ def entry_matches(entry: str, patch_name: str, bundle_index: int | None) -> bool
             return selector_matches(selector_str, bundle_index)
         return selector_str == "*"
 
-    # No colon — applies to all bundles
+    # No selector applies to all bundles
     return entry == patch_name
+
+
+def parse_patch_selection(value: str) -> tuple[str, list[tuple[bool, str]]]:
+    """Parse an app-wide base followed by ordered patch overrides."""
+    if not value.strip():
+        return "DEFAULT", []
+    parts = [part.strip() for part in value.split(",")]
+    base = "DEFAULT"
+    if parts[0].upper() in {"ALL", "DEFAULT", "NONE"}:
+        base = parts.pop(0).upper()
+    overrides = []
+    for part in parts:
+        if not part or part[0] not in "+-" or not part[1:]:
+            msg = f"Invalid patch selection clause: {part!r}"
+            raise ValueError(msg)
+        entry = part[1:]
+        selector, separator, name = entry.partition(":")
+        valid_selector = selector.removeprefix("^") == "*" or bool(_BUNDLE_SELECTOR_RE.fullmatch(selector))
+        if separator and (not name or not valid_selector):
+            msg = f"Invalid patch selection clause: {part!r}"
+            raise ValueError(msg)
+        overrides.append((part[0] == "+", entry))
+    return base, overrides

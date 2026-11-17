@@ -76,6 +76,19 @@ class AppVersionStateTests(TestCase):
 class AppCachingTests(TestCase):
     """Verify DISABLE_CACHING prevents shared cache reads and writes."""
 
+    def test_build_hash_preserves_bundle_order(self: Self) -> None:
+        """Bundle positions must affect the build identity for scoped patch selection."""
+        hashes = []
+        for bundle_hashes in (["hash-a", "hash-b"], ["hash-b", "hash-a"]):
+            app = APP.__new__(APP)
+            app.app_version = "1.0"
+            app.resolved_version = None
+            app.patch_selection = "DEFAULT,-2:some-patch"
+            with patch.object(APP, "compute_pb_norm_hashes", return_value=bundle_hashes):
+                hashes.append(app.get_build_hash())
+
+        self.assertNotEqual(hashes[0], hashes[1])
+
     def test_cli_temp_path_includes_patch_source_and_app_name(self: Self) -> None:
         """CLI temp directories should identify the patch source so parallel patch families stay isolated."""
         app = APP.__new__(APP)

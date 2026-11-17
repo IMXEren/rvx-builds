@@ -227,6 +227,7 @@ class Patches(object):
             version=preferred_version,
             options=options,
             bundle_file=patch.get("bundle_file"),
+            enabled=patch.get("use", False),
         )
 
     @staticmethod
