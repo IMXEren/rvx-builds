@@ -372,13 +372,14 @@ secrets` in the format -
     YOUTUBE_PATCH_SELECTION=DEFAULT,+clone-app,-dynamic-color
     ```
     The first clause sets the base for **all bundles**: `DEFAULT` selects patches marked enabled
-    by their maintainers, `ALL` selects every listed patch, and `NONE` selects none. Omitting the
-    variable uses `DEFAULT`. The remaining comma-separated clauses add (`+`) or remove (`-`)
-    matching patches. When several clauses match, the last one wins. A leading base clause is
+    by their maintainers, `APP` selects every app-specific patch but no universal patches,
+    `ALL` selects every listed patch, and `NONE` selects none. Omitting the variable uses
+    `DEFAULT`. The remaining comma-separated clauses add (`+`) or remove (`-`) matching patches. When several clauses match, the last one wins. A leading base clause is
     optional, so `+clone-app` also starts from `DEFAULT`.
 
-    Universal patches usually are not enabled by default, so they need `ALL` or an explicit
-    `+patch-name` clause. `NONE,+patch-name` selects only the named patch.
+    For example, `YOUTUBE_PATCH_SELECTION=APP` selects all app-specific patches without
+    universal patches. Universal patches usually are not enabled by default, so they need
+    `ALL` or an explicit `+patch-name` clause. `NONE,+patch-name` selects only the named patch.
 
     Overrides without a bundle selector apply to every bundle with a matching patch name. To
     target one bundle, prefix its 1-based position and a colon after `+` or `-`:
@@ -388,6 +389,12 @@ secrets` in the format -
     Selectors support `N` (one bundle), `N-M` (inclusive range), `^` (all except the
     selected bundles), and `*` (all bundles). The base clause always applies to the entire app.
     Bundle-scoped base clauses such as `2:DEFAULT` are not supported.
+
+    The old `<APP_NAME>_INCLUDE_PATCH` and `<APP_NAME>_EXCLUDE_PATCH` variables still work
+    temporarily. They use `APP` as the base with `+` and `-` overrides. Their use emits a
+    deprecation warning.
+    If `<APP_NAME>_PATCH_SELECTION` is set, it takes precedence. Migrate old `EXCEPT::`
+    allowlists to `NONE,+patch-name`.
 
     Patch names are normalized to lowercase dash-separated form by default:
     ```

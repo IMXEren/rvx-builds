@@ -58,8 +58,19 @@ class APP(object):
         # Keep backward compatibility
         self.patches_dl = patches_dl_raw
 
-        self.patch_selection = config.env.str(f"{app_name}_PATCH_SELECTION".upper(), "DEFAULT")
-        self.selection_base, self.selection_overrides = parse_patch_selection(self.patch_selection)
+        key = app_name.upper()
+        selection = config.env.str(f"{key}_PATCH_SELECTION", None)
+        legacy_include = config.env.str(f"{key}_INCLUDE_PATCH", None)
+        legacy_exclude = config.env.str(f"{key}_EXCLUDE_PATCH", None)
+        legacy = legacy_include is not None or legacy_exclude is not None
+        if legacy:
+            logger.warning(f"{key}_INCLUDE_PATCH and {key}_EXCLUDE_PATCH are deprecated. Use {key}_PATCH_SELECTION.")
+        if selection is None:
+            includes = [f"+{name.strip()}" for name in (legacy_include or "").split(",") if name.strip()]
+            excludes = [f"-{name.strip()}" for name in (legacy_exclude or "").split(",") if name.strip()]
+            selection = ",".join(["APP" if legacy else "DEFAULT", *includes, *excludes])
+        self.patch_selection = selection
+        self.selection_base, self.selection_overrides = parse_patch_selection(selection)
         self.resource: dict[str, dict[str, str]] = {}
         self.patch_bundles: list[dict[str, str]] = []  # Store multiple patch bundles
         self.no_of_patches: int = 0

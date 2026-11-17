@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Self, cast
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
+from src._bundle_selector import PatchBase
 from src.apks.version_fallback import VersionFallback
 from src.app import APP
 
@@ -20,6 +21,54 @@ if TYPE_CHECKING:
 
 class AppVersionStateTests(TestCase):
     """Verify requested and resolved app versions remain separate."""
+
+    def test_legacy_patch_lists_use_app_base_with_warning(self: Self) -> None:
+        """Old variables use the same app-only base as explicit selections."""
+        config = Mock()
+        config.global_patches_dl = "https://example.test/patches"
+        config.global_cli_argsf = "revanced-cli"
+        config.global_cli_lpargs = ""
+        config.global_cli_pargs = ""
+        values = {
+            "SAMPLE_INCLUDE_PATCH": "universal-patch",
+            "SAMPLE_EXCLUDE_PATCH": "2:disabled-patch",
+        }
+        config.env.str.side_effect = lambda key, default=None: values.get(key, default)
+        config.env.list.side_effect = lambda _key, default=None: default
+        config.env.bool.side_effect = lambda _key, default=None: default
+
+        with patch("src.app.logger.warning") as warning:
+            app = APP("sample", "com.example", cast("RevancedConfig", config))
+
+        self.assertIs(PatchBase.APP, app.selection_base)
+        self.assertEqual([(True, "universal-patch"), (False, "2:disabled-patch")], app.selection_overrides)
+        warning.assert_called_once_with(
+            "SAMPLE_INCLUDE_PATCH and SAMPLE_EXCLUDE_PATCH are deprecated. Use SAMPLE_PATCH_SELECTION.",
+        )
+
+        values["SAMPLE_INCLUDE_PATCH"] = ""
+        values["SAMPLE_EXCLUDE_PATCH"] = ""
+        with patch("src.app.logger.warning") as warning:
+            app = APP("sample", "com.example", cast("RevancedConfig", config))
+        self.assertIs(PatchBase.APP, app.selection_base)
+        self.assertEqual([], app.selection_overrides)
+        warning.assert_called_once()
+
+        values["SAMPLE_PATCH_SELECTION"] = "NONE,+other-patch"
+        with patch("src.app.logger.warning") as warning:
+            app = APP("sample", "com.example", cast("RevancedConfig", config))
+        self.assertIs(PatchBase.NONE, app.selection_base)
+        self.assertEqual([(True, "other-patch")], app.selection_overrides)
+        warning.assert_called_once()
+
+        values.pop("SAMPLE_INCLUDE_PATCH")
+        values.pop("SAMPLE_EXCLUDE_PATCH")
+        values["SAMPLE_PATCH_SELECTION"] = "APP,+universal-patch"
+        with patch("src.app.logger.warning") as warning:
+            app = APP("sample", "com.example", cast("RevancedConfig", config))
+        self.assertIs(PatchBase.APP, app.selection_base)
+        self.assertEqual([(True, "universal-patch")], app.selection_overrides)
+        warning.assert_not_called()
 
     def test_version_fallback_resolves_candidate_without_overwriting_latest_selector(self: Self) -> None:
         """A successful fallback candidate is concrete download state, not a replacement request selector."""
@@ -75,6 +124,19 @@ class AppVersionStateTests(TestCase):
 
 class AppCachingTests(TestCase):
     """Verify DISABLE_CACHING prevents shared cache reads and writes."""
+
+    def test_app_selection_changes_build_hash(self: Self) -> None:
+        """Different base clauses must produce different build identities."""
+        hashes = []
+        for selection in ("DEFAULT,+universal-patch", "APP,+universal-patch"):
+            app = APP.__new__(APP)
+            app.app_version = "1.0"
+            app.resolved_version = None
+            app.patch_selection = selection
+            with patch.object(APP, "compute_pb_norm_hashes", return_value=["hash-a"]):
+                hashes.append(app.get_build_hash())
+
+        self.assertNotEqual(hashes[0], hashes[1])
 
     def test_build_hash_preserves_bundle_order(self: Self) -> None:
         """Bundle positions must affect the build identity for scoped patch selection."""

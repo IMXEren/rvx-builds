@@ -18,7 +18,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src._bundle_selector import entry_matches, parse_patch_selection, selector_matches
+from src._bundle_selector import PatchBase, entry_matches, parse_patch_selection, selector_matches
 from src.parser import Parser
 from src.structs.patches import PatchInfo
 
@@ -186,10 +186,29 @@ class PatchSelectionTests(TestCase):
         assert self.parser._should_select_patch(_make_patch("My Patch"), app)
         assert not self.parser._should_select_patch(_make_patch("Other"), app)
 
+    def test_all_base_clauses_parse_as_enum(self: Self) -> None:
+        for base in PatchBase:
+            with self.subTest(base=base):
+                assert parse_patch_selection(base.value)[0] is base
+
     def test_reject_scoped_base_and_malformed_override(self: Self) -> None:
-        for value in ("ALL,2:DEFAULT", "DEFAULT,", "DEFAULT,+", "DEFAULT,-bad:patch"):
+        for value in ("LEGACY", "ALL,2:DEFAULT", "DEFAULT,", "DEFAULT,+", "DEFAULT,-bad:patch"):
             with self.subTest(value=value), pytest.raises(ValueError, match="Invalid patch selection clause"):
                 parse_patch_selection(value)
+
+    def test_app_base_selects_app_patches_only(self: Self) -> None:
+        app = self._app("APP,+universal-patch,-2:regular-patch")
+        regular = _make_patch("Regular Patch", "bundle1.rvp")
+        scoped = _make_patch("Regular Patch", "bundle2.rvp")
+        universal = _make_patch("Universal Patch", "bundle1.rvp", enabled=True)
+        universal["app"] = "universal"
+        other = _make_patch("Other Universal", "bundle1.rvp", enabled=True)
+        other["app"] = "universal"
+
+        assert self.parser._should_select_patch(regular, app)
+        assert not self.parser._should_select_patch(scoped, app)
+        assert self.parser._should_select_patch(universal, app)
+        assert not self.parser._should_select_patch(other, app)
 
     def test_universal_patch_uses_same_selection(self: Self) -> None:
         patch = _make_patch("Universal Patch", "bundle1.rvp")

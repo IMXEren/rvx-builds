@@ -8,6 +8,17 @@ Provides the ``[selector:]patch_name`` syntax where ``selector`` is one of:
 """
 
 import re
+from enum import StrEnum
+
+
+class PatchBase(StrEnum):
+    """Starting sets for app-wide patch selection."""
+
+    ALL = "ALL"
+    DEFAULT = "DEFAULT"
+    NONE = "NONE"
+    APP = "APP"
+
 
 # Matches bundle selectors: 1, 1-3, ^1, ^1-3
 _BUNDLE_SELECTOR_RE = re.compile(r"^(\^)?(\d+)(?:-(\d+))?$")
@@ -98,14 +109,14 @@ def entry_matches(entry: str, patch_name: str, bundle_index: int | None) -> bool
     return entry == patch_name
 
 
-def parse_patch_selection(value: str) -> tuple[str, list[tuple[bool, str]]]:
+def parse_patch_selection(value: str) -> tuple[PatchBase, list[tuple[bool, str]]]:
     """Parse an app-wide base followed by ordered patch overrides."""
     if not value.strip():
-        return "DEFAULT", []
+        return PatchBase.DEFAULT, []
     parts = [part.strip() for part in value.split(",")]
-    base = "DEFAULT"
-    if parts[0].upper() in {"ALL", "DEFAULT", "NONE"}:
-        base = parts.pop(0).upper()
+    base = PatchBase.DEFAULT
+    if parts[0].upper() in PatchBase.__members__:
+        base = PatchBase[parts.pop(0).upper()]
     overrides = []
     for part in parts:
         if not part or part[0] not in "+-" or not part[1:]:

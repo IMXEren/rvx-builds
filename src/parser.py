@@ -9,6 +9,7 @@ from typing import Any, Self
 from loguru import logger
 from ruamel.yaml import YAML
 
+from src._bundle_selector import PatchBase
 from src._bundle_selector import entry_matches as _entry_matches_fn
 from src.app import APP
 from src.cli_args import DEFAULT_PATCH_ARGS, append_cli_argument, is_arg_enabled
@@ -394,7 +395,11 @@ class Parser(object):
     def _should_select_patch(self: Self, patch: PatchInfo, app: APP) -> bool:
         """Apply the app-wide base and ordered overrides to one bundle patch."""
         base = app.selection_base
-        selected = base == "ALL" or (base == "DEFAULT" and patch.get("enabled", False))
+        selected = (
+            base == PatchBase.ALL
+            or (base == PatchBase.APP and patch["app"] != "universal")
+            or (base == PatchBase.DEFAULT and patch.get("enabled", False))
+        )
         name = self._normalize_patch_name(patch["name"], normalize=app.normalize_patch_names)
         bundle_index = self._get_bundle_index(patch)
         for enable, entry in app.selection_overrides:
