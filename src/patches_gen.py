@@ -1,6 +1,7 @@
 """Generate patches using cli."""
 
 import json
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -178,20 +179,28 @@ def extract_package_info(package_section: str) -> dict[str, Any]:
         else first_line.strip()
     )
     versions: list[str] = []
-    collecting_versions = False
+    codes: dict[str, int] = {}
+    field = ""
 
     for line in lines[1:]:
         if _has_label(line, "Compatible versions:", top_level_only=False):
-            inline_versions = _field_value(line, "Compatible versions:")
-            if inline_versions:
-                versions.extend(inline_versions.split())
-            collecting_versions = True
-            continue
-
-        if collecting_versions:
+            field = "versions"
+            versions.extend(_field_value(line, "Compatible versions:").split())
+        elif _has_label(line, "Version codes:", top_level_only=False):
+            field = "codes"
+        elif field == "versions":
             versions.extend(line.strip().split())
+        elif field == "codes":
+            match = re.match(r"\s*(\S+):\s+(.+)", line)
+            if match and match[1] in versions:
+                values = [int(code) for code in re.findall(r"\b[A-Za-z][\w]*=(\d+)\b", match[2])]
+                if values:
+                    codes[match[1]] = max(values)
 
-    return {"name": package_name, "versions": versions or None}
+    result = {"name": package_name, "versions": versions or None}
+    if codes:
+        result["version_codes"] = codes
+    return result
 
 
 def extract_compatible_packages_from_section(section: str) -> list[dict[str, Any]]:
@@ -205,37 +214,17 @@ def extract_compatible_packages_from_section(section: str) -> list[dict[str, Any
         return []
 
     packages: list[dict[str, Any]] = []
-    current_name: str | None = None
-    current_versions: list[str] = []
-    collecting_versions = False
-
-    def flush_package() -> None:
-        """Commit the current package once its following package or section boundary appears."""
-        if current_name is not None:
-            packages.append({"name": current_name, "versions": current_versions or None})
-
+    package_lines: list[str] = []
     for line in lines[compatible_index + 1 :]:
         if _has_label(line, "Package name:", top_level_only=False):
-            flush_package()
-            current_name = _field_value(line, "Package name:")
-            current_versions = []
-            collecting_versions = False
-            continue
+            if package_lines:
+                packages.append(extract_package_info("\n".join(package_lines)))
+            package_lines = [line]
+        elif package_lines:
+            package_lines.append(line)
 
-        if current_name is None:
-            continue
-
-        if _has_label(line, "Compatible versions:", top_level_only=False):
-            inline_versions = _field_value(line, "Compatible versions:")
-            if inline_versions:
-                current_versions.extend(inline_versions.split())
-            collecting_versions = True
-            continue
-
-        if collecting_versions and line.strip():
-            current_versions.extend(line.strip().split())
-
-    flush_package()
+    if package_lines:
+        packages.append(extract_package_info("\n".join(package_lines)))
     return packages
 
 
@@ -255,21 +244,12 @@ def parse_option_match(option_lines: list[str]) -> dict[str, Any]:
     while index < len(normalised_option_lines):
         line = normalised_option_lines[index]
 
-        if _has_label(line, "Title:", top_level_only=False):
+        if _has_label(line, "Title:", top_level_only=False) or _has_label(line, "Name:", top_level_only=False):
+            label = line.lstrip().partition(":")[0] + ":"
             name, index = _collect_multiline_field(
                 normalised_option_lines,
                 index,
-                "Title:",
-                OPTION_FIELD_LABELS,
-                stop_at_top_level=False,
-            )
-            continue
-
-        if _has_label(line, "Name:", top_level_only=False):
-            name, index = _collect_multiline_field(
-                normalised_option_lines,
-                index,
-                "Name:",
+                label,
                 OPTION_FIELD_LABELS,
                 stop_at_top_level=False,
             )

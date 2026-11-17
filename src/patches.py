@@ -1,11 +1,9 @@
 """Revanced Patches."""
 
 import contextlib
-import re
 from typing import Any, ClassVar, Self, cast
 
 from loguru import logger
-from packaging.version import InvalidVersion, Version
 
 from src.apks.version_sorter import VersionSorter
 from src.app import APP
@@ -232,55 +230,16 @@ class Patches(object):
         )
 
     @staticmethod
-    def _coerce_nonstandard_version(candidate: str) -> Version | None:
-        """Convert suffix-heavy app versions into a comparable numeric version when possible."""
-        numeric_parts = re.findall(r"\d+", candidate)
-        if not numeric_parts:
-            # Versions without numeric groups cannot be ordered safely, so callers should keep the existing fallback.
-            return None
-        try:
-            # Piko can publish versions such as `11.95.1-release-ripped.0`; numeric groups preserve app ordering.
-            return Version(".".join(numeric_parts))
-        except InvalidVersion:
-            # The normalized numeric form should be valid, but preserving the old fallback keeps parsing resilient.
-            return None
-
-    @staticmethod
     def select_recommended_version(versions: list[str]) -> str:
-        """Choose the newest compatible version from the CLI-provided version list."""
-        valid_versions: list[tuple[Version, str]] = []
-
-        for candidate in versions:
-            try:
-                # The CLI often returns newest-to-oldest, but sorting avoids relying on source ordering.
-                valid_versions.append((Version(candidate), candidate))
-            except InvalidVersion:
-                if coerced_version := Patches._coerce_nonstandard_version(candidate):
-                    # Numeric coercion joins the same comparison pool so mixed beta/release-ripped lists sort together.
-                    valid_versions.append((coerced_version, candidate))
-                else:
-                    # Non-standard app versions should not crash patch listing; fallback below preserves CLI order.
-                    logger.warning(f"Unable to parse compatible app version `{candidate}`.")
-
-        if valid_versions:
-            # The original string is returned so downstream download sources receive the exact advertised value.
-            return max(valid_versions, key=lambda item: item[0])[1]
-
-        # If every version is unorderable, keep the first advertised version rather than silently picking oldest.
-        return versions[0]
+        """Choose the newest advertised version while retaining its original name."""
+        return max(versions, key=VersionSorter.sorting_key)
 
     @staticmethod
     def get_compatible_versions(app: "APP") -> list[str]:
-        """Return the union of patch-compatible versions, sorted descending.
-
-        Empty list means no compatible versions are known (e.g., no patches loaded).
-        Unparseable versions are still included -- ``VersionSorter.sorting_key`` falls
-        back to ``semver.Version(0, 0, 0)`` for them, so they appear at the end
-        of the descending order.
-        """
+        """Return the patch-compatible versions, newest first by code or version name."""
         return sorted(
             app.compatible_versions,
-            key=VersionSorter.sorting_key,
+            key=lambda version: VersionSorter.candidate_key(version, app.compatible_version_codes),
             reverse=True,
         )
 
@@ -329,6 +288,8 @@ class Patches(object):
             if app.package_name == package_name:
                 # Capture the union of compatible versions for the version-fallback system.
                 app.compatible_versions.update(compatible_package.get("versions") or [])
+                for version, code in compatible_package.get("version_codes", {}).items():
+                    app.compatible_version_codes[version] = max(code, app.compatible_version_codes.get(version, code))
                 patch_dict = self._create_patch_dict(patch, package_name, versions)
                 # Do NOT deduplicate by name here.  Bundle-scoped exclude selectors
                 # (e.g. ``2:some-patch``) rely on each bundle retaining its own copy
@@ -410,6 +371,9 @@ class Patches(object):
         "Experimental".
         """
         total_patches, recommended_version = self.get(app=app.app_name)
+        candidates = self.get_compatible_versions(app)
+        if candidates:
+            recommended_version = candidates[0]
         experiment = False
 
         if app.app_version:

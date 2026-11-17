@@ -6,13 +6,17 @@
 
 from contextlib import chdir
 from tempfile import TemporaryDirectory
-from typing import Any, Self
+from types import SimpleNamespace
+from typing import TYPE_CHECKING, Any, Self, cast
 from unittest import TestCase
 from unittest.mock import patch
 
 from src.cli_args import merge_cli_arg_maps
 from src.patches import Patches
 from src.patches_gen import convert_command_output_to_json, parse_text_to_json
+
+if TYPE_CHECKING:
+    from src.app import APP
 
 EXPECTED_REVANCED_PATCH_COUNT = 2
 EXPECTED_REVANCED_OPTION_COUNT = 2
@@ -159,6 +163,50 @@ class PatchesGenParserTests(TestCase):
         self.assertEqual("gmsCoreVendorGroupId", option["key"])
         self.assertEqual(["app.revanced", "com.google", "com.mgoogle"], option["possible_values"])
         self.assertEqual(["20.47.62", "20.48.46"], gms_core["compatiblePackages"][0]["versions"])
+
+    def test_morphe_version_codes_rank_versions_before_names(self: Self) -> None:
+        """Collect codes per version and stop parsing versions at the code section."""
+        sample = """Name: Example
+Compatible packages:
+\tPackage name: com.twitter.android
+\tCompatible versions:
+\t\t12.41.0-prod.01
+\t\t12.43.0-prod.01
+\tVersion codes:
+\t\t12.41.0-prod.01: ARM64_V8A=500 X86=501
+\t\t12.43.0-prod.01: ARM64_V8A=400 X86=401
+"""
+        package = parse_text_to_json(sample)[0]["compatiblePackages"][0]
+        self.assertEqual(["12.41.0-prod.01", "12.43.0-prod.01"], package["versions"])
+        self.assertEqual({"12.41.0-prod.01": 501, "12.43.0-prod.01": 401}, package["version_codes"])
+
+        app = cast("APP", SimpleNamespace(
+            app_name="twitter", package_name="com.twitter.android",
+            compatible_versions=set(), compatible_version_codes={},
+        ))
+        patches = Patches.__new__(Patches)
+        patches.patches_dict = {"twitter": []}
+        patches._process_app_specific_patch(  # noqa: SLF001
+            {"name": "Example", "description": "", "options": [], "compatiblePackages": [package]}, app,
+        )
+        self.assertEqual(["12.41.0-prod.01", "12.43.0-prod.01"], Patches.get_compatible_versions(app))
+
+    def test_mixed_piko_versions_choose_newx(self: Self) -> None:
+        """A legacy patch's valid SemVer must not outrank a newer prod.01 version."""
+        app = cast("APP", SimpleNamespace(
+            app_name="twitter", package_name="com.twitter.android",
+            compatible_versions=set(), compatible_version_codes={}, app_version=None,
+        ))
+        patches = Patches.__new__(Patches)
+        patches.patches_dict = {"twitter": []}
+        for name, version in (("Legacy", "12.19.1-release.0"), ("NewX", "12.43.0-prod.01")):
+            patches._process_app_specific_patch(  # noqa: SLF001
+                {"name": name, "description": "", "options": [],
+                 "compatiblePackages": [{"name": app.package_name, "versions": [version]}]}, app,
+            )
+        self.assertEqual(["12.43.0-prod.01", "12.19.1-release.0"], Patches.get_compatible_versions(app))
+        patches.get_app_configs(app)
+        self.assertEqual("12.43.0-prod.01", app.app_version)
 
     def test_morphe_list_patches_does_not_emit_patch_temp_path(self: Self) -> None:
         """Morphe temp isolation is patch-only; list-patches should not receive patch temp-path flags."""

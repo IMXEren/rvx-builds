@@ -38,6 +38,21 @@ class AppVersionStateTests(TestCase):
         self.assertEqual("latest", app.app_version)
         self.assertEqual("20.51.39", app.resolved_version)
 
+    def test_version_fallback_prefers_code_and_preserves_requested_version(self: Self) -> None:
+        """Download order uses codes even when version names disagree."""
+        app = cast("APP", SimpleNamespace(
+            app_name="twitter", app_version="12.41.0-prod.01", resolved_version=None,
+            compatible_version_codes={"12.41.0-prod.01": 501, "12.43.0-prod.01": 401},
+        ))
+        download = Mock(return_value=("twitter.apkm", "https://example.test"))
+        downloader = cast("Downloader", SimpleNamespace(download=download))
+
+        VersionFallback.run(app, downloader, ["12.43.0-prod.01", "12.41.0-prod.01"])
+
+        download.assert_called_once_with("12.41.0-prod.01", app)
+        self.assertEqual("12.41.0-prod.01", app.resolved_version)
+        self.assertEqual("12.41.0-prod.01", app.app_version)
+
     def test_direct_url_uses_downloaded_manifest_to_resolve_latest_selector(self: Self) -> None:
         """Direct APK URLs should get the same manifest fallback as source-backed downloads."""
         app = APP.__new__(APP)

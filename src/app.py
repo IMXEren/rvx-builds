@@ -73,6 +73,7 @@ class APP(object):
         self.old_key = config.env.bool(f"{app_name}_OLD_KEY".upper(), config.global_old_key)
         self.patches: list[dict[Any, Any]] = []
         self.compatible_versions: set[str] = set()
+        self.compatible_version_codes: dict[str, int] = {}
         self.normalize_patch_names = config.env.bool(
             f"{app_name}_NORMALIZE_PATCH_NAMES".upper(),
             config.global_normalize_patch_names,

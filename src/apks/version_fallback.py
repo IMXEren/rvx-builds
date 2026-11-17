@@ -29,12 +29,12 @@ class VersionFallback:
         versions: list[str],
         **kwargs: dict[str, Any],
     ) -> tuple[str, str]:
-        """Try downloading each version in descending semver order.
+        """Try downloading each version in descending code or version-name order.
 
         :param app: The APP instance being downloaded.
         :param downloader: The Downloader instance to use.
-        :param versions: Candidate versions in any order. Will be sorted
-            descending using ``VersionSorter.sorting_key`` before iteration.
+        :param versions: Candidate versions in any order, sorted by advertised
+            version code when available and otherwise by version name.
         :param kwargs: Extra kwargs forwarded to ``downloader.download``.
         :returns: The ``(file_name, dl_url)`` tuple from the successful attempt.
         :raises ValueError: If ``versions`` is empty.
@@ -43,8 +43,8 @@ class VersionFallback:
         if not versions:
             msg = "VersionFallback.run requires a non-empty versions list"
             raise ValueError(msg)
-        # Sort descending so the newest is tried first.
-        ordered = sorted(versions, key=VersionSorter.sorting_key, reverse=True)
+        codes = getattr(app, "compatible_version_codes", {})
+        ordered = sorted(versions, key=lambda version: VersionSorter.candidate_key(version, codes), reverse=True)
         last_error: VersionNotFoundError | None = None
         for version in ordered:
             try:
