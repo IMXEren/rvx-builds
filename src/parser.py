@@ -477,8 +477,11 @@ class Parser(object):
         # Keystore path is always resolved in the temp directory used by the builder.
         keystore_path = str(self.config.temp_folder.joinpath(app.keystore_name))
         append_cli_argument(args, self._patch_args["KEYSTORE"], [keystore_path])
-        # Force flag keeps current behavior unless user profile explicitly disables it.
-        append_cli_argument(args, self._patch_args["FORCE"])
+        # Force user-chosen experimental versions and versions the bundles do not list.
+        # Otherwise the CLI must skip incompatible patches.
+        unlisted = bool(app.compatible_versions) and app.get_effective_version() not in app.compatible_versions
+        if app.experiment or unlisted:
+            append_cli_argument(args, self._patch_args["FORCE"])
 
     def _add_keystore_flags(self: Self, args: list[str], app: APP) -> None:
         """Add keystore-specific flags if needed."""

@@ -99,6 +99,9 @@ def _patch_app() -> APP:
                 "TEMPORARY_FILES_PATH": [""],
                 "BYTECODE_MODE": [""],
             },
+            compatible_versions={"20.1.0"},
+            experiment=False,
+            get_effective_version=lambda: "20.1.0",
             download_file_name="youtube.apk",
             get_cli_temporary_files_path=lambda config: str(
                 config.temp_folder.joinpath("patch-source-temporary-files", "revanced-patches-youtube"),
@@ -152,6 +155,25 @@ class BuilderFailureTests(TestCase):
         self.assertIn("-t", command)
         self.assertIn(f"apks{os.sep}patch-source-temporary-files{os.sep}revanced-patches-youtube", command)
 
+    def test_patch_app_forces_only_unlisted_versions(self: Self) -> None:
+        """The CLI must keep skipping incompatible patches unless the APK version is unlisted."""
+        parser = Parser(cast("Patches", object()), _config())
+        cases = (
+            ("20.1.0", {"20.1.0"}, False, False),
+            ("20.2.0", {"20.1.0"}, False, True),
+            ("20.2.0", set(), False, False),
+            ("20.1.0", {"20.1.0"}, True, True),
+        )
+        for version, compatible_versions, experiment, forced in cases:
+            with self.subTest(version=version, compatible_versions=compatible_versions, experiment=experiment):
+                app = _patch_app()
+                app.compatible_versions = compatible_versions
+                app.experiment = experiment
+                app.get_effective_version = lambda version=version: version
+                with patch("src.parser.Popen", return_value=_SuccessfulProcess()) as popen:
+                    parser.patch_app(app)
+                self.assertEqual(forced, "--force" in popen.call_args.args[0])
+
     def test_patch_app_always_passes_extra_flags(self: Self) -> None:
         """Extra flags are always appended to the patch command."""
         parser = Parser(cast("Patches", object()), _config())
@@ -162,6 +184,7 @@ class BuilderFailureTests(TestCase):
             parser.patch_app(app)
 
         command = popen.call_args.args[0]
+        self.assertNotIn("--force", command)
         self.assertEqual(["--unsigned", "--continue-on-error"], command[-2:])
 
     def test_patch_app_accepts_nonzero_continue_on_error_when_output_exists(self: Self) -> None:

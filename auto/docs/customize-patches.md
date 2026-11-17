@@ -260,7 +260,8 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    ```
 
    `PATCHES_POST` is an optional companion argument appended after every patch bundle (used by ReVanced v6 with `-b`).
-   Use `EXTRA_FLAGS` for any other flags that should always be passed.
+   `FORCE` is only passed when `<APP_NAME>_VERSION` picks a version other than the recommended one, or when
+   the APK version is not listed by the patch bundles. Otherwise the CLI skips patches that do not support the version. Use `EXTRA_FLAGS` for any other flags that should always be passed.
    App-level overrides are also supported and take precedence:
 
    ```ini
