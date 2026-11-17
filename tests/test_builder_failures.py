@@ -83,6 +83,7 @@ def _patch_app() -> APP:
                 "DISABLED": ["-d"],
                 "ENABLED": ["-e"],
                 "EXCLUSIVE": ["--exclusive"],
+                "EXTRA_FLAGS": [],
                 "FORCE": ["--force"],
                 "KEYSTORE": ["--keystore"],
                 "KEYSTORE_ENTRY_ALIAS": [""],
@@ -150,6 +151,18 @@ class BuilderFailureTests(TestCase):
         self.assertIn("--continue-on-error", command)
         self.assertIn("-t", command)
         self.assertIn(f"apks{os.sep}patch-source-temporary-files{os.sep}revanced-patches-youtube", command)
+
+    def test_patch_app_always_passes_extra_flags(self: Self) -> None:
+        """Extra flags are always appended to the patch command."""
+        parser = Parser(cast("Patches", object()), _config())
+        app = _patch_app()
+        app.cli_p_args["EXTRA_FLAGS"] = ["--unsigned", "--continue-on-error"]
+
+        with patch("src.parser.Popen", return_value=_SuccessfulProcess()) as popen:
+            parser.patch_app(app)
+
+        command = popen.call_args.args[0]
+        self.assertEqual(["--unsigned", "--continue-on-error"], command[-2:])
 
     def test_patch_app_accepts_nonzero_continue_on_error_when_output_exists(self: Self) -> None:
         """A skipped patch should not fail the app when Morphe still wrote the patched APK."""

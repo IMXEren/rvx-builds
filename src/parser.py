@@ -569,6 +569,7 @@ class Parser(object):
         # Continue-on-error is profile-controlled because Morphe supports it but ReVanced may reject unknown flags.
         append_cli_argument(args, self._patch_args["CONTINUE_ON_ERROR"])
         append_cli_argument(args, self._patch_args["BYTECODE_MODE"])
+        append_cli_argument(args, self._patch_args["EXTRA_FLAGS"])
 
         output_file_path = self.config.temp_folder.joinpath(app.get_output_file_name())
         if output_file_path.exists():

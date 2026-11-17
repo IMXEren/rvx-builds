@@ -260,12 +260,13 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    ```
 
    `PATCHES_POST` is an optional companion argument appended after every patch bundle (used by ReVanced v6 with `-b`).
+   Use `EXTRA_FLAGS` for any other flags that should always be passed.
    App-level overrides are also supported and take precedence:
 
    ```ini
    YOUTUBE_CLI_ARGSF=morphe-cli
    YOUTUBE_CLI_LPARGS="PATCHES=--patches"
-   YOUTUBE_CLI_PARGS="PATCHES=-p STRIPLIBS=--striplibs FORCE='--force --continue-on-error'"
+   YOUTUBE_CLI_PARGS="PATCHES=-p STRIPLIBS=--striplibs EXTRA_FLAGS='--continue-on-error'"
    ```
 
 8. <a id="global-keystore-file-name"></a>If you don't want to use default keystore. You can provide your own by

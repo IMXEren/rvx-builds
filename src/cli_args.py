@@ -36,6 +36,7 @@ PATCH_KEYS: Final[set[str]] = {
     "DISABLED",
     "ENABLED",
     "EXCLUSIVE",
+    "EXTRA_FLAGS",
     "FORCE",
     "KEYSTORE",
     "KEYSTORE_OLD",
@@ -74,6 +75,8 @@ DEFAULT_PATCH_ARGS: Final[dict[str, list[str]]] = {
     "DISABLED": ["-d"],
     "ENABLED": ["-e"],
     "EXCLUSIVE": ["--exclusive"],
+    # Always appended so users can pass flags without a dedicated key.
+    "EXTRA_FLAGS": [],
     "FORCE": ["--force"],
     "KEYSTORE": ["--keystore"],
     "KEYSTORE_OLD": [
@@ -125,6 +128,7 @@ CLI_PROFILES: Final[dict[str, dict[str, dict[str, list[str]]]]] = {
             "DISABLED": ["-d"],
             "ENABLED": ["-e"],
             "EXCLUSIVE": ["--exclusive"],
+            "EXTRA_FLAGS": [],
             "FORCE": ["--force"],
             "KEYSTORE": ["--keystore"],
             "KEYSTORE_OLD": [
@@ -177,7 +181,7 @@ def parse_arg_overrides(raw_overrides: str | None, allowed_keys: set[str]) -> di
             continue
 
         # We split the value to keep multiple flags/args for a key
-        # Example: `FORCE='--force --continue-on-error'`
+        # Example: `EXTRA_FLAGS='--continue-on-error --unsigned'`
         parsed_overrides[normalized_key] = shlex.split(value.strip())
 
     return parsed_overrides
