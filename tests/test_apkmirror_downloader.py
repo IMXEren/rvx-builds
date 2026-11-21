@@ -59,6 +59,59 @@ class APKMirrorDownloaderTests(TestCase):
             url,
         )
 
+    def test_guess_release_url_strips_ripped_suffix(self: Self) -> None:
+        """Piko's `release-ripped` versions map to APKMirror's upstream `release` slug."""
+        url = ApkMirror._guess_release_url("https://www.apkmirror.com/apk/x-corp/twitter/x", "11.95.1-release-ripped.0")
+        self.assertEqual("https://www.apkmirror.com/apk/x-corp/twitter/x-11-95-1-release-0-release/", url)
+
+    def test_listing_urls_page_older_uploads_by_app_category(self: Self) -> None:
+        """Older uploads are paged under `/uploads/` by the listing's category segment."""
+        self.assertEqual(
+            [
+                "https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram",
+                "https://www.apkmirror.com/uploads/page/2/?appcategory=instagram-instagram",
+                "https://www.apkmirror.com/uploads/page/3/?appcategory=instagram-instagram",
+            ],
+            ApkMirror._listing_urls("https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram"),
+        )
+
+    def test_find_specific_version_searches_older_upload_pages(self: Self) -> None:
+        """A version pushed off the app listing is still found on a later uploads page."""
+
+        def listing(version: str, href: str) -> str:
+            return f"""
+                <div class="listWidget p-relative">
+                    <div class="appRow">
+                        <span class="appRowTitle">Instagram {version} by Instagram</span>
+                        <a class="downloadLink" href="{href}">Download</a>
+                    </div>
+                </div>
+            """
+
+        app = cast(
+            "APP",
+            SimpleNamespace(
+                app_name="INSTAGRAM",
+                download_source="https://www.apkmirror.com/apk/instagram/instagram-instagram/instagram",
+            ),
+        )
+        missing = ScrapingError(
+            "404 not found",
+            response=cast("ResponseType", _APKMirrorResponse(status_code=404, text="<html><h1>404</h1></html>")),
+        )
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            pages = [missing, listing("456.0.0.53.78", "/new/"), listing("445.0.0.45.83", "/old/")]
+            with patch.object(downloader, "_extract_source", side_effect=pages) as extract:
+                result = downloader._find_specific_version_page(app, "445.0.0.45.83")
+
+        self.assertEqual(f"{APK_MIRROR_BASE_URL}/old/", result)
+        self.assertEqual(
+            "https://www.apkmirror.com/uploads/page/2/?appcategory=instagram-instagram",
+            extract.call_args.args[0],
+        )
+
     def test_guess_release_url_handles_no_trailing_slash(self: Self) -> None:
         """Sources without a trailing slash should still produce a correct release URL."""
         url = ApkMirror._guess_release_url(

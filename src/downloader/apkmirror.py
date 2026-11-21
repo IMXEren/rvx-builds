@@ -20,6 +20,11 @@ from src.utils import (
     slugify,
 )
 
+# Listing and upload pages scraped when the direct release URL guess misses.
+LISTING_PAGES = 3
+# Index of `<category>` in an `apk/<developer>/<category>/<slug>` source path.
+CATEGORY_SEGMENT = 2
+
 
 @dataclass(frozen=True, slots=True)
 class MirrorVariant:
@@ -226,10 +231,34 @@ class ApkMirror(Downloader):
           version: 20.51.39
           result: https://www.apkmirror.com/apk/google-inc/youtube/youtube-20-51-39-release/
         """
-        app_main_page = download_source
+        # Piko advertises `release-ripped` versions while APKMirror stores the matching upstream `release` APK.
         # APKMirror normalizes version separators to dashes inside release slugs.
-        version_slug = version.replace(".", "-")
-        return f"{app_main_page}-{version_slug}-release/"
+        version_slug = version.replace("-ripped", "").replace(".", "-")
+        return f"{download_source}-{version_slug}-release/"
+
+    @staticmethod
+    def _listing_urls(download_source: str) -> list[str]:
+        """Return the app listing followed by older APKMirror upload pages for the same app category.
+
+        The listing only shows recent uploads, and older ones are paged under `/uploads/` by the
+        category segment of `/apk/<developer>/<category>/<slug>`.
+        """
+        path = download_source.removeprefix(APK_MIRROR_BASE_URL).strip("/").split("/")
+        category = path[CATEGORY_SEGMENT] if len(path) > CATEGORY_SEGMENT else ""
+        pages = range(2, LISTING_PAGES + 1) if category else range(0)
+        return [download_source, *(f"{APK_MIRROR_BASE_URL}/uploads/page/{n}/?appcategory={category}" for n in pages)]
+
+    def _match_listing_rows(self: Self, versions_container: Any, version: str) -> str | None:
+        """Return the release URL of the listing row whose title names the requested version."""
+        for app_row in versions_container.find_all(class_="appRow"):
+            # APKMirror release slugs can differ from the app source slug, so links must come from the listing row.
+            title = app_row.find(class_="appRowTitle")
+            download_link = app_row.find(class_="downloadLink")
+            if not title or not download_link or not download_link.attr("href"):
+                continue
+            if self._version_matches_title(version, " ".join(title.stripped_strings)):
+                return f"{APK_MIRROR_BASE_URL}{download_link.attrs['href']}"
+        return None
 
     def _find_specific_version_page(self: Self, app: APP, version: str) -> str:
         """Resolve a specific APKMirror release URL, trying a direct URL guess before listing scrape.
@@ -247,26 +276,29 @@ class ApkMirror(Downloader):
                 logger.debug(f"Direct URL resolved for {app.app_name} {version}: {guessed_url}")
                 return guessed_url
             logger.debug(f"Guessed URL {guessed_url} loaded but has no variants table; falling back to listing.")
-        except (APKMirrorAPKDownloadError, ScrapingError):
+        except (APKMirrorAPKDownloadError, ScrapingError) as exc:
             # The guessed URL returned a non-200 or challenge page; fall through to listing-based lookup.
-            logger.debug(f"Guessed URL {guessed_url} failed; falling back to listing scrape.")
+            logger.warning(f"Guessed URL {guessed_url} failed ({exc}); falling back to listing scrape.")
 
-        # Slow path: scrape the first page of the version listing and match by title text.
-        listing_doc = turbohtml.parse(self._extract_source(app.download_source))
-        versions_container = listing_doc.select_one(".listWidget.p-relative")
-        if versions_container is None:
-            # A missing listing container means the source page is not the expected APKMirror app listing.
-            msg = f"Unable to find APKMirror version list for {app.app_name}"
-            raise APKMirrorAPKDownloadError(msg, url=app.download_source)
+        # Slow path: scrape the recent listing pages and match by title text.
+        for page, listing_url in enumerate(self._listing_urls(app.download_source), start=1):
+            try:
+                listing_doc = turbohtml.parse(self._extract_source(listing_url))
+            except (APKMirrorAPKDownloadError, ScrapingError) as exc:
+                if page == 1:
+                    raise
+                logger.warning(f"APKMirror listing page {listing_url} failed ({exc}); stopping pagination.")
+                break
+            versions_container = listing_doc.select_one(".listWidget.p-relative")
+            if versions_container is None:
+                if page == 1:
+                    # A missing listing container means the source page is not the expected APKMirror app listing.
+                    msg = f"Unable to find APKMirror version list for {app.app_name}"
+                    raise APKMirrorAPKDownloadError(msg, url=app.download_source)
+                break
 
-        for app_row in versions_container.find_all(class_="appRow"):
-            # APKMirror release slugs can differ from the app source slug, so links must come from the listing row.
-            title = app_row.find(class_="appRowTitle")
-            download_link = app_row.find(class_="downloadLink")
-            if not title or not download_link or not download_link.attr("href"):
-                continue
-            if self._version_matches_title(version, " ".join(title.stripped_strings)):
-                return f"{APK_MIRROR_BASE_URL}{download_link.attrs['href']}"
+            if release_url := self._match_listing_rows(versions_container, version):
+                return release_url
 
         msg = f"Unable to find {app.app_name} version {version} on APKMirror"
         raise VersionNotFoundError(msg, url=app.download_source)
