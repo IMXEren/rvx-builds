@@ -14,7 +14,7 @@ from unittest.mock import patch
 from src.config import RevancedConfig
 from src.downloader.apkmirror import ApkMirror
 from src.downloader.sources import APK_MIRROR_BASE_URL
-from src.exceptions import APKMirrorAPKDownloadError, ScrapingError
+from src.exceptions import APKMirrorAPKDownloadError, ScrapingError, VersionNotFoundError
 from src.utils import request_header
 
 if TYPE_CHECKING:
@@ -111,6 +111,16 @@ class APKMirrorDownloaderTests(TestCase):
             "https://www.apkmirror.com/uploads/page/2/?appcategory=instagram-instagram",
             extract.call_args.args[0],
         )
+
+        # Pages past the last upload return 404, which ends the search as not found.
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            pages = [missing, listing("456.0.0.53.78", "/new/"), missing]
+            with (
+                patch.object(downloader, "_extract_source", side_effect=pages),
+                self.assertRaises(VersionNotFoundError),
+            ):
+                downloader._find_specific_version_page(app, "445.0.0.45.83")
 
     def test_guess_release_url_handles_no_trailing_slash(self: Self) -> None:
         """Sources without a trailing slash should still produce a correct release URL."""

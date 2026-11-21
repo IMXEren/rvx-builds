@@ -287,7 +287,11 @@ class ApkMirror(Downloader):
             except (APKMirrorAPKDownloadError, ScrapingError) as exc:
                 if page == 1:
                     raise
-                logger.warning(f"APKMirror listing page {listing_url} failed ({exc}); stopping pagination.")
+                # Pages past the last upload return 404, which simply ends the listing.
+                if isinstance(exc, ScrapingError) and exc.is_not_found():
+                    logger.debug(f"APKMirror listing ends before {listing_url}.")
+                else:
+                    logger.warning(f"APKMirror listing page {listing_url} failed ({exc}); stopping pagination.")
                 break
             versions_container = listing_doc.select_one(".listWidget.p-relative")
             if versions_container is None:
