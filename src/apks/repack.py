@@ -4,24 +4,22 @@ import json
 import re
 import zipfile
 from pathlib import Path
-from xml.etree import ElementTree as ET
 
 from loguru import logger
 from pyaxmlparser import APK
-from pyaxmlparser.axmlprinter import AXMLPrinter
 
 from src.apks.silence import silence_pyaxmlparser
 
 # All standard Android architectures and screen densities
 STANDARD_ARCHS = {"armeabi", "armeabi_v7a", "arm64_v8a", "x86", "x86_64", "mips", "mips64"}
 STANDARD_DPIS = {"ldpi", "mdpi", "tvdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi", "anydpi", "nodpi"}
+DPI_BUCKETS = {"ldpi": 120, "mdpi": 160, "tvdpi": 213, "hdpi": 240, "xhdpi": 320, "xxhdpi": 480, "xxxhdpi": 640}
+MODIFIER_PATTERN = re.compile(r"(?:config\.|base-)([^.]+)\.apk$")
 
 
 def get_dpi_modifier(density: int) -> str:
     """Maps a raw density integer from device.json to the standard Android DPI modifier."""
-    dpis = {120: "ldpi", 160: "mdpi", 213: "tvdpi", 240: "hdpi", 320: "xhdpi", 480: "xxhdpi", 640: "xxxhdpi"}
-    closest = min(dpis.keys(), key=lambda k: abs(k - density))
-    return dpis[closest]
+    return min(DPI_BUCKETS, key=lambda bucket: abs(DPI_BUCKETS[bucket] - density))
 
 
 def get_filters(device_spec_path: Path) -> tuple[set[str], set[str]]:
@@ -44,17 +42,40 @@ def get_filters(device_spec_path: Path) -> tuple[set[str], set[str]]:
     return allowed_arch, allowed_dpi
 
 
-def _should_keep(modifier: str, allowed_arch: set[str], allowed_dpi: set[str]) -> bool:
-    keep = False
-    if modifier in STANDARD_ARCHS:
-        if modifier in allowed_arch:
-            keep = True
-    elif modifier in STANDARD_DPIS:
-        if modifier in allowed_dpi:
-            keep = True
-    else:
-        # It is a language or feature module
-        keep = True
+def _select_splits(names: list[str], allowed_arch: set[str], allowed_dpi: set[str]) -> set[str]:
+    """Pick the split APKs to keep, never dropping every split of one kind.
+
+    Bundletool makes each density or arch split complete for its bucket, and the base may reference
+    resources that only exist in them. So when no split matches the device, the closest density split
+    or all arch splits are kept instead of none.
+    """
+    archs: dict[str, str] = {}
+    dpis: dict[str, str] = {}
+    keep: set[str] = set()
+    for name in names:
+        match = MODIFIER_PATTERN.search(name)
+        modifier = match.group(1).replace("-", "_") if match else ""
+        if modifier in STANDARD_ARCHS:
+            archs[name] = modifier
+        elif modifier in DPI_BUCKETS:
+            dpis[name] = modifier
+        else:
+            # Base, nodpi/anydpi, language, feature and unrecognized APKs are always kept.
+            keep.add(name)
+
+    matched_archs = {name for name, arch in archs.items() if arch in allowed_arch}
+    keep |= matched_archs or set(archs)
+
+    matched_dpis = {name for name, dpi in dpis.items() if dpi in allowed_dpi}
+    if not matched_dpis and dpis:
+        targets = [DPI_BUCKETS[dpi] for dpi in allowed_dpi if dpi in DPI_BUCKETS]
+        if targets:
+            # Ties go to the higher density because downscaling keeps bitmaps sharp.
+            closest = min(dpis, key=lambda name: (abs(DPI_BUCKETS[dpis[name]] - targets[0]), -DPI_BUCKETS[dpis[name]]))
+            matched_dpis = {closest}
+        else:
+            matched_dpis = set(dpis)
+    keep |= matched_dpis
     return keep
 
 
@@ -91,26 +112,6 @@ def get_apk_version(file_path: Path) -> str | None:
     return None
 
 
-def _get_package_name(zin: zipfile.ZipFile) -> str | None:
-    """Read the package name from any APK inside a bundle zip."""
-    for item in zin.infolist():
-        if not item.filename.endswith(".apk"):
-            continue
-        try:
-            with zin.open(item.filename) as apk_file, zipfile.ZipFile(apk_file) as inner_zip:
-                manifest_bytes = inner_zip.read("AndroidManifest.xml")
-            with silence_pyaxmlparser():
-                axml = AXMLPrinter(manifest_bytes)
-            manifest_xml = ET.fromstring(axml.get_xml())  # noqa: S314
-            package_name = manifest_xml.attrib.get("package")
-            if package_name:
-                return package_name
-        except Exception as e:  # noqa: BLE001  # pyaxmlparser raises generic errors
-            logger.warning("Failed to read package name from inner APK: {}, Error: {}", item.filename, e)
-            continue
-    return None
-
-
 def repack_apks(input_zip: Path, output_zip: Path, device_spec_path: Path) -> bool:
     """Repack apks to include only necessary archs, density (dpi) and languages (ALL) from the `device-spec.json`."""
     allowed_arch, allowed_dpi = get_filters(device_spec_path)
@@ -123,45 +124,17 @@ def repack_apks(input_zip: Path, output_zip: Path, device_spec_path: Path) -> bo
     logger.info(f"[*] Target Architecture(s): {', '.join(allowed_arch) or 'None specified'}")
     logger.info(f"[*] Target Density(s)     : {', '.join(allowed_dpi)}")
 
-    modifier_pattern = re.compile(r"(?:config\.|base-)([^.]+)\.apk$")
-
     with (
         zipfile.ZipFile(input_zip, "r") as zin,
         zipfile.ZipFile(output_zip, "w", compression=zipfile.ZIP_DEFLATED) as zout,
     ):
-        # Discover package-name based APK (e.g. com.example.app.apk)
-        base_names = {"base.apk", "base-master.apk"}
-        pkg = _get_package_name(zin)
-        if pkg:
-            base_names.add(f"{pkg}.apk")
-            logger.info(f"[*] Identified package: {pkg}")
-
-        for item in zin.infolist():
-            filename = item.filename
-
-            if not filename.endswith(".apk"):
-                continue
-
-            basename = Path(filename).name
-            keep = False
-
-            if basename in base_names:
-                keep = True
-            else:
-                match = modifier_pattern.search(basename)
-                if match:
-                    modifier = match.group(1).replace("-", "_")
-
-                    # If it's an arch/DPI, check if allowed. Otherwise, keep it.
-                    keep = _should_keep(modifier, allowed_arch, allowed_dpi)
-                else:
-                    # Keep unrecognized APK formats by default
-                    keep = True
-
-            if keep:
+        apks = [item for item in zin.infolist() if item.filename.endswith(".apk")]
+        keep = _select_splits([Path(item.filename).name for item in apks], allowed_arch, allowed_dpi)
+        for item in apks:
+            basename = Path(item.filename).name
+            if basename in keep:
                 logger.debug(f"[+] Packing [{output_zip.name}/]:  {basename}")
-                file_data = zin.read(item.filename)
-                zout.writestr(item.filename, file_data)
+                zout.writestr(item.filename, zin.read(item.filename))
             else:
                 logger.warning(f"[-] Dropping [{output_zip.name}/]: {basename}")
 
