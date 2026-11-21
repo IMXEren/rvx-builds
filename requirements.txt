@@ -7,7 +7,7 @@ packaging==26.3
 pre-commit==4.7.0
 # prowl: v2.0.0-dev.14
 pyaxmlparser==0.3.31
-python-dotenv==1.2.3
+python-dotenv==1.2.4
 requests==2.34.2
 ruamel.yaml==0.19.1
 semver==3.1.0
