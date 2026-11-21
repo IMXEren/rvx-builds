@@ -107,10 +107,14 @@ apk_sources = {
     ),
     "infinity-plus": f"{APK_MIRROR_BASE_APK_URL}/docile-alligator/infinity-for-reddit-plus/infinity-for-reddit",
     "gmx": f"{APK_MIRROR_BASE_APK_URL}/gmx/gmx-mail/gmx-mail-cloud",
-    "proton-vpn": f"{APK_MIRROR_BASE_APK_URL}/proton-technologies-ag/protonvpn-secure-and-free-vpn/proton-vpn-fast-secure-vpn",
+    "proton-vpn": (
+        f"{APK_MIRROR_BASE_APK_URL}/proton-technologies-ag/protonvpn-secure-and-free-vpn/proton-vpn-fast-secure-vpn"
+    ),
     "photoshop-mix": f"{APK_MIRROR_BASE_APK_URL}/adobe/photoshop-mix/photoshop-mix",
     "disney-plus-fire-tv": f"{APK_MIRROR_BASE_APK_URL}/disney/disney-fire-tv/disney-fire-tv-android-tv",
-    "kleinanzeigen": f"{APK_MIRROR_BASE_APK_URL}/kleinanzeigen-de-gmbh/ebay-kleinanzeigen-for-germany/kleinanzeigen-without-ebay",
+    "kleinanzeigen": (
+        f"{APK_MIRROR_BASE_APK_URL}/kleinanzeigen-de-gmbh/ebay-kleinanzeigen-for-germany/kleinanzeigen-without-ebay"
+    ),
     "letterboxd": f"{APK_MIRROR_BASE_APK_URL}/letterboxd-limited/letterboxd/letterboxd",
     "microsoft-lens": f"{APK_MIRROR_BASE_APK_URL}/microsoft-corporation/office-lens/microsoft-lens-pdf-scanner",
     "fotmob": f"{APK_MIRROR_BASE_APK_URL}/fotmob-as/fotmob-live-soccer-scores/fotmob-soccer-live-scores",
