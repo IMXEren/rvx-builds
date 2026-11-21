@@ -64,6 +64,12 @@ class APKMirrorDownloaderTests(TestCase):
         url = ApkMirror._guess_release_url("https://www.apkmirror.com/apk/x-corp/twitter/x", "11.95.1-release-ripped.0")
         self.assertEqual("https://www.apkmirror.com/apk/x-corp/twitter/x-11-95-1-release-0-release/", url)
 
+    def test_version_matches_title_requires_whole_version(self: Self) -> None:
+        """A version must not match a longer version that merely starts with it."""
+        self.assertTrue(ApkMirror._version_matches_title("445.0.0.0.37", "Instagram 445.0.0.0.37 alpha by Instagram"))
+        self.assertFalse(ApkMirror._version_matches_title("445.0.0.0.3", "Instagram 445.0.0.0.37 alpha by Instagram"))
+        self.assertTrue(ApkMirror._version_matches_title("11.95.1-release-ripped.0", "X 11.95.1-release.0"))
+
     def test_listing_urls_page_older_uploads_by_app_category(self: Self) -> None:
         """Older uploads are paged under `/uploads/` by the listing's category segment."""
         self.assertEqual(

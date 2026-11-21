@@ -213,12 +213,13 @@ class ApkMirror(Downloader):
 
     @staticmethod
     def _version_matches_title(version: str, title: str) -> bool:
-        """Return whether an APKMirror app-row title refers to the requested version."""
-        if version in title:
-            return True
+        """Return whether an APKMirror app-row title refers to the requested version.
+
+        The version must be a whole word, so `445.0.0.0.3` does not match `445.0.0.0.37 alpha`.
+        """
+        words = title.split()
         # Piko advertises `release-ripped` versions while APKMirror stores the matching upstream `release` APK.
-        apk_mirror_version = version.replace("-ripped", "")
-        return apk_mirror_version in title
+        return version in words or version.replace("-ripped", "") in words
 
     @staticmethod
     def _guess_release_url(download_source: str, version: str) -> str:
