@@ -1,6 +1,6 @@
 default_language_version:
   python: python3.15
-exclude: "^docs/|/migrations/"
+exclude: "^docs/|/migrations/|^auto/"
 default_stages: [ pre-commit ]
 
 repos:
