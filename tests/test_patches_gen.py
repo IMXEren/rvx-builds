@@ -191,29 +191,48 @@ Compatible packages:
             package["version_codes"],
         )
 
-        app = cast("APP", SimpleNamespace(
-            app_name="twitter", package_name="com.twitter.android",
-            compatible_versions=set(), compatible_version_codes={}, archs_to_build=["arm64-v8a"],
-        ))
+        app = cast(
+            "APP",
+            SimpleNamespace(
+                app_name="twitter",
+                package_name="com.twitter.android",
+                compatible_versions=set(),
+                compatible_version_codes={},
+                archs_to_build=["arm64-v8a"],
+            ),
+        )
         patches = Patches.__new__(Patches)
         patches.patches_dict = {"twitter": []}
         patches._process_app_specific_patch(
-            {"name": "Example", "description": "", "options": [], "compatiblePackages": [package]}, app,
+            {"name": "Example", "description": "", "options": [], "compatiblePackages": [package]},
+            app,
         )
         self.assertEqual(["12.41.0-prod.01", "12.43.0-prod.01"], Patches.get_compatible_versions(app))
 
     def test_mixed_piko_versions_choose_newx(self: Self) -> None:
         """A legacy patch's valid SemVer must not outrank a newer prod.01 version."""
-        app = cast("APP", SimpleNamespace(
-            app_name="twitter", package_name="com.twitter.android",
-            compatible_versions=set(), compatible_version_codes={}, archs_to_build=["arm64-v8a"], app_version=None,
-        ))
+        app = cast(
+            "APP",
+            SimpleNamespace(
+                app_name="twitter",
+                package_name="com.twitter.android",
+                compatible_versions=set(),
+                compatible_version_codes={},
+                archs_to_build=["arm64-v8a"],
+                app_version=None,
+            ),
+        )
         patches = Patches.__new__(Patches)
         patches.patches_dict = {"twitter": []}
         for name, version in (("Legacy", "12.19.1-release.0"), ("NewX", "12.43.0-prod.01")):
             patches._process_app_specific_patch(
-                {"name": name, "description": "", "options": [],
-                 "compatiblePackages": [{"name": app.package_name, "versions": [version]}]}, app,
+                {
+                    "name": name,
+                    "description": "",
+                    "options": [],
+                    "compatiblePackages": [{"name": app.package_name, "versions": [version]}],
+                },
+                app,
             )
         self.assertEqual(["12.43.0-prod.01", "12.19.1-release.0"], Patches.get_compatible_versions(app))
         patches.get_app_configs(app)

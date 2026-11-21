@@ -89,15 +89,20 @@ class AppVersionStateTests(TestCase):
 
     def test_version_fallback_prefers_code_and_preserves_requested_version(self: Self) -> None:
         """Download order uses codes even when version names disagree."""
-        app = cast("APP", SimpleNamespace(
-            app_name="twitter", app_version="12.41.0-prod.01", resolved_version=None,
-            # The x86 code would win across all archs, but only the built arm64 codes rank versions.
-            compatible_version_codes={
-                "12.41.0-prod.01": {"arm64-v8a": {501}, "x86": {1}},
-                "12.43.0-prod.01": {"arm64-v8a": {401}, "x86": {999}},
-            },
-            archs_to_build=["arm64-v8a"],
-        ))
+        app = cast(
+            "APP",
+            SimpleNamespace(
+                app_name="twitter",
+                app_version="12.41.0-prod.01",
+                resolved_version=None,
+                # The x86 code would win across all archs, but only the built arm64 codes rank versions.
+                compatible_version_codes={
+                    "12.41.0-prod.01": {"arm64-v8a": {501}, "x86": {1}},
+                    "12.43.0-prod.01": {"arm64-v8a": {401}, "x86": {999}},
+                },
+                archs_to_build=["arm64-v8a"],
+            ),
+        )
         download = Mock(return_value=("twitter.apkm", "https://example.test"))
         downloader = cast("Downloader", SimpleNamespace(download=download))
 
