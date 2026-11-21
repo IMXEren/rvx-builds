@@ -183,11 +183,17 @@ Compatible packages:
 """
         package = parse_text_to_json(sample)[0]["compatiblePackages"][0]
         self.assertEqual(["12.41.0-prod.01", "12.43.0-prod.01"], package["versions"])
-        self.assertEqual({"12.41.0-prod.01": 501, "12.43.0-prod.01": 401}, package["version_codes"])
+        self.assertEqual(
+            {
+                "12.41.0-prod.01": {"arm64-v8a": [500], "x86": [501]},
+                "12.43.0-prod.01": {"arm64-v8a": [400], "x86": [401]},
+            },
+            package["version_codes"],
+        )
 
         app = cast("APP", SimpleNamespace(
             app_name="twitter", package_name="com.twitter.android",
-            compatible_versions=set(), compatible_version_codes={},
+            compatible_versions=set(), compatible_version_codes={}, archs_to_build=["arm64-v8a"],
         ))
         patches = Patches.__new__(Patches)
         patches.patches_dict = {"twitter": []}
@@ -200,7 +206,7 @@ Compatible packages:
         """A legacy patch's valid SemVer must not outrank a newer prod.01 version."""
         app = cast("APP", SimpleNamespace(
             app_name="twitter", package_name="com.twitter.android",
-            compatible_versions=set(), compatible_version_codes={}, app_version=None,
+            compatible_versions=set(), compatible_version_codes={}, archs_to_build=["arm64-v8a"], app_version=None,
         ))
         patches = Patches.__new__(Patches)
         patches.patches_dict = {"twitter": []}

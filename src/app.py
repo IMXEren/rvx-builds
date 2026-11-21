@@ -7,7 +7,7 @@ import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from threading import Lock
-from typing import Any, NamedTuple, Self
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
@@ -21,6 +21,9 @@ from src.downloader.sources import APKEEP, apk_sources
 from src.exceptions import BuilderError, DownloadError, PatchingFailedError
 from src.jars.normalize import normalize_jar_hash
 from src.utils import pbundles_norm_hashes, slugify, time_zone
+
+if TYPE_CHECKING:
+    from src.apks.version_sorter import VersionCodes
 
 
 class _DownloadLockState(NamedTuple):
@@ -85,7 +88,7 @@ class APP(object):
         self.old_key = config.env.bool(f"{app_name}_OLD_KEY".upper(), config.global_old_key)
         self.patches: list[dict[Any, Any]] = []
         self.compatible_versions: set[str] = set()
-        self.compatible_version_codes: dict[str, int] = {}
+        self.compatible_version_codes: VersionCodes = {}
         self.normalize_patch_names = config.env.bool(
             f"{app_name}_NORMALIZE_PATCH_NAMES".upper(),
             config.global_normalize_patch_names,

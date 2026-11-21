@@ -44,7 +44,8 @@ class VersionFallback:
             msg = "VersionFallback.run requires a non-empty versions list"
             raise ValueError(msg)
         codes = getattr(app, "compatible_version_codes", {})
-        ordered = sorted(versions, key=lambda version: VersionSorter.candidate_key(version, codes), reverse=True)
+        archs = getattr(app, "archs_to_build", ())
+        ordered = sorted(versions, key=lambda version: VersionSorter.candidate_key(version, codes, archs), reverse=True)
         last_error: VersionNotFoundError | None = None
         for version in ordered:
             try:

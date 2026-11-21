@@ -8,7 +8,9 @@ from typing import Any
 
 from loguru import logger
 
+from src.apks.variant_sorter import Arch
 from src.cli_args import DEFAULT_LIST_PATCHES_ARGS, append_cli_argument, fill_in_default_args
+from src.structs.patches import CompatiblePackage
 
 # Patch fields are only section delimiters when they are emitted at column zero.
 PATCH_DESCRIPTION_STOP_LABELS = ("Enabled:", "Options:", "Compatible packages:")
@@ -165,7 +167,18 @@ def extract_enabled_state_from_section(section: str) -> bool:
     return False
 
 
-def extract_package_info(package_section: str) -> dict[str, Any]:
+def _add_version_codes(line: str, versions: list[str], codes: dict[str, dict[str, list[int]]]) -> None:
+    """Add one `version: ABI=code ...` line from the CLI `Version codes:` section."""
+    match = re.match(r"\s*(\S+):\s+(.+)", line)
+    if not match or match[1] not in versions:
+        return
+    for abi, code in re.findall(r"\b([A-Za-z]\w*)=(\d+)\b", match[2]):
+        # Morphe ABI names match Arch member names. Unknown ABIs cannot be built, so they are skipped.
+        if abi in Arch.__members__:
+            codes.setdefault(match[1], {}).setdefault(Arch[abi].value, []).append(int(code))
+
+
+def extract_package_info(package_section: str) -> CompatiblePackage:
     """Extract one compatible package entry from CLI package text."""
     lines = [line for line in _section_lines(package_section) if line.strip()]
     if not lines:
@@ -179,7 +192,7 @@ def extract_package_info(package_section: str) -> dict[str, Any]:
         else first_line.strip()
     )
     versions: list[str] = []
-    codes: dict[str, int] = {}
+    codes: dict[str, dict[str, list[int]]] = {}
     field = ""
 
     for line in lines[1:]:
@@ -191,19 +204,15 @@ def extract_package_info(package_section: str) -> dict[str, Any]:
         elif field == "versions":
             versions.extend(line.strip().split())
         elif field == "codes":
-            match = re.match(r"\s*(\S+):\s+(.+)", line)
-            if match and match[1] in versions:
-                values = [int(code) for code in re.findall(r"\b[A-Za-z][\w]*=(\d+)\b", match[2])]
-                if values:
-                    codes[match[1]] = max(values)
+            _add_version_codes(line, versions, codes)
 
-    result = {"name": package_name, "versions": versions or None}
+    result: CompatiblePackage = {"name": package_name, "versions": versions or None}
     if codes:
         result["version_codes"] = codes
     return result
 
 
-def extract_compatible_packages_from_section(section: str) -> list[dict[str, Any]]:
+def extract_compatible_packages_from_section(section: str) -> list[CompatiblePackage]:
     """Extract all compatible packages from a patch section."""
     lines = _section_lines(section)
     compatible_index = next(
@@ -213,7 +222,7 @@ def extract_compatible_packages_from_section(section: str) -> list[dict[str, Any
     if compatible_index is None:
         return []
 
-    packages: list[dict[str, Any]] = []
+    packages: list[CompatiblePackage] = []
     package_lines: list[str] = []
     for line in lines[compatible_index + 1 :]:
         if _has_label(line, "Package name:", top_level_only=False):

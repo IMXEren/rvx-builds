@@ -3,9 +3,18 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
 import packaging.version
 import semver
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
+
+    from src.apks.variant_sorter import Arch
+
+# Version name to arch to the version codes the patches target.
+type VersionCodes = dict[str, dict[Arch, set[int]]]
 
 
 class VersionSorter:
@@ -51,7 +60,16 @@ class VersionSorter:
             return semver.Version(0, 0, 0)
 
     @staticmethod
-    def candidate_key(version: str, version_codes: dict[str, int]) -> tuple[bool, int, semver.Version]:
-        """Prefer an advertised Android version code, then the version name."""
-        code = version_codes.get(version)
-        return code is not None, code if code is not None else 0, VersionSorter.sorting_key(version)
+    def target_codes(version_codes: VersionCodes, version: str, archs: Collection[str]) -> set[int]:
+        """Return the version codes advertised for the archs being built."""
+        return {code for arch, codes in version_codes.get(version, {}).items() if arch in archs for code in codes}
+
+    @staticmethod
+    def candidate_key(
+        version: str,
+        version_codes: VersionCodes,
+        archs: Collection[str],
+    ) -> tuple[bool, int, semver.Version]:
+        """Prefer the highest version code advertised for the built archs, then the version name."""
+        codes = VersionSorter.target_codes(version_codes, version, archs)
+        return bool(codes), max(codes) if codes else 0, VersionSorter.sorting_key(version)

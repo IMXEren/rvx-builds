@@ -27,6 +27,14 @@ class PatchInfo(TypedDict):
     enabled: NotRequired[bool]  ## CLI default enabled state
 
 
+class CompatiblePackage(TypedDict):
+    """Represents one compatible package parsed from the cli output and saved to `patches.json`."""
+
+    name: str
+    versions: list[str] | None
+    version_codes: NotRequired[dict[str, dict[str, list[int]]]]  ## version name to arch to version codes
+
+
 type LoadedOptionValue = str | bool | int | float | list[Any] | None
 
 

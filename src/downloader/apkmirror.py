@@ -1,11 +1,14 @@
 """Downloader Class."""
 
+from collections.abc import Collection
+from dataclasses import dataclass
 from typing import Any, Self, cast
 
 import turbohtml
 from loguru import logger
 
-from src.apks.variant_sorter import VariantSorter
+from src.apks.variant_sorter import Arch, Density, VariantSorter
+from src.apks.version_sorter import VersionSorter
 from src.app import APP
 from src.downloader.download import Downloader
 from src.downloader.sources import APK_MIRROR_BASE_URL
@@ -16,6 +19,17 @@ from src.utils import (
     request_header,
     slugify,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class MirrorVariant:
+    """One row of an APKMirror release's variants table."""
+
+    type: str  ## APK or BUNDLE badge
+    url: str
+    archs: list[Arch]
+    density: Density | None
+    codes: frozenset[int]  ## Android version codes shown in the row
 
 
 class ApkMirror(Downloader):
@@ -122,10 +136,11 @@ class ApkMirror(Downloader):
         preserve_bundle = app.effective_cli_argsf == "morphe-cli"
         return self._extract_download_link(page, app.app_name, preserve_bundle=preserve_bundle)
 
-    def get_download_page(self: Self, main_page: str) -> str:
+    def get_download_page(self: Self, main_page: str, version_codes: Collection[int] = ()) -> str:
         """Function to get the download page in apk_mirror.
 
         :param main_page: Main Download Page in APK mirror(Index)
+        :param version_codes: Version codes the patches target, preferred over arch and density
         :return:
         """
         try:
@@ -145,8 +160,7 @@ class ApkMirror(Downloader):
             msg = "Unable to find APKMirror variants table on release page"
             raise APKMirrorAPKDownloadError(msg, url=main_page)
         table_rows = variants_container.select(".table-row.headerFont")
-        apk_variants: list[dict[str, Any]] = []
-        bundle_variants: list[dict[str, Any]] = []
+        variants: list[MirrorVariant] = []
 
         for row in table_rows:
             accent = row.find(class_="accent_color")
@@ -155,47 +169,42 @@ class ApkMirror(Downloader):
             badge = row.find(class_="apkm-badge")
             if not badge:
                 continue
-            apk_type = "".join(badge.strings)
-            sub_url = accent.attr("href")
             text = row.text.strip()
+            variants.append(
+                MirrorVariant(
+                    type="".join(badge.strings),
+                    url=f"{APK_MIRROR_BASE_URL}{accent.attr('href')}",
+                    archs=VariantSorter.parse_archs(text, delimiter=None),
+                    density=VariantSorter.parse_density(text),
+                    # The variant cell shows the version code in a plain colorLightBlack span, next to the date span.
+                    codes=frozenset(
+                        int(code)
+                        for span in row.select("span.colorLightBlack")
+                        if (code := "".join(span.strings).strip()).isdigit()
+                    ),
+                ),
+            )
 
-            archs = VariantSorter.parse_archs(text, delimiter=None)
-            density = VariantSorter.parse_density(text)
-
-            variant = {
-                "type": apk_type,
-                "url": f"{APK_MIRROR_BASE_URL}{sub_url}",
-                "archs": archs,
-                "density": density,
-            }
-
-            if apk_type == "BUNDLE":
-                bundle_variants.append(variant)
-            else:
-                apk_variants.append(variant)
-
-        # Sort best-first within each type
-        apk_variants.sort(
-            key=lambda v: VariantSorter.sorting_key(v["archs"], v["density"]),
-            reverse=True,
-        )
-        bundle_variants.sort(
-            key=lambda v: VariantSorter.sorting_key(v["archs"], v["density"]),
-            reverse=True,
-        )
-
-        # Prefer APK, fall back to BUNDLE
-        if apk_variants:
-            selected = apk_variants[0]
-        elif bundle_variants:
-            selected = bundle_variants[0]
-        else:
+        if not variants:
             msg = "Unable to extract download page"
             raise APKMirrorAPKDownloadError(msg, url=main_page)
 
-        self.apk_type = selected["type"]
-        selected_url: str = selected["url"]
-        return selected_url
+        # Variants of one version are separate builds, so patch fingerprints only match the targeted codes.
+        if version_codes:
+            matching = [v for v in variants if v.codes & set(version_codes)]
+            if matching:
+                variants = matching
+            else:
+                logger.warning(f"No APKMirror variant matches version codes {sorted(version_codes)} on {main_page}")
+
+        # Prefer APK over BUNDLE, then the best arch and density.
+        selected = max(
+            variants,
+            key=lambda v: (v.type != "BUNDLE", VariantSorter.sorting_key(v.archs, v.density)),
+        )
+        logger.debug(f"Selected APKMirror variant with version codes {sorted(selected.codes)}: {selected.url}")
+        self.apk_type = selected.type
+        return selected.url
 
     @staticmethod
     def _version_matches_title(version: str, title: str) -> bool:
@@ -280,7 +289,9 @@ class ApkMirror(Downloader):
         if not main_page:
             # APKMirror may rename app slugs independently from source paths, so resolve release URLs from listing HTML.
             main_page = self._find_specific_version_page(app, version)
-        download_page = self.get_download_page(main_page)
+        # Only codes for the built archs count, so a missing arm64 build cannot fall through to another arch's build.
+        target_codes = VersionSorter.target_codes(app.compatible_version_codes, version, app.archs_to_build)
+        download_page = self.get_download_page(main_page, target_codes)
         if version == "latest":
             try:
                 logger.info(f"Trying to resolve {app.app_name} version.")

@@ -117,6 +117,8 @@ class APKMirrorDownloaderTests(TestCase):
                 app_version="11.95.1-release-ripped.0",
                 download_source="https://www.apkmirror.com/apk/x-corp/twitter/",
                 effective_cli_argsf="morphe-cli",
+                compatible_version_codes={"11.95.1-release-ripped.0": {"arm64-v8a": {311950100}, "x86": {311950101}}},
+                archs_to_build=["arm64-v8a"],
             ),
         )
 
@@ -153,6 +155,7 @@ class APKMirrorDownloaderTests(TestCase):
 
         get_page.assert_called_once_with(
             "https://www.apkmirror.com/apk/x-corp/twitter/x-11-95-1-release-0-release/",
+            {311950100},
         )
         self.assertEqual("TWITTER_PIKO.apkm", file_name)
         self.assertEqual("https://example.test/download.php?id=1", download_url)
@@ -216,6 +219,46 @@ class APKMirrorDownloaderTests(TestCase):
 
         self.assertEqual(f"{APK_MIRROR_BASE_URL}/download/bundle-noarch/", result)
         self.assertEqual(downloader.apk_type, "BUNDLE")
+
+    def test_get_download_page_prefers_targeted_version_code_over_arch_and_density(self: Self) -> None:
+        """Patches fingerprint one build, so its version code outranks the arch and density ordering."""
+        def row(href: str, code: str, arch: str, dpi: str) -> str:
+            # Mirrors APKMirror's variant cell markup, including the split-count badge and the date span.
+            return f"""
+                <div class="table-row headerFont">
+                    <div class="table-cell rowheight addseparator expand pad dowrap-break-all">
+                        <a class="accent_color" href="{href}">456.0.0.53.78</a>
+                        <span class="apkm-badge success">BUNDLE</span>
+                        <span class="apkm-badge success">1 S</span>
+                        <br><span class="colorLightBlack">{code}</span>
+                        <br><span class="colorLightBlack wrapText">November 18, 2026</span>
+                    </div>
+                    <div class="table-cell rowheight addseparator expand pad dowrap">{arch}</div>
+                    <div class="table-cell rowheight addseparator expand pad dowrap">Android 9.0+</div>
+                    <div class="table-cell rowheight addseparator expand pad dowrap">{dpi}</div>
+                </div>
+            """
+
+        variant_page = f"""
+            <div class="tab-pane noPadding">
+                {row("/download/640dpi/", "386214528", "arm64-v8a", "640dpi")}
+                {row("/download/targeted/", "386214534", "arm64-v8a", "160-480dpi")}
+                {row("/download/short-code/", "42", "armeabi-v7a", "160-480dpi")}
+            </div>
+        """
+
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with patch.object(downloader, "_extract_source", return_value=variant_page):
+                best = downloader.get_download_page("https://www.apkmirror.com/apk/instagram/")
+                targeted = downloader.get_download_page("https://www.apkmirror.com/apk/instagram/", {386214534})
+                short_code = downloader.get_download_page("https://www.apkmirror.com/apk/instagram/", {42})
+                unmatched = downloader.get_download_page("https://www.apkmirror.com/apk/instagram/", {1, 2026})
+
+        self.assertEqual(f"{APK_MIRROR_BASE_URL}/download/640dpi/", best)
+        self.assertEqual(f"{APK_MIRROR_BASE_URL}/download/targeted/", targeted)
+        self.assertEqual(f"{APK_MIRROR_BASE_URL}/download/short-code/", short_code)
+        self.assertEqual(best, unmatched)
 
     def test_get_download_page_handles_reversed_multi_class_ordering(self: Self) -> None:
         """CSS conjunction selector matches multi-class elements regardless of token order.
@@ -302,6 +345,8 @@ class APKMirrorDownloaderTests(TestCase):
                 resolved_version=None,
                 download_source="https://www.apkmirror.com/apk/google-inc/youtube/youtube",
                 effective_cli_argsf="revanced-cli",
+                compatible_version_codes={},
+                archs_to_build=["arm64-v8a"],
             ),
         )
 
@@ -343,6 +388,8 @@ class APKMirrorDownloaderTests(TestCase):
                 resolved_version=None,
                 download_source="https://www.apkmirror.com/apk/google-inc/youtube/youtube",
                 effective_cli_argsf="revanced-cli",
+                compatible_version_codes={},
+                archs_to_build=["arm64-v8a"],
             ),
         )
 

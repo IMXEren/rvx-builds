@@ -5,12 +5,13 @@ from typing import Any, ClassVar, Self, cast
 
 from loguru import logger
 
+from src.apks.variant_sorter import Arch
 from src.apks.version_sorter import VersionSorter
 from src.app import APP
 from src.config import RevancedConfig
 from src.exceptions import AppNotFoundError
 from src.patches_gen import convert_command_output_to_json
-from src.structs.patches import OptionInfo, PatchInfo
+from src.structs.patches import CompatiblePackage, OptionInfo, PatchInfo
 
 
 class Patches(object):
@@ -240,7 +241,7 @@ class Patches(object):
         """Return the patch-compatible versions, newest first by code or version name."""
         return sorted(
             app.compatible_versions,
-            key=lambda version: VersionSorter.candidate_key(version, app.compatible_version_codes),
+            key=lambda version: VersionSorter.candidate_key(version, app.compatible_version_codes, app.archs_to_build),
             reverse=True,
         )
 
@@ -282,15 +283,18 @@ class Patches(object):
         app : APP
             The app instance
         """
-        for compatible_package in patch["compatiblePackages"]:
+        compatible_packages: list[CompatiblePackage] = patch["compatiblePackages"]
+        for compatible_package in compatible_packages:
             package_name = compatible_package["name"]
             versions = compatible_package["versions"]
 
             if app.package_name == package_name:
                 # Capture the union of compatible versions for the version-fallback system.
                 app.compatible_versions.update(compatible_package.get("versions") or [])
-                for version, code in compatible_package.get("version_codes", {}).items():
-                    app.compatible_version_codes[version] = max(code, app.compatible_version_codes.get(version, code))
+                for version, abi_codes in compatible_package.get("version_codes", {}).items():
+                    merged = app.compatible_version_codes.setdefault(version, {})
+                    for arch, codes in abi_codes.items():
+                        merged.setdefault(Arch(arch), set()).update(codes)
                 patch_dict = self._create_patch_dict(patch, package_name, versions)
                 # Do NOT deduplicate by name here.  Bundle-scoped exclude selectors
                 # (e.g. ``2:some-patch``) rely on each bundle retaining its own copy
