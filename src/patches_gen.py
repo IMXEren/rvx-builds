@@ -245,7 +245,7 @@ def parse_option_match(option_lines: list[str]) -> dict[str, Any]:
     description = ""
     required = False
     key = ""
-    default = ""
+    default: str | None = ""
     possible_values: list[str] = []
     option_type = ""
     index = 0

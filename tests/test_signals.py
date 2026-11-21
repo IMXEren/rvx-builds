@@ -35,6 +35,13 @@ async def _async_noop() -> None:
     """Trivial async callback."""
 
 
+def _join_worker(coord: process_signals.SignalCoordinator) -> None:
+    """Wait for the drain worker the coordinator started."""
+    worker = coord._worker
+    assert worker is not None
+    worker.join(timeout=5)
+
+
 def _register_hold(coord: process_signals.SignalCoordinator) -> threading.Event:
     """Block drain worker from completing until the returned event is set.
 
@@ -470,7 +477,7 @@ class TestPhases:
         coord._on_signal(signal.SIGINT, None)
         assert coord.phase is process_signals.CoordinatorPhase.DRAINING
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
 
 # ---------------------------------------------------------------------------
@@ -534,7 +541,7 @@ class TestOnSignal:
         coord._on_signal(signal.SIGTERM, None)
         assert coord.triggering_signal == signal.SIGTERM
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_records_deadline(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -546,7 +553,7 @@ class TestOnSignal:
         assert coord.deadline is not None
         assert before <= coord.deadline <= after + process_signals.DEFAULT_GRACE_PERIOD + 0.5
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_sets_draining_phase(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -555,7 +562,7 @@ class TestOnSignal:
         coord._on_signal(signal.SIGINT, None)
         assert coord.phase is process_signals.CoordinatorPhase.DRAINING
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_does_not_invoke_callbacks_inline(self) -> None:
         """_on_signal does not invoke callbacks -- drain worker does."""
@@ -572,7 +579,7 @@ class TestOnSignal:
         # hold blocks the worker thread, so record has not been called yet
         assert called == []
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_freezes_frozen_identifiers(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -583,7 +590,7 @@ class TestOnSignal:
         # held drain worker means _frozen_identifiers hasn't been cleared
         assert tok._identifier in coord._frozen_identifiers
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_clears_registrations_after_freeze(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -593,7 +600,7 @@ class TestOnSignal:
         coord._on_signal(signal.SIGINT, None)
         assert coord.callback_count == 0
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_increments_signal_count(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -603,7 +610,7 @@ class TestOnSignal:
         coord._on_signal(signal.SIGINT, None)
         assert coord.signal_count == 1
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_starts_worker_thread(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -613,7 +620,7 @@ class TestOnSignal:
         assert coord._worker is not None
         assert coord._worker.is_alive()
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_cancels_global_cancel_token(self) -> None:
         """_on_signal cancels the process-wide cancel token."""
@@ -625,7 +632,7 @@ class TestOnSignal:
         # a prior test; we only verify the post-condition).
         assert process_signals.get_process_cancel_token().cancelled
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_second_signal_escalates(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -640,7 +647,7 @@ class TestOnSignal:
         assert coord._abort.is_set()
         hold.set()
         if coord._worker:
-            coord._worker.join(timeout=5)
+            _join_worker(coord)
 
     def test_second_signal_increments_signal_count(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -651,7 +658,7 @@ class TestOnSignal:
         coord._on_signal(signal.SIGTERM, None)
         assert coord.signal_count == 2
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
 
 # ---------------------------------------------------------------------------
@@ -1017,7 +1024,7 @@ class TestLegacyProperties:
         coord._on_signal(signal.SIGINT, None)
         assert coord.shutting_down
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_signal_count_monotonic(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -1056,7 +1063,7 @@ class TestLegacyProperties:
         coord._on_signal(signal.SIGINT, None)
         assert coord.installed
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_callback_count(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -1139,7 +1146,7 @@ class TestRegistrationFreezeRace:
 
         assert coord.callback_count == 0
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_registration_accepted_before_handler_freezes(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -1152,7 +1159,7 @@ class TestRegistrationFreezeRace:
         coord._on_signal(signal.SIGINT, None)
         assert tok._identifier in coord._frozen_identifiers
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
     def test_concurrent_register_and_signal_consistent_outcome(self) -> None:
         coord = process_signals.SignalCoordinator()
@@ -1182,7 +1189,7 @@ class TestRegistrationFreezeRace:
         assert results == ["rejected"]
         assert coord.callback_count == 0
         hold.set()
-        coord._worker.join(timeout=5)
+        _join_worker(coord)
 
 
 # ---------------------------------------------------------------------------

@@ -87,9 +87,9 @@ class ApkPure(Downloader):
         for apk in apks:
             if _apk_dl := apk.attr("href"):
                 if "/b/XAPK/" in _apk_dl:
-                    _xapk_dls.append(_apk_dl)  # type: ignore  # noqa: PGH003
+                    _xapk_dls.append(_apk_dl)
                 else:
-                    _apk_dls.append(_apk_dl)  # type: ignore  # noqa: PGH003
+                    _apk_dls.append(_apk_dl)
         _apk_dls.sort(key=cmp_to_key(self._compare_dls))
         _xapk_dls.sort(key=cmp_to_key(self._compare_dls))
         file_name, app_dl = self._select_preferred_dl(app, _apk_dls, _xapk_dls)

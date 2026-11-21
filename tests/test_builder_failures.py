@@ -2,7 +2,7 @@
 
 # These tests guard CI/release behavior: failed patch commands must be visible without discarding good app outputs.
 # The repo's local test command is unittest, so assertion contexts stay on TestCase instead of pytest.
-# ruff: noqa: PT009, PT027, SLF001, F821
+# ruff: noqa: PT009, PT027, SLF001
 
 import io
 import os
@@ -20,6 +20,7 @@ from src.parser import Parser
 from src.signals import OperationCancelledError
 lazy from src.app import APP
 lazy from src.config import RevancedConfig
+lazy from src.patches import Patches
 
 
 class _FailedProcess:
@@ -158,7 +159,7 @@ class BuilderFailureTests(TestCase):
     def test_patch_app_forces_only_unlisted_versions(self: Self) -> None:
         """The CLI must keep skipping incompatible patches unless the APK version is unlisted."""
         parser = Parser(cast("Patches", object()), _config())
-        cases = (
+        cases: tuple[tuple[str, set[str], bool, bool], ...] = (
             ("20.1.0", {"20.1.0"}, False, False),
             ("20.2.0", {"20.1.0"}, False, True),
             ("20.2.0", set(), False, False),
@@ -169,8 +170,10 @@ class BuilderFailureTests(TestCase):
                 app = _patch_app()
                 app.compatible_versions = compatible_versions
                 app.experiment = experiment
-                app.get_effective_version = lambda version=version: version
-                with patch("src.parser.Popen", return_value=_SuccessfulProcess()) as popen:
+                with (
+                    patch.object(app, "get_effective_version", return_value=version),
+                    patch("src.parser.Popen", return_value=_SuccessfulProcess()) as popen,
+                ):
                     parser.patch_app(app)
                 self.assertEqual(forced, "--force" in popen.call_args.args[0])
 

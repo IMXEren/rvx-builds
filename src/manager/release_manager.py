@@ -22,7 +22,7 @@ class ReleaseManager(object):
             return True
         logger.info(f"New version {new_version}, Old version {old_version}")
         try:
-            return Version(new_version) > Version(old_version)  # type: ignore[no-any-return]
+            return Version(new_version) > Version(old_version)
         except InvalidVersion:
             logger.error("unable to parse version.")
         return False

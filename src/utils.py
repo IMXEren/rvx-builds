@@ -22,7 +22,7 @@ from curl_cffi import Session
 from curl_cffi.requests.exceptions import RequestException as CurlRequestException
 from loguru import logger
 from requests import Response
-from tenacity import retry, retry_if_result, stop_after_attempt, wait_exponential
+from tenacity import Retrying, retry_if_result, stop_after_attempt, wait_exponential
 lazy from environs import Env
 
 from src.prowl_client import ProwlResponse, fetch_via_prowl, to_cookie_jar
@@ -211,7 +211,11 @@ def make_request(
         token.wait(delay)
         token.raise_if_cancelled()
 
-    @retry(
+    def _browser() -> ProwlResponse | None:
+        token.raise_if_cancelled()
+        return _browser_retry(url)
+
+    direct_retrying = Retrying(
         retry=retry_if_result(
             lambda response: (
                 not _is_terminal(response) and (response is None or response.status_code != HTTPStatus.FORBIDDEN)
@@ -222,26 +226,20 @@ def make_request(
         sleep=_wait,
         retry_error_callback=lambda state: state.outcome.result() if state.outcome is not None else None,
     )
-    def _direct_with_retries() -> ResponseType | None:
-        return _direct()
-
-    @retry(
+    browser_retrying = Retrying(
         retry=retry_if_result(lambda response: not _is_terminal(response)),
         stop=stop_after_attempt(browser_attempts),
         wait=wait_exponential(multiplier=1, min=1, max=4),
         sleep=_wait,
         retry_error_callback=lambda state: state.outcome.result() if state.outcome is not None else None,
     )
-    def _browser_with_retries() -> ProwlResponse | None:
-        token.raise_if_cancelled()
-        return _browser_retry(url)
 
     update_session_data()
-    response = _direct_with_retries()
+    response: ResponseType | None = direct_retrying(_direct)
     if _is_terminal(response):
         return response
 
-    response = _browser_with_retries()
+    response = browser_retrying(_browser)
     if _is_terminal(response):
         return response
 

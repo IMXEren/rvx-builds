@@ -79,7 +79,6 @@ _PENDING_CALLS_LOCK = threading.Lock()
 _PENDING_CALL_SCHEDULED = False
 
 
-@_PendingCallCallback
 def _drain_pending_calls(_argument: ctypes.c_void_p) -> int:
     """Run callbacks posted through ``Py_AddPendingCall`` on the main thread."""
     del _argument
@@ -98,13 +97,22 @@ def _drain_pending_calls(_argument: ctypes.c_void_p) -> int:
             os.write(2, f"[pid={os.getpid()}] Main-thread pending callback failed:\n{e}\n".encode())
 
 
-try:
-    _PY_ADD_PENDING_CALL = ctypes.pythonapi.Py_AddPendingCall
-except AttributeError:  # pragma: no cover - non-CPython interpreter
-    _PY_ADD_PENDING_CALL = None
-else:
-    _PY_ADD_PENDING_CALL.argtypes = (_PendingCallCallback, ctypes.c_void_p)
-    _PY_ADD_PENDING_CALL.restype = ctypes.c_int
+# The C function pointer must stay referenced for as long as CPython may call it.
+_DRAIN_PENDING_CALLS = _PendingCallCallback(_drain_pending_calls)
+
+
+def _load_add_pending_call() -> Callable[[Any, None], int] | None:
+    """Return CPython's ``Py_AddPendingCall``, or ``None`` on other interpreters."""
+    try:
+        add_pending_call = ctypes.pythonapi.Py_AddPendingCall
+    except AttributeError:  # pragma: no cover - non-CPython interpreter
+        return None
+    add_pending_call.argtypes = (_PendingCallCallback, ctypes.c_void_p)
+    add_pending_call.restype = ctypes.c_int
+    return add_pending_call
+
+
+_PY_ADD_PENDING_CALL = _load_add_pending_call()
 
 
 def _post_to_main_thread(
@@ -132,7 +140,7 @@ def _post_to_main_thread(
                 return
 
             _PENDING_CALL_SCHEDULED = True
-            if _PY_ADD_PENDING_CALL(_drain_pending_calls, None) == 0:
+            if _PY_ADD_PENDING_CALL(_DRAIN_PENDING_CALLS, None) == 0:
                 return
             _PENDING_CALL_SCHEDULED = False
 
@@ -504,7 +512,7 @@ class SignalCoordinator:
                 identifier=identifier,
                 callback=cleanup,
                 owner_loop=owner_loop,
-                name=name or getattr(cleanup, "__qualname__", repr(cleanup)),
+                name=name or str(getattr(cleanup, "__qualname__", repr(cleanup))),
                 timeout=None if timeout is None else float(timeout),
             )
 

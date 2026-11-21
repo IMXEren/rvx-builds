@@ -46,7 +46,7 @@ class UptoDown(Downloader):
         if not el:
             msg = f"Could not find app code element on {url}"
             raise UptoDownAPKDownloadError(msg, url=url)
-        code = el.attr("data-code", "")
+        code: str = el.attr("data-code", "")
         if not code:
             msg = f"App code missing on {url}"
             raise UptoDownAPKDownloadError(msg, url=url)
