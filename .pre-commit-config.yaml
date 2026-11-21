@@ -1,3 +1,5 @@
+default_language_version:
+  python: python3.15
 exclude: "^docs/|/migrations/"
 default_stages: [ pre-commit ]
 
