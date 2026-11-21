@@ -39,12 +39,12 @@ RUN JAVA_BIN="$(readlink -f "$(command -v java)")" && \
 ENV JAVA_HOME=/opt/java-home
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
-# Ensure curl and jq are available for the next step
+# Ensure curl is available for the next step
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl jq libssl3 && \
+    apt-get install -y --no-install-recommends curl libssl3 && \
     rm -rf /var/lib/apt/lists/*
 ENV PATH="/usr/local/bin:${PATH}"
-# Now use them safely
+ARG APKEEP_VERSION=1.1.0
 RUN set -eux; \
     ARCH="$(uname -m)"; \
     case "$ARCH" in \
@@ -52,9 +52,8 @@ RUN set -eux; \
         aarch64) ARCH_NAME="aarch64-unknown-linux-gnu" ;; \
         *) echo "Unsupported arch: $ARCH" && exit 1 ;; \
     esac; \
-    URL=$(curl -s https://api.github.com/repos/EFForg/apkeep/releases/latest \
-        | jq -r ".assets[] | select(.name == \"apkeep-${ARCH_NAME}\") | .browser_download_url"); \
-    curl -L "$URL" -o /usr/local/bin/apkeep; \
+    URL="https://github.com/EFForg/apkeep/releases/download/${APKEEP_VERSION}/apkeep-${ARCH_NAME}"; \
+    curl -fL "$URL" -o /usr/local/bin/apkeep; \
     chmod +x /usr/local/bin/apkeep; \
     echo "Installed apkeep from $URL"; \
     /usr/local/bin/apkeep --version
