@@ -47,4 +47,4 @@ Use an app-prefixed variable to select a different profile for one app:
 YOUTUBE_APKEEP_DEVICE_FILE=apks/youtube-device.properties
 ```
 
-Built-in profiles can instead be selected with `APKEEP_DEVICE_NAME` or its app-prefixed equivalent. See the [APKEEP device configuration documentation](../auto/docs/customize-patches.md#apkeep-device-configuration) and [upstream APKEEP guide](https://github.com/EFForg/apkeep/blob/master/USAGE-google-play.md#device-configuration) for available settings and profile details.
+Built-in profiles can instead be selected with `APKEEP_DEVICE_NAME` or its app-prefixed equivalent. See the [APKEEP device configuration documentation](../docs/customize-patches.md#apkeep-device-configuration) and [upstream APKEEP guide](https://github.com/EFForg/apkeep/blob/master/USAGE-google-play.md#device-configuration) for available settings and profile details.

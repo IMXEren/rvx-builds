@@ -87,7 +87,7 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
 
 ## Customization
 
-1. **Officially** Supported values for **APP_NAME\*** are listed under `Code` column [here](../../../changelogs/auto/apps/README.md#supported-apps).
+1. **Officially** Supported values for **APP_NAME\*** are listed under `Code` column [here](../../changelogs/auto/apps/README.md#supported-apps).
    <br>Note that the page syncs itself with the usage of `PATCHES_DL` resources in the `.env` file.
    <br>The sources of original APKs are from one of these apkmirror, apkpure, uptodown & apksos sites. I'm not responsible for any damaged caused.
    If you know any better/safe source to download clean. Open a discussion.

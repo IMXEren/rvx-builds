@@ -5,7 +5,7 @@
 
 # ⭐ New!! Custom Patch Resources
 
-The Tool now supports resource config at app level. You can patch A app with X resources while patching B with Y resources. This can be done by providing supported download links for resources for the app. Another new major addition is to be able patch any supported app in the `patches.json`, irrespective of the official apps present in the repository configs. [**Read more...**](/auto/docs/customize-patches.md)
+The Tool now supports resource config at app level. You can patch A app with X resources while patching B with Y resources. This can be done by providing supported download links for resources for the app. Another new major addition is to be able patch any supported app in the `patches.json`, irrespective of the official apps present in the repository configs. [**Read more...**](/docs/customize-patches.md)
 
 # Table of Contents
 
@@ -32,7 +32,7 @@ The Tool now supports resource config at app level. You can patch A app with X r
 
 ### Pre-Forked
 
-I think that there might be possibility that some people would've already forked the parent repository of @nikhilbadyal or it's child repository (for example, of @Spacellary). So, here are [listed files](/auto/docs/pre-forked.md) (may or may not replace originals) which you can copy to repository clone folder and push those changes. It'll make your repository eligible to be used in **Automation** and somewhat similar to mine. Proceed with patch methods.
+I think that there might be possibility that some people would've already forked the parent repository of @nikhilbadyal or it's child repository (for example, of @Spacellary). So, here are [listed files](/docs/pre-forked.md) (may or may not replace originals) which you can copy to repository clone folder and push those changes. It'll make your repository eligible to be used in **Automation** and somewhat similar to mine. Proceed with patch methods.
 
 ### Methods
 
@@ -46,13 +46,13 @@ Here's the manual way to patch apps.
 
 1. Create a [GitHub account](https://github.com/join) if you haven't.
 2. Fork this [repository](https://github.com/IMXEren/rvx-builds) under any name.
-3. Read this [page](/auto/docs/customize-patches.md) onwards. This is to customize the patching. After going through, you must have prepared an `.env` file.
+3. Read this [page](/docs/customize-patches.md) onwards. This is to customize the patching. After going through, you must have prepared an `.env` file.
 4. Congrats, you're ready to patch these apps.
 5. Go to `Actions` tab. Select `Build & Release`. Click on `Run Workflow` button.
 6. Wait for sometime while it patches and build all those apps mentioned in the `.env` file.
 7. Once complete and successful, you'll get your patched apks in the `Releases` section.
 8. Download & install those apks. Now, you've installed the patched apps!!
-9. Here are some [extra things](/auto/docs/extras.md) to configure.
+9. Here are some [extra things](/docs/extras.md) to configure.
 
 ### 2. Automated
 
@@ -65,7 +65,7 @@ It'll be better for yourself if you have some [basic knowledge about Tasker](htt
    - Downloads: To modify download & installation of app properties. (**Must configure**)
    - Merge: To merge your customization (locally on Tasker) with the `.env` file in your GitHub Repo. Only shown if you've made customization changes in _Apps_ or clicked it (i.e. always open **Apps** even when you don't need to change).
    - Releases: To build your patched apps and release them. Set the above options accordingly and make a stable or a pre-release.
-4. If you have access to Join paid version, enable `RVX-Builds - New Release [Join]` Profile in `Profiles` Tab. Also enable `RVX-Builds - Check For Updates` if you want it to handle cancelled or errored out downloads due to any reason. Also, you need to add **JOIN API** [secrets](/auto/docs/extras.md#github-secrets). Here's [how to](/auto/docs/extras.md#join-api) do it.
+4. If you have access to Join paid version, enable `RVX-Builds - New Release [Join]` Profile in `Profiles` Tab. Also enable `RVX-Builds - Check For Updates` if you want it to handle cancelled or errored out downloads due to any reason. Also, you need to add **JOIN API** [secrets](/docs/extras.md#github-secrets). Here's [how to](/docs/extras.md#join-api) do it.
 5. If you don't have access to Join paid version, enable `RVX-Builds - Check For Updates` Profile in `Profiles` Tab. Disable `RVX-Builds - New Release [Join]` in this case.
 6. After the successful release, the workflow would make an API call to Join (`RVX-Builds - New Release [Join]`) which would ultimately initialize an event and the downloader & installer task would run and work based upon your configuration of `Downloads` menu option in `RVX-Builds - Manager` task. Another workaround is that this profile `RVX-Builds - Check For Updates` would periodically (20 min; you can change) perform checks. It can also handle cancelled or errored out downloads.
 7. Finally, after all the downloading or installation, there'll be a notification to let you know that it was successful. Note that, it requires ADB Wifi access to Tasker to let it install apps in the background.
@@ -74,7 +74,7 @@ It'll be better for yourself if you have some [basic knowledge about Tasker](htt
 **Note:**
 
 1.  Initialization of the tasks may take sometime at some-points due to heavy scripting process. Kindly don't worry about all that. Also, make sure that you've a decent internet connection speed.
-2.  [Read here](/auto/docs/tasker-automation.md) for more details on the automation functionalities.
+2.  [Read here](/docs/tasker-automation.md) for more details on the automation functionalities.
 
 ### Patching
 
