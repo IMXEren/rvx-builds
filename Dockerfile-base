@@ -41,7 +41,7 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 # Ensure curl and jq are available for the next step
 RUN apt-get update && \
-    apt-get install -y curl jq libssl3 && \
+    apt-get install -y --no-install-recommends curl jq libssl3 && \
     rm -rf /var/lib/apt/lists/*
 ENV PATH="/usr/local/bin:${PATH}"
 # Now use them safely
