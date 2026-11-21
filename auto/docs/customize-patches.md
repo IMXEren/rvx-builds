@@ -117,11 +117,13 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    3. APKPURE - Supports downloading any available version
        1. Link Format - `https://apkpure.net/-/<package-name>`
        2. Example Link - https://apkpure.net/-/com.google.android.youtube
-   4. APKEEP - Downloads the current Google Play version using [APKEEP](https://github.com/EFForg/apkeep)
-       1. Link Format - `apkeep`
-       2. Example Link - `apkeep`
-       3. You need to provide `APKEEP_EMAIL` and `APKEEP_TOKEN` in [custom GitHub secrets](extras.md#custom-secrets) for authentication.
-       4. Google Play does not provide historical app versions, so APKEEP cannot download a specifically requested older version.
+   4. APKEEP - Downloads using [APKEEP](https://github.com/EFForg/apkeep) from the Google Play provider by default, or from any
+      other provider APKEEP supports when written as `apkeep:<provider>`
+       1. Link Format - `apkeep` or `apkeep:<provider>`
+       2. Example Link - `apkeep`, `apkeep:f-droid`, `apkeep:apk-pure`
+       3. For the Google Play provider, you need to provide `APKEEP_EMAIL` and `APKEEP_TOKEN` in [custom GitHub secrets](extras.md#custom-secrets) for authentication. Other providers do not need them.
+       4. Google Play does not provide historical app versions, so APKEEP cannot download a specifically requested older version from it.
+          APKEEP documents `f-droid` and `apk-pure` as supporting a specific `<APP_NAME>_VERSION`.
 
    <a id="apkeep-device-configuration"></a>
    **APKEEP Google Play device configuration**
@@ -147,7 +149,8 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    YOUTUBE_APKEEP_DEVICE_FILE=apks/youtube-device.properties
    ```
 
-   These settings correspond to APKEEP's `device` and `device_properties_file` Google Play options. See the
+   These settings correspond to APKEEP's `device` and `device_properties_file` Google Play options, so they only apply
+   to the Google Play provider. See the
    [upstream device configuration guide](https://github.com/EFForg/apkeep/blob/master/USAGE-google-play.md#device-configuration)
    for details. When no override is configured, APKEEP also defaults to the `UTC` timezone and `en_US` locale.
 
