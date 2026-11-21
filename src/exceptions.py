@@ -30,7 +30,7 @@ class ScrapingError(BuilderError):
         self: Self,
         *args: Any,
         url: str | None = None,
-        response: "ResponseType | None" = None,
+        response: ResponseType | None = None,
         **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the ScrapingError.

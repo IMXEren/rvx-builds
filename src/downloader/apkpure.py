@@ -9,10 +9,10 @@ from urllib.parse import parse_qs, urlparse
 import turbohtml
 from loguru import logger
 
-from src.app import APP
 from src.downloader.download import Downloader
 from src.exceptions import APKPureAPKDownloadError, ScrapingError, VersionNotFoundError
 from src.utils import handle_request_response, make_request, request_header, slugify
+lazy from src.app import APP
 
 
 class ApkPure(Downloader):

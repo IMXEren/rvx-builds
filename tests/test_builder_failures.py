@@ -15,11 +15,11 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import main as builder_main
-from src.app import APP
-from src.config import RevancedConfig
 from src.exceptions import PatchingFailedError
 from src.parser import Parser
 from src.signals import OperationCancelledError
+lazy from src.app import APP
+lazy from src.config import RevancedConfig
 
 
 class _FailedProcess:

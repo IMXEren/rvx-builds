@@ -7,11 +7,11 @@ from loguru import logger
 
 from src.apks.variant_sorter import Arch
 from src.apks.version_sorter import VersionSorter
-from src.app import APP
-from src.config import RevancedConfig
 from src.exceptions import AppNotFoundError
 from src.patches_gen import convert_command_output_to_json
 from src.structs.patches import CompatiblePackage, OptionInfo, PatchInfo
+lazy from src.app import APP
+lazy from src.config import RevancedConfig
 
 
 class Patches(object):
@@ -237,7 +237,7 @@ class Patches(object):
         return max(versions, key=VersionSorter.sorting_key)
 
     @staticmethod
-    def get_compatible_versions(app: "APP") -> list[str]:
+    def get_compatible_versions(app: APP) -> list[str]:
         """Return the patch-compatible versions, newest first by code or version name."""
         return sorted(
             app.compatible_versions,
@@ -360,7 +360,7 @@ class Patches(object):
         """
         return app_version == "latest" or app_version > recommended_version or app_version < recommended_version
 
-    def get_app_configs(self: Self, app: "APP") -> list[PatchInfo]:
+    def get_app_configs(self: Self, app: APP) -> list[PatchInfo]:
         """The function `get_app_configs` returns configurations for a given app.
 
         Parameters

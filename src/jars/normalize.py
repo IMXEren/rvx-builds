@@ -2,7 +2,7 @@
 
 import hashlib
 import zipfile
-from pathlib import Path
+lazy from pathlib import Path
 
 
 def _should_ignore(name: str) -> bool:

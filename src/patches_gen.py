@@ -10,7 +10,7 @@ from loguru import logger
 
 from src.apks.variant_sorter import Arch
 from src.cli_args import DEFAULT_LIST_PATCHES_ARGS, append_cli_argument, fill_in_default_args
-from src.structs.patches import CompatiblePackage
+lazy from src.structs.patches import CompatiblePackage
 
 # Patch fields are only section delimiters when they are emitted at column zero.
 PATCH_DESCRIPTION_STOP_LABELS = ("Enabled:", "Options:", "Compatible packages:")

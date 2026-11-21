@@ -1,9 +1,7 @@
 """Downloader Factory."""
 
-from src.config import RevancedConfig
 from src.downloader.apkeep import Apkeep
 from src.downloader.apkmirror import ApkMirror
-from src.downloader.download import Downloader
 from src.downloader.github import Github
 from src.downloader.gitlab import Gitlab
 from src.downloader.sources import (
@@ -14,6 +12,8 @@ from src.downloader.sources import (
 )
 from src.downloader.uptodown import UptoDown
 from src.exceptions import DownloadError
+lazy from src.config import RevancedConfig
+lazy from src.downloader.download import Downloader
 
 
 class DownloaderFactory(object):

@@ -9,9 +9,9 @@ from typing import Any, Self
 
 from loguru import logger
 
-from src.app import APP
 from src.downloader.download import Downloader
 from src.exceptions import DownloadError
+lazy from src.app import APP
 
 # Kept for compatibility with a bare `apkeep` source (no explicit provider).
 DEFAULT_APKEEP_PROVIDER = "google-play"

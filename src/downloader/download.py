@@ -10,16 +10,16 @@ from typing import Any, Self
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from curl_cffi import Session
 from loguru import logger
 from tqdm import tqdm
+lazy from curl_cffi import Session
 
 from src.apks.repack import get_apk_version, repack_apks
 from src.app import APP
-from src.config import RevancedConfig
 from src.exceptions import DownloadError
 from src.signals import get_process_cancel_token
 from src.utils import handle_request_response, implement_method, request_timeout, session
+lazy from src.config import RevancedConfig
 
 # Extensions that are always treated as split APK bundles and repacked when a device spec is available.
 SPLIT_APK_EXTENSIONS = {".apkm", ".apks", ".xapk", ".zip"}
@@ -168,7 +168,7 @@ class Downloader(object):
         """Extract download link from web page."""
         raise NotImplementedError(implement_method)
 
-    def specific_version(self: Self, app: "APP", version: str) -> tuple[str, str]:
+    def specific_version(self: Self, app: APP, version: str) -> tuple[str, str]:
         """Function to download the specified version of app..
 
         :param app: Name of the application
@@ -388,5 +388,5 @@ class Downloader(object):
                         assets_filter=f".*{file_extension}",
                         file_name=new_file_name,
                     )
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             logger.info("Unable to download extra file. Provide input in url@name.apk or url@/regex/ format.")

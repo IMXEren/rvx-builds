@@ -11,14 +11,14 @@ from ruamel.yaml import YAML
 
 from src._bundle_selector import PatchBase
 from src._bundle_selector import entry_matches as _entry_matches_fn
-from src.app import APP
 from src.cli_args import DEFAULT_PATCH_ARGS, append_cli_argument, is_arg_enabled
-from src.config import RevancedConfig
 from src.exceptions import PatchingFailedError
-from src.patches import Patches
 from src.signals import get_process_cancel_token
 from src.structs.patches import LoadedOption, LoadedOptionValue, LoadedPatchOption, PatchInfo
 from src.utils import possible_archs
+lazy from src.app import APP
+lazy from src.config import RevancedConfig
+lazy from src.patches import Patches
 
 
 class Parser(object):

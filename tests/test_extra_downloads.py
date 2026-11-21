@@ -8,8 +8,8 @@ from typing import Self, cast
 from unittest import TestCase
 from unittest.mock import call, patch
 
-from src.config import RevancedConfig
 from src.downloader.download import Downloader
+lazy from src.config import RevancedConfig
 
 
 def _config() -> RevancedConfig:
@@ -30,10 +30,13 @@ class ExtraDownloadsExactModeTests(TestCase):
         config = _config()
         config.extra_download_files = ["https://github.com/REAndroid/APKEditor@apkeditor.jar"]
 
-        with patch.object(Downloader, "__init__", return_value=None), patch(
-            "src.downloader.download.APP.download",
-            return_value=("latest", "apkeditor-output.jar"),
-        ) as mock_download:
+        with (
+            patch.object(Downloader, "__init__", return_value=None),
+            patch(
+                "src.downloader.download.APP.download",
+                return_value=("latest", "apkeditor-output.jar"),
+            ) as mock_download,
+        ):
             Downloader.extra_downloads(config)
 
         mock_download.assert_called_once_with(
@@ -51,10 +54,13 @@ class ExtraDownloadsExactModeTests(TestCase):
             "https://github.com/baz/qux@helper.jar",
         ]
 
-        with patch.object(Downloader, "__init__", return_value=None), patch(
-            "src.downloader.download.APP.download",
-            return_value=("latest", ""),
-        ) as mock_download:
+        with (
+            patch.object(Downloader, "__init__", return_value=None),
+            patch(
+                "src.downloader.download.APP.download",
+                return_value=("latest", ""),
+            ) as mock_download,
+        ):
             Downloader.extra_downloads(config)
 
         self.assertEqual(mock_download.call_count, 2)
@@ -77,9 +83,12 @@ class ExtraDownloadsExactModeTests(TestCase):
         # No @ separator, so split("@") raises ValueError
         config.extra_download_files = ["https://github.com/foo/bar"]
 
-        with patch.object(Downloader, "__init__", return_value=None), patch(
-            "src.downloader.download.APP.download",
-        ) as mock_download:
+        with (
+            patch.object(Downloader, "__init__", return_value=None),
+            patch(
+                "src.downloader.download.APP.download",
+            ) as mock_download,
+        ):
             # Should not raise
             Downloader.extra_downloads(config)
 
@@ -97,10 +106,13 @@ class ExtraDownloadsRegexModeTests(TestCase):
             r"https://github.com/microg/GmsCore/releases/latest@/com\.google\.android\.gms-\d+\.apk$/",
         ]
 
-        with patch.object(Downloader, "__init__", return_value=None), patch(
-            "src.downloader.download.APP.download",
-            return_value=("latest", ""),
-        ) as mock_download:
+        with (
+            patch.object(Downloader, "__init__", return_value=None),
+            patch(
+                "src.downloader.download.APP.download",
+                return_value=("latest", ""),
+            ) as mock_download,
+        ):
             Downloader.extra_downloads(config)
 
         # Regex mode: no file_name arg, pattern passed directly as assets_filter
@@ -115,10 +127,13 @@ class ExtraDownloadsRegexModeTests(TestCase):
         config = _config()
         config.extra_download_files = ["https://example.com@/foo-\\d+\\.jar$/"]
 
-        with patch.object(Downloader, "__init__", return_value=None), patch(
-            "src.downloader.download.APP.download",
-            return_value=("latest", ""),
-        ) as mock_download:
+        with (
+            patch.object(Downloader, "__init__", return_value=None),
+            patch(
+                "src.downloader.download.APP.download",
+                return_value=("latest", ""),
+            ) as mock_download,
+        ):
             Downloader.extra_downloads(config)
 
         # The / delimiters should not appear in the filter
@@ -138,10 +153,13 @@ class ExtraDownloadsRegexModeTests(TestCase):
             r"https://github.com/microg/GmsCore/releases/latest@/com\.google\.android\.gms-\d+\.apk$/",
         ]
 
-        with patch.object(Downloader, "__init__", return_value=None), patch(
-            "src.downloader.download.APP.download",
-            return_value=("latest", ""),
-        ) as mock_download:
+        with (
+            patch.object(Downloader, "__init__", return_value=None),
+            patch(
+                "src.downloader.download.APP.download",
+                return_value=("latest", ""),
+            ) as mock_download,
+        ):
             Downloader.extra_downloads(config)
 
         # First call: exact mode
@@ -173,10 +191,13 @@ class ExtraDownloadsRegexModeTests(TestCase):
         # Edge case: only starts with /, not a valid regex delimiter pair
         config.extra_download_files = ["https://example.com@/some-file.apk"]
 
-        with patch.object(Downloader, "__init__", return_value=None), patch(
-            "src.downloader.download.APP.download",
-            return_value=("latest", ""),
-        ) as mock_download:
+        with (
+            patch.object(Downloader, "__init__", return_value=None),
+            patch(
+                "src.downloader.download.APP.download",
+                return_value=("latest", ""),
+            ) as mock_download,
+        ):
             Downloader.extra_downloads(config)
 
         # Should be treated as exact mode (file_spec = "/some-file.apk")

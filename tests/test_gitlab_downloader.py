@@ -11,9 +11,9 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from src.app import APP
-from src.config import RevancedConfig
 from src.downloader.factory import DownloaderFactory
 from src.downloader.gitlab import Gitlab
+lazy from src.config import RevancedConfig
 
 
 class _GitlabResponse:

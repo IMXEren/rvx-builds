@@ -2,7 +2,7 @@
 
 import contextlib
 import logging
-from collections.abc import Iterator
+lazy from collections.abc import Iterator
 
 
 @contextlib.contextmanager

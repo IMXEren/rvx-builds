@@ -5,11 +5,11 @@ import urllib.request
 from pathlib import Path
 from typing import Self
 
-from environs import Env
+lazy from environs import Env
 
-from src.app import APP
 from src.manager.release_manager import ReleaseManager
 from src.utils import app_dump_key, branch_name, updates_file, updates_file_url
+lazy from src.app import APP
 
 
 class GitHubManager(ReleaseManager):

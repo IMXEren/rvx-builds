@@ -7,10 +7,10 @@ import turbohtml
 from loguru import logger
 
 from src.apks.variant_sorter import VariantSorter
-from src.app import APP
 from src.downloader.download import Downloader
 from src.exceptions import NOT_FOUND_STATUS_CODE, ScrapingError, UptoDownAPKDownloadError, VersionNotFoundError
 from src.utils import handle_request_response, make_request, request_header
+lazy from src.app import APP
 
 
 class UptoDown(Downloader):

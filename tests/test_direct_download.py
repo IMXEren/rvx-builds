@@ -13,8 +13,8 @@ from unittest.mock import patch
 from zipfile import ZipFile
 
 from src.apks.repack import get_apk_version
-from src.config import RevancedConfig
 from src.downloader.download import Downloader
+lazy from src.config import RevancedConfig
 
 if TYPE_CHECKING:
     from src.app import APP

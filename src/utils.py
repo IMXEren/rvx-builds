@@ -20,10 +20,10 @@ from browserforge.headers import Browser, HeaderGenerator
 from curl_cffi import Response as CurlResponse
 from curl_cffi import Session
 from curl_cffi.requests.exceptions import RequestException as CurlRequestException
-from environs import Env
 from loguru import logger
 from requests import Response
 from tenacity import retry, retry_if_result, stop_after_attempt, wait_exponential
+lazy from environs import Env
 
 from src.prowl_client import ProwlResponse, fetch_via_prowl, to_cookie_jar
 from src.signals import get_process_cancel_token
@@ -387,7 +387,7 @@ def get_build_revision(previous: dict[str, Any] | None, version: str, build_hash
     return revision + 1
 
 
-def save_patch_info(app: "APP", updates_info: dict[str, Any]) -> dict[str, Any]:
+def save_patch_info(app: APP, updates_info: dict[str, Any]) -> dict[str, Any]:
     """Save version info a patching resources used to a file."""
     updates_info[app.app_name] = {
         app_version_key: app.get_effective_version(),
@@ -409,7 +409,7 @@ def _write_obtainium_json_config(
     app_info: tuple[str, str],
     sources_path: Path,
     repo_info: tuple[str, str],
-    config: "RevancedConfig",
+    config: RevancedConfig,
 ) -> None:
     """Write an Obtainium JSON app config next to its companion HTML source page."""
     app_name, _html_file_name = app_info
@@ -579,7 +579,7 @@ def write_per_app_changelogs(updates_info: dict[str, Any]) -> None:
         file_path.write_text(changelog, encoding="utf_8")
 
 
-def generate_obtainium_export(updates_info: dict[str, Any], config: "RevancedConfig") -> None:
+def generate_obtainium_export(updates_info: dict[str, Any], config: RevancedConfig) -> None:
     """Generate HTML files for Obtainium."""
     if not config.obtainium_export and not config.obtainium_gh_private_export:
         return

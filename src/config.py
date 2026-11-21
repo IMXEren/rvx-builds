@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Self
 
-from environs import Env
+lazy from environs import Env
 
 from src.cli_args import DEFAULT_CLI_PROFILE
 from src.utils import default_build, default_cli, default_patches, possible_archs, resource_folder

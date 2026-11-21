@@ -11,11 +11,11 @@ from typing import TYPE_CHECKING, Self, cast
 from unittest import TestCase
 from unittest.mock import patch
 
-from src.config import RevancedConfig
 from src.downloader.apkmirror import ApkMirror
 from src.downloader.sources import APK_MIRROR_BASE_URL
 from src.exceptions import APKMirrorAPKDownloadError, ScrapingError, VersionNotFoundError
 from src.utils import request_header
+lazy from src.config import RevancedConfig
 
 if TYPE_CHECKING:
     from src.app import APP
@@ -291,6 +291,7 @@ class APKMirrorDownloaderTests(TestCase):
 
     def test_get_download_page_prefers_targeted_version_code_over_arch_and_density(self: Self) -> None:
         """Patches fingerprint one build, so its version code outranks the arch and density ordering."""
+
         def row(href: str, code: str, arch: str, dpi: str) -> str:
             # Mirrors APKMirror's variant cell markup, including the split-count badge and the date span.
             return f"""

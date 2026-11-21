@@ -16,11 +16,11 @@ from loguru import logger
 from src._bundle_selector import parse_patch_selection
 from src.apks.repack import get_apk_version
 from src.cli_args import merge_cli_arg_maps
-from src.config import RevancedConfig
 from src.downloader.sources import APKEEP, apk_sources
 from src.exceptions import BuilderError, DownloadError, PatchingFailedError
 from src.jars.normalize import normalize_jar_hash
 from src.utils import pbundles_norm_hashes, slugify, time_zone
+lazy from src.config import RevancedConfig
 
 if TYPE_CHECKING:
     from src.apks.version_sorter import VersionCodes
@@ -374,7 +374,7 @@ class APP(object):
 
         return hashes
 
-    def __str__(self: "APP") -> str:
+    def __str__(self: APP) -> str:
         """Returns the str representation of the app."""
         attrs = vars(self)
         return ", ".join([f"{key}: {value}" for key, value in attrs.items()])

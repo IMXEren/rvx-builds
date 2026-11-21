@@ -1,18 +1,18 @@
 """GitLab release downloader."""
 
 import re
-from collections.abc import Iterator
 from typing import Any, Self
 from urllib.parse import quote, urlparse
+lazy from collections.abc import Iterator
 
 import requests
 from loguru import logger
 
-from src.app import APP
-from src.config import RevancedConfig
 from src.downloader.download import Downloader
 from src.exceptions import DownloadError
 from src.utils import handle_request_response, request_timeout, update_changelog
+lazy from src.app import APP
+lazy from src.config import RevancedConfig
 
 
 class Gitlab(Downloader):

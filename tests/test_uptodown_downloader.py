@@ -22,7 +22,7 @@ class _UptodownResponse(SimpleNamespace):
     text: str
 
 
-def _config() -> "RevancedConfig":
+def _config() -> RevancedConfig:
     """Build the narrow config object needed while `_download` is mocked out."""
     return cast("RevancedConfig", SimpleNamespace())
 

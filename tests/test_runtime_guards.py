@@ -12,10 +12,10 @@ from typing import TYPE_CHECKING, Self, cast
 from unittest import TestCase
 from unittest.mock import patch
 
-from src.config import RevancedConfig
 from src.downloader.apkeep import Apkeep
 from src.exceptions import DownloadError
 from src.utils import _check_version
+lazy from src.config import RevancedConfig
 
 if TYPE_CHECKING:
     from src.app import APP
@@ -128,6 +128,7 @@ class RuntimeGuardTests(TestCase):
 
                 command = popen.call_args.args[0]
                 self.assertEqual(expected, command[command.index("-o") + 1])
+
     def test_apkeep_uses_provider_from_source_suffix(self: Self) -> None:
         """`apkeep:<provider>` should pass that provider straight through to apkeep's -d flag."""
         with TemporaryDirectory() as tmp_dir:

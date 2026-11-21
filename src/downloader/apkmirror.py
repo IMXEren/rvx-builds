@@ -1,15 +1,14 @@
 """Downloader Class."""
 
-from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Any, Self, cast
+lazy from collections.abc import Collection
 
 import turbohtml
 from loguru import logger
 
 from src.apks.variant_sorter import Arch, Density, VariantSorter
 from src.apks.version_sorter import VersionSorter
-from src.app import APP
 from src.downloader.download import Downloader
 from src.downloader.sources import APK_MIRROR_BASE_URL
 from src.exceptions import APKMirrorAPKDownloadError, ScrapingError, VersionNotFoundError
@@ -19,6 +18,7 @@ from src.utils import (
     request_header,
     slugify,
 )
+lazy from src.app import APP
 
 # Listing and upload pages scraped when the direct release URL guess misses.
 LISTING_PAGES = 3
