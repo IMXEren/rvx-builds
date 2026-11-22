@@ -1,25 +1,13 @@
 name: Push to DockerHub
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       IMAGE_TAG:
         required: false
-        default:
         type: string
-        description: "Defaults to imxeren/docker-py-revanced"
       FILE:
         required: false
         type: string
-  push:
-    branches:
-      - "main"
-    paths:
-      - "**.py"
-      - "README.md"
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   check-image-tag:
@@ -69,7 +57,7 @@ jobs:
           push: true
           platforms: ${{ matrix.platform }}
           tags: ${{ needs.check-image-tag.outputs.IMAGE_TAG }}-${{ matrix.arch }}
-          file: ${{ inputs.FILE }}
+          file: ${{ inputs.FILE || 'Dockerfile' }}
 
   merge-manifest:
     if: github.repository == 'IMXEren/rvx-builds'

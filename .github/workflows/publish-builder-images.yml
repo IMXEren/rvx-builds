@@ -1,0 +1,103 @@
+name: Publish Builder Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      IMAGE_TAG:
+        required: false
+        type: string
+        description: "Defaults to imxeren/docker-py-revanced:latest"
+      FILE:
+        required: false
+        type: string
+        description: "Defaults to Dockerfile"
+  push:
+    branches:
+      - "main"
+    paths:
+      - "Dockerfile-base"
+      - "Dockerfile"
+      - "requirements.txt"
+      - "entrypoint"
+      - "**.py"
+      - "README.md"
+      - ".github/workflows/publish-builder-images.yml"
+      - ".github/workflows/dockerhub.yml"
+  schedule:
+    - cron: "0 0 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      base: ${{ steps.detect.outputs.base }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'push'
+        with:
+          fetch-depth: 0
+      - name: Detect base changes
+        id: detect
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [[ "${{ github.event_name }}" != push ]] || git diff --name-only "$BEFORE" "$GITHUB_SHA" -- Dockerfile-base | grep -q .; then
+            echo "base=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  image-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_TAG: ${{ steps.image.outputs.IMAGE_TAG }}
+    steps:
+      - name: Set image tag
+        id: image
+        run: |
+          OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_TAG=ghcr.io/${OWNER}/docker-py-revanced-base:latest" >> "$GITHUB_OUTPUT"
+
+  ghcr-push:
+    uses: ./.github/workflows/ghcr-push.yml
+    needs: [changes, image-tag]
+    if: needs.changes.outputs.base == 'true' && github.repository == 'IMXEren/rvx-builds'
+    with:
+      IMAGE_TAG: ${{ needs.image-tag.outputs.IMAGE_TAG }}
+      FILE: Dockerfile-base
+
+  child:
+    needs: [changes, ghcr-push]
+    if: >-
+      always() && github.repository == 'IMXEren/rvx-builds' &&
+      needs.changes.result == 'success' &&
+      (needs.ghcr-push.result == 'success' || needs.ghcr-push.result == 'skipped')
+    uses: ./.github/workflows/dockerhub.yml
+    with:
+      IMAGE_TAG: ${{ inputs.IMAGE_TAG || 'imxeren/docker-py-revanced:latest' }}
+      FILE: ${{ inputs.FILE || 'Dockerfile' }}
+    secrets: inherit
+
+  cleanup:
+    needs: ghcr-push
+    if: needs.ghcr-push.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - name: Clean up orphaned untagged layers
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          package: docker-py-revanced-base
+          keep-n-tagged: 1
+          delete-untagged: true
+          delete-partial-images: true
