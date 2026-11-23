@@ -19,6 +19,7 @@ on:
       - scripts/prepare-prowl.sh
       - run.sh
       - src/prowl/**
+      - tests/test_prowl_cdp.py
       - tests/test_prowl_service.py
 
 permissions:

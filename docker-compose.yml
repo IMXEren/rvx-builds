@@ -8,6 +8,9 @@ services:
         condition: service_healthy
     environment:
       - PROWL_URL=http://prowl:8191
+      - PROWL_CDP_TOKEN_FILE=/run/secrets/prowl_cdp_token
+    secrets:
+      - prowl_cdp_token
     env_file:
       - .env
     volumes:
@@ -26,6 +29,9 @@ services:
       - PROWL_PROFILE_DIR=/state/profile
       - PROWL_PROFILE_ARCHIVE=/state/browser-profile.zip
       - PROWL_PORT=8191
+      - PROWL_CDP_TOKEN_FILE=/run/secrets/prowl_cdp_token
+    secrets:
+      - prowl_cdp_token
     expose:
       - "8191"
     volumes:
@@ -54,3 +60,8 @@ services:
 
 volumes:
   prowl-state:
+
+# Created by run.sh.
+secrets:
+  prowl_cdp_token:
+    file: ./.prowl-cdp-token

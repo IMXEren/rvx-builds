@@ -9,3 +9,4 @@ venv
 .venv
 
 browser-profile*/
+.prowl-cdp-token

@@ -6,6 +6,7 @@ loguru==0.8.0
 packaging==26.3
 pre-commit==4.7.0
 pyaxmlparser==0.3.31
+pydoll-python @ git+https://github.com/IMXEren/pydoll@3.1.0-dev.1
 python-dotenv==1.2.4
 requests==2.34.2
 ruamel.yaml==0.19.1

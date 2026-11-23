@@ -17,3 +17,4 @@ status.md
 *.backup
 
 browser-profile*/
+.prowl-cdp-token
