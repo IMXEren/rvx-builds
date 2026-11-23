@@ -141,12 +141,14 @@ class APP(object):
             self.resolved_version = self.resolved_version or requested_version
         else:
             logger.info("Downloading apk to be patched by scrapping")
-            try:
-                if not self.download_source:
-                    self.download_source = apk_sources[self.app_name.lower()].format(self.package_name)
-            except KeyError as key:
-                msg = f"App {self.app_name} not supported officially yet. Please provide download source in env."
-                raise DownloadError(msg) from key
+            if not self.download_source:
+                source = apk_sources.get(self.app_name.lower())
+                self.download_source = (
+                    source.format(self.package_name) if source else DownloaderFactory.discover_source(self.package_name)
+                )
+            if not self.download_source:
+                msg = f"No mirror has {self.package_name} for {self.app_name}. Please provide download source in env."
+                raise DownloadError(msg)
 
             # Version fallback: when env is unset and the patch bundle advertised
             # compatible versions, try them in descending order if the first attempt 404s.

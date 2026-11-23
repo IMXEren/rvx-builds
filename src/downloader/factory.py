@@ -1,5 +1,7 @@
 """Downloader Factory."""
 
+from loguru import logger
+
 from src.downloader.apkcube import ApkCube
 from src.downloader.apkeep import Apkeep
 from src.downloader.apkmirror import ApkMirror
@@ -49,3 +51,18 @@ class DownloaderFactory(object):
             return Apkeep(config)
         msg = "No download factory found."
         raise DownloadError(msg, url=apk_source)
+
+    @staticmethod
+    def discover_source(package_name: str) -> str:
+        """Return the first mirror source that has the package, for apps without a configured source."""
+        lookups = (
+            ApkMirror.source_for_package,
+            UptoDown.source_for_package,
+            ApkCube.source_for_package,
+            ApkPure.source_for_package,
+        )
+        for lookup in lookups:
+            if source := lookup(package_name):
+                logger.info(f"Found download source {source} for {package_name}")
+                return source
+        return ""

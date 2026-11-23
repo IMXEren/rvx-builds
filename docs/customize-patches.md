@@ -100,6 +100,9 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    <APP_NAME>_PACKAGE_NAME=<package-name-of-the-application>
    ```
 
+   `DL_SOURCE` is optional. Without it the tool looks the package up on APKMIRROR, then UPTODOWN, then APKCUBE,
+   then APKPURE, and downloads from the first site that has it.
+
    You can also provide `DL` to the clean apk instead of providing `DL_SOURCES` as mentioned in this [note](#app-dl).
 
    ```ini
