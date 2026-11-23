@@ -546,3 +546,6 @@ secrets` in the format -
     ```
 
     Run `./run.sh`; the resulting `prowl:local` image stays local and is never published by rvx-builds.
+
+    `./run.sh` also loads the latest [uBO Lite](https://github.com/uBlockOrigin/uBOL-home) into Prowl's browser.
+    It is downloaded once into the `prowl-extensions` volume. Remove that volume to fetch a newer release.

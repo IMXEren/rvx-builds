@@ -34,12 +34,14 @@ services:
       - PROWL_PROFILE_ARCHIVE=/state/browser-profile.zip
       - PROWL_PORT=8191
       - PROWL_CDP_TOKEN_FILE=/run/secrets/prowl_cdp_token
+      - PROWL_EXTENSIONS_DIR=/extensions
     secrets:
       - prowl_cdp_token
     expose:
       - "8191"
     volumes:
       - prowl-state:/state
+      - prowl-extensions:/extensions
     # Chromium needs a large /dev/shm; Docker's 64MB default starves it.
     shm_size: "2gb"
     healthcheck:
@@ -48,6 +50,28 @@ services:
       timeout: 5s
       retries: 3
       start_period: 60s
+
+  # Run once by run.sh, since `up` skips profiled services.
+  prowl-extensions:
+    image: alpine:3
+    profiles: [setup]
+    volumes:
+      - prowl-extensions:/extensions
+    command:
+      - sh
+      - -euc
+      - |
+        [ -f /extensions/ubol/manifest.json ] && exit 0
+        releases=https://github.com/uBlockOrigin/uBOL-home/releases
+        # /latest redirects to the tag, which names the asset.
+        tag=$$(wget -S --spider "$$releases/latest" 2>&1 | sed -n 's#.*[Ll]ocation: .*/releases/tag/##p' | tail -n 1 | tr -d '\r')
+        wget -qO /tmp/ubol.zip "$$releases/download/$$tag/uBOLite_$$tag.chromium.zip"
+        unzip -q /tmp/ubol.zip -d /tmp/ubol
+        # Prowl would log the raw locale key.
+        sed -i 's#"name": *"__MSG_extName__"#"name": "uBlock Origin Lite"#' /tmp/ubol/manifest.json
+        mv /tmp/ubol /extensions/ubol
+        # Chrome writes compiled rules into unpacked extensions.
+        chmod -R a+rwX /extensions
 
   display:
     image: ghcr.io/dtinth/xtigervnc-docker:main
@@ -69,6 +93,7 @@ services:
 
 volumes:
   prowl-state:
+  prowl-extensions:
 
 # Created by run.sh.
 secrets:
