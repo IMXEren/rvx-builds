@@ -329,7 +329,7 @@ def delete_old_changelog() -> None:
     Path(changelog_file).unlink(missing_ok=True)
 
 
-def apkmirror_status_check(package_name: str) -> Any:
+def apkmirror_status_check(package_name: str, exclude: list[str] | None = None) -> Any:
     """The `apkmirror_status_check` function checks if an app exists on APKMirror.
 
     Parameters
@@ -337,12 +337,16 @@ def apkmirror_status_check(package_name: str) -> Any:
     package_name : str
         The `package_name` parameter is a string that represents the name of the app package to check on
     APKMirror.
+    exclude : list[str] | None
+        Release channels such as `alpha` and `beta` that the latest release must not come from.
 
     Returns
     -------
         the response from the APKMirror API as a JSON object.
     """
-    body = {"pnames": [package_name]}
+    body: dict[str, list[str]] = {"pnames": [package_name]}
+    if exclude:
+        body["exclude"] = exclude
     response = curl_cffi.post(APK_MIRROR_APK_CHECK, json=body, headers=request_header, timeout=60)
     return response.json()
 

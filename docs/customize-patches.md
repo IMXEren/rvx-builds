@@ -111,6 +111,8 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    1. APKMIRROR - Supports downloading any available version
       1. Link Format - `https://www.apkmirror.com/apk/<organisation-name>/app-name/`
       2. Example Link - https://www.apkmirror.com/apk/google-inc/youtube/
+      3. A specific version's release page is first looked up through Morphe Manager's download resolver, so
+         releases whose page name differs from the link are still found.
    2. UPTODOWN - Supports downloading any available version
       1. Link Format - `https://<app-name>.en.uptodown.com/android`
       2. Example Link - https://spotify.en.uptodown.com/android

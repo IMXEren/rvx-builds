@@ -41,6 +41,12 @@ def _config(temp_folder: Path) -> RevancedConfig:
 class APKMirrorDownloaderTests(TestCase):
     """Verify APKMirror can fall back from HTTP scraping to CloakBrowser."""
 
+    def setUp(self: Self) -> None:
+        """Keep Morphe's resolver offline unless a test answers it."""
+        resolver = patch("src.downloader.apkmirror.resolve_download_page", return_value="")
+        self.resolver = resolver.start()
+        self.addCleanup(resolver.stop)
+
     def test_default_user_agent_uses_valid_khtml_token(self: Self) -> None:
         """A typo in the shared UA made requests look like an impossible browser."""
         user_agent = request_header["User-Agent"]
@@ -184,6 +190,7 @@ class APKMirrorDownloaderTests(TestCase):
             SimpleNamespace(
                 app_name="TWITTER_PIKO",
                 app_version="11.95.1-release-ripped.0",
+                package_name="com.twitter.android",
                 download_source="https://www.apkmirror.com/apk/x-corp/twitter/",
                 effective_cli_argsf="morphe-cli",
                 compatible_version_codes={"11.95.1-release-ripped.0": {"arm64-v8a": {311950100}, "x86": {311950101}}},
@@ -594,3 +601,111 @@ class APKMirrorDownloaderTests(TestCase):
         )
         self.assertEqual(downloader.apk_type, "APK")
         self.assertEqual("TEST.apk", file_name)
+
+    @staticmethod
+    def _twitter_app() -> APP:
+        """Build the APP fields the resolver and latest-release paths read."""
+        return cast(
+            "APP",
+            SimpleNamespace(
+                app_name="TWITTER",
+                package_name="com.twitter.android",
+                download_source="https://www.apkmirror.com/apk/x-corp/twitter/x",
+                compatible_version_codes={"12.43.0-prod.01": {"arm64-v8a": {312430001}}},
+                archs_to_build=["arm64-v8a"],
+            ),
+        )
+
+    def test_resolver_variant_page_resolves_to_its_release_page(self: Self) -> None:
+        """A resolver answer on a variant page of the requested version is used as the release page."""
+        self.resolver.return_value = (
+            "https://www.apkmirror.com/apk/x-corp/twitter/x-12-43-0-prod-01-release/"
+            "x-12-43-0-prod-01-3-android-apk-download/"
+        )
+
+        page = ApkMirror._resolver_release_page(self._twitter_app(), "12.43.0-prod.01")
+
+        self.assertEqual("https://www.apkmirror.com/apk/x-corp/twitter/x-12-43-0-prod-01-release/", page)
+        self.resolver.assert_called_once_with("com.twitter.android", "12.43.0-prod.01", "arm64-v8a", 312430001)
+
+    def test_resolver_answer_for_another_version_or_listing_is_ignored(self: Self) -> None:
+        """Only a release of the requested version inside the source listing is trusted."""
+        for answer in (
+            "https://www.apkmirror.com/apk/x-corp/twitter/x-12-45-1-prod-01-release/",
+            "https://www.apkmirror.com/apk/x-corp/twitter-tv/x-12-43-0-prod-01-release/",
+            "https://google.com/search?q=com.twitter.android",
+        ):
+            with self.subTest(answer=answer):
+                self.resolver.return_value = answer
+                self.assertEqual("", ApkMirror._resolver_release_page(self._twitter_app(), "12.43.0-prod.01"))
+
+    def test_latest_version_uses_app_exists_release_in_source_listing(self: Self) -> None:
+        """APKMirror's API names the latest stable release without scraping the listing."""
+        entry = {
+            "pname": "com.twitter.android",
+            "exists": True,
+            "release": {"version": "12.45.1-prod.01", "link": "/apk/x-corp/twitter/x-12-45-1-prod-01-release/"},
+        }
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with (
+                patch("src.downloader.apkmirror.apkmirror_status_check", return_value={"data": [entry]}),
+                patch.object(downloader, "specific_version", return_value=("TWITTER.apkm", "dl")) as specific,
+                patch.object(downloader, "_extract_source") as extract_source,
+            ):
+                downloader.latest_version(self._twitter_app())
+
+        specific.assert_called_once_with(
+            self._twitter_app(),
+            "latest",
+            "https://www.apkmirror.com/apk/x-corp/twitter/x-12-45-1-prod-01-release/",
+        )
+        extract_source.assert_not_called()
+
+    def test_latest_version_listing_takes_first_stable_row(self: Self) -> None:
+        """The listing is newest first, so text order of the URLs must not pick an older release."""
+        listing_page = """
+            <div class="listWidget p-relative">
+                <div class="appRow">
+                    <span class="appRowTitle">X 12.46.0-alpha.01</span>
+                    <a class="downloadLink" href="/apk/x-corp/twitter/x-12-46-0-alpha-01-release/">Download</a>
+                </div>
+                <div class="appRow">
+                    <span class="appRowTitle">X 12.45.1-SECONDARY</span>
+                    <a class="downloadLink" href="/apk/x-corp/twitter/x-12-45-1-secondary-release/">Download</a>
+                </div>
+                <div class="appRow">
+                    <span class="appRowTitle">X 12.45.1-prod.01</span>
+                    <a class="downloadLink" href="/apk/x-corp/twitter/x-12-45-1-prod-01-release/">Download</a>
+                </div>
+                <div class="appRow">
+                    <span class="appRowTitle">X 12.9.0-prod.01</span>
+                    <a class="downloadLink" href="/apk/x-corp/twitter/x-12-9-0-prod-01-release/">Download</a>
+                </div>
+            </div>
+        """
+        with TemporaryDirectory() as tmp_dir:
+            downloader = ApkMirror(_config(Path(tmp_dir)))
+            with (
+                patch("src.downloader.apkmirror.apkmirror_status_check", return_value={"data": []}),
+                patch.object(downloader, "_extract_source", return_value=listing_page),
+                patch.object(downloader, "specific_version", return_value=("TWITTER.apkm", "dl")) as specific,
+            ):
+                downloader.latest_version(self._twitter_app())
+
+        self.assertEqual(
+            f"{APK_MIRROR_BASE_URL}/apk/x-corp/twitter/x-12-45-1-prod-01-release/",
+            specific.call_args.args[2],
+        )
+
+    def test_source_for_package_strips_version_from_release_link(self: Self) -> None:
+        """An unconfigured app gets the release slug prefix, so release URLs can still be guessed."""
+        entry = {
+            "pname": "com.twitter.android",
+            "exists": True,
+            "release": {"version": "12.45.1-prod.01", "link": "/apk/x-corp/twitter/x-12-45-1-prod-01-release/"},
+        }
+        with patch("src.downloader.apkmirror.apkmirror_status_check", return_value={"data": [entry]}):
+            source = ApkMirror.source_for_package("com.twitter.android")
+
+        self.assertEqual("https://www.apkmirror.com/apk/x-corp/twitter/x", source)
