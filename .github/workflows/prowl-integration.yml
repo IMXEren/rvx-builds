@@ -18,7 +18,7 @@ on:
       - docker-compose-local.yml
       - scripts/prepare-prowl.sh
       - run.sh
-      - src/prowl_client.py
+      - src/prowl/**
       - tests/test_prowl_service.py
 
 permissions:

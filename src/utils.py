@@ -25,7 +25,7 @@ from requests import Response
 from tenacity import Retrying, retry_if_result, stop_after_attempt, wait_exponential
 lazy from environs import Env
 
-from src.prowl_client import ProwlResponse, fetch_via_prowl, to_cookie_jar
+from src.prowl.client import ProwlResponse, fetch_via_prowl, to_cookie_jar
 from src.signals import get_process_cancel_token
 
 if TYPE_CHECKING:

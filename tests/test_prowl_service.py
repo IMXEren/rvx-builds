@@ -12,7 +12,7 @@ from requests import Session
 from requests.cookies import create_cookie
 
 from src import utils
-from src.prowl_client import (
+from src.prowl.client import (
     DEFAULT_PROWL_URL,
     PROWL_ERROR_MESSAGE_LIMIT,
     ProwlError,
@@ -231,7 +231,7 @@ class ProwlCookieJarTests(TestCase):
                 raise ValueError(msg)
             return create_cookie(**kwargs)  # type: ignore[no-untyped-call]
 
-        with patch("src.prowl_client.create_cookie", flaky_create_cookie):
+        with patch("src.prowl.client.create_cookie", flaky_create_cookie):
             jar = to_cookie_jar(
                 [
                     {"name": "bad", "value": "v", "domain": ".example.test", "path": "/"},
@@ -247,8 +247,8 @@ class ProwlFetchTests(TestCase):
     def test_successful_fetch_returns_the_solution(self: Self) -> None:
         """A valid envelope becomes a response against the configured endpoint."""
         with (
-            patch("src.prowl_client.requests.post", return_value=_StubHttpResponse(_ok_envelope())) as post,
-            patch("src.prowl_client.logger") as logger,
+            patch("src.prowl.client.requests.post", return_value=_StubHttpResponse(_ok_envelope())) as post,
+            patch("src.prowl.client.logger") as logger,
         ):
             response = cast("ProwlResponse", fetch_via_prowl(_URL, timeout=30))
         self.assertEqual(response.status_code, _OK)
@@ -259,26 +259,26 @@ class ProwlFetchTests(TestCase):
 
     def test_transport_failure_returns_none(self: Self) -> None:
         """An unreachable service yields ``None`` so the retry loop continues."""
-        with patch("src.prowl_client.requests.post", side_effect=requests.ConnectionError("boom")):
+        with patch("src.prowl.client.requests.post", side_effect=requests.ConnectionError("boom")):
             self.assertIsNone(fetch_via_prowl(_URL, timeout=30))
 
     def test_non_json_body_returns_none(self: Self) -> None:
         """A response that is not JSON is not treated as a page."""
-        with patch("src.prowl_client.requests.post", return_value=_StubHttpResponse(ValueError("no json"))):
+        with patch("src.prowl.client.requests.post", return_value=_StubHttpResponse(ValueError("no json"))):
             self.assertIsNone(fetch_via_prowl(_URL, timeout=30))
 
     def test_error_envelope_returns_none(self: Self) -> None:
         """A failure envelope yields ``None`` rather than raising."""
         envelope = {"status": "error", "message": "Challenge could not be solved", "solution": {"response": "SECRET"}}
-        with patch("src.prowl_client.requests.post", return_value=_StubHttpResponse(envelope)):
+        with patch("src.prowl.client.requests.post", return_value=_StubHttpResponse(envelope)):
             self.assertIsNone(fetch_via_prowl(_URL, timeout=30))
 
     def test_response_body_is_never_logged(self: Self) -> None:
         """A service failure must not spill the page body into the logs."""
         envelope = {"status": "error", "message": "Challenge could not be solved", "solution": {"response": "SECRET"}}
         with (
-            patch("src.prowl_client.requests.post", return_value=_StubHttpResponse(envelope)),
-            patch("src.prowl_client.logger") as logger,
+            patch("src.prowl.client.requests.post", return_value=_StubHttpResponse(envelope)),
+            patch("src.prowl.client.logger") as logger,
         ):
             fetch_via_prowl(_URL, timeout=30)
         warnings = str(logger.warning.call_args_list)
