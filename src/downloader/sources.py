@@ -6,6 +6,7 @@ APK_MIRROR_PACKAGE_URL = f"{APK_MIRROR_BASE_URL}/?s=" + "{}"
 APK_MIRROR_APK_CHECK = f"{APK_MIRROR_BASE_URL}/wp-json/apkm/v1/app_exists/"
 UPTODOWN_SUFFIX = "en.uptodown.com/android"
 UPTODOWN_BASE_URL = "https://{}." + UPTODOWN_SUFFIX
+UPTODOWN_API_URL = "https://www.uptodown.app/eapi"
 APK_PURE_BASE_URL = "https://apkpure.net"
 APK_PURE_URL = APK_PURE_BASE_URL + "/-/{}"
 APK_PURE_ICON_URL = APK_PURE_BASE_URL + "/search?q={}"

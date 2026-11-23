@@ -1,56 +1,104 @@
 """Upto Down Downloader."""
 
+import base64
+import hashlib
+import hmac
+import json
 import re
-from typing import Any, Self, cast
+import secrets
+import time
+from typing import Any, ClassVar, Self, cast
 
 import turbohtml
 from loguru import logger
 
 from src.apks.variant_sorter import VariantSorter
 from src.downloader.download import Downloader
-from src.exceptions import NOT_FOUND_STATUS_CODE, ScrapingError, UptoDownAPKDownloadError, VersionNotFoundError
-from src.utils import handle_request_response, make_request, request_header
+from src.downloader.sources import UPTODOWN_API_URL, UPTODOWN_SUFFIX
+from src.exceptions import NOT_FOUND_STATUS_CODE, UptoDownAPKDownloadError, VersionNotFoundError
+from src.utils import handle_request_response, make_request, request_header, request_timeout, session
 lazy from src.app import APP
+
+# The Android client's API is not behind the web pages' Turnstile.
+CLIENT_HEADERS = {
+    "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 16; Pixel 8 Pro Build/BP4A.260205.001)",
+    "Identificador": "Uptodown_Android",
+    "Identificador-Version": "739",
+    "Accept": "application/json",
+}
+# Signs the token request timestamp.
+CLIENT_HMAC_KEY = b"MDGMXUMdvHJBG/vjdFgmqX6LUdy7ecfwvYNd0gyfOCs="
+CLIENT_PLATFORM = "13"
+TOKEN_EXPIRY_MARGIN = 60
+MAX_VERSION_PAGES = 50
 
 
 class UptoDown(Downloader):
     """Files downloader."""
 
-    @staticmethod
-    def _is_xapk_variant_page(page: str) -> bool:
-        """Detect Uptodown variant URLs that expose the real XAPK file instead of the store bridge."""
-        return page.rstrip("/").endswith("-x")
+    _token: ClassVar[str] = ""
+    _token_expiry: ClassVar[float] = 0.0
 
-    @staticmethod
-    def _is_xapk_store_bridge(detail_download_button: turbohtml.Element, page: str) -> bool:
-        """Detect generic XAPK download pages whose direct token is missing and needs the legacy variant path."""
-        button_classes = detail_download_button.attr("class") or []
-        # Direct variant pages already point at app bytes, so only generic pages are eligible for fallback rewriting.
-        return "xapk" in button_classes and not UptoDown._is_xapk_variant_page(page)
+    @classmethod
+    def _authorize(cls: type[Self], *, force: bool = False) -> str:
+        """Return a client API token, requesting a new one when the cached token expires."""
+        if cls._token and not force and time.time() < cls._token_expiry - TOKEN_EXPIRY_MARGIN:
+            return cls._token
+        timestamp = str(int(time.time()))
+        identifier = secrets.token_hex(8)
+        signature = hmac.new(CLIENT_HMAC_KEY, timestamp.encode(), hashlib.sha256).hexdigest()
+        response = session.post(
+            f"{UPTODOWN_API_URL}/auth/token?identifier={identifier}",
+            headers=CLIENT_HEADERS,
+            data={
+                "identifier": identifier,
+                "id_plataforma": CLIENT_PLATFORM,
+                "lang": "en",
+                "unixtime": timestamp,
+                "hmac": signature,
+            },
+            timeout=request_timeout,
+        )
+        handle_request_response(response, f"{UPTODOWN_API_URL}/auth/token")
+        token = cast("str", response.json().get("token", ""))
+        if not token:
+            msg = "Uptodown returned no API token"
+            raise UptoDownAPKDownloadError(msg, url=UPTODOWN_API_URL)
+        # The JWT payload carries the expiry.
+        payload = token.split(".")[1]
+        expiry = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))).get("exp", 0)
+        cls._token, cls._token_expiry = token, float(expiry)
+        return token
 
-    def _resolve_xapk_variant_page(self: Self, detail_download_button: turbohtml.Element, page: str, app: str) -> str:
-        """Build the direct XAPK variant URL from Uptodown's generic app-store bridge button."""
-        download_version = detail_download_button.attr("data-download-version")
-        if not download_version:
-            msg = f"Unable to resolve direct XAPK download for {app} from uptodown."
-            raise UptoDownAPKDownloadError(msg, url=page)
+    @classmethod
+    def _api_get(cls: type[Self], path: str) -> dict[str, Any]:
+        """Return the `data` object of a client API call, renewing the token once when it is rejected."""
+        url = f"{UPTODOWN_API_URL}{path}"
+        for force in (False, True):
+            headers = CLIENT_HEADERS | {"Authorization": f"Bearer {cls._authorize(force=force)}"}
+            response = session.get(url, headers=headers, timeout=request_timeout)
+            if response.status_code != 401:  # noqa: PLR2004 - HTTP Unauthorized
+                break
+        handle_request_response(response, url)
+        return cast("dict[str, Any]", response.json().get("data") or {})
 
-        # Uptodown encodes the real file endpoint as `/download/<file-id>-x` behind the variants UI.
-        return f"{page.rstrip('/')}/{download_version}-x"
+    @classmethod
+    def _app_id(cls: type[Self], package_name: str) -> str:
+        """Return Uptodown's app id for a package, or an empty string when Uptodown lacks it."""
+        return str(cls._api_get(f"/apps/byPackagename/{package_name}").get("appID", ""))
 
-    def _get_app_code(self: Self, url: str) -> str:
-        """Extract the numeric app code from a Uptodown page."""
-        html = make_request(url, headers=request_header).text
-        doc = turbohtml.parse(html)
-        el = doc.find("h1", id="detail-app-name")
-        if not el:
-            msg = f"Could not find app code element on {url}"
-            raise UptoDownAPKDownloadError(msg, url=url)
-        code: str = el.attr("data-code", "")
-        if not code:
-            msg = f"App code missing on {url}"
-            raise UptoDownAPKDownloadError(msg, url=url)
-        return code
+    @classmethod
+    def source_for_package(cls: type[Self], package_name: str) -> str:
+        """Return the Uptodown app source URL for a package, or an empty string when Uptodown lacks it."""
+        try:
+            app_id = cls._app_id(package_name)
+            share_url = cast("str", cls._api_get(f"/v3/apps/{app_id}/device/0").get("urlShare", "")) if app_id else ""
+        except Exception as exc:  # noqa: BLE001 - discovery moves on to the next mirror
+            logger.debug(f"Uptodown lookup failed for {package_name}: {exc}")
+            return ""
+        # The factory recognizes the English host.
+        match = re.fullmatch(r"https://([^.]+)\.uptodown\.com/android/?", share_url)
+        return f"https://{match.group(1)}.{UPTODOWN_SUFFIX}" if match else ""
 
     @staticmethod
     def _text_or(el: turbohtml.Element | None) -> str:
@@ -69,24 +117,16 @@ class UptoDown(Downloader):
                 arch_text = "".join(p_tag.stripped_strings)
         return list(VariantSorter.parse_archs(arch_text)) if arch_text else []
 
-    def _fetch_variants(self: Self, app: APP, app_code: str, version_id: str) -> list[dict[str, Any]]:
-        """Fetch variant info from the Uptodown variants API.
+    def _fetch_variants(self: Self, app: APP, app_id: str, version_id: str) -> list[dict[str, Any]]:
+        """Fetch variant info from the Uptodown variants endpoint.
 
-        Returns a list of dicts with keys:
-            file_id, download_url, archs (list[Arch]), density (Density | None)
+        Returns a list of dicts with keys: file_id, archs (list[Arch]), density (Density | None)
         """
-        base = app.download_source.rstrip("/")
-        if base.endswith("/android"):
-            base = base[:-8]
-        elif base.endswith("/download"):
-            base = base[:-9]
-
         download_page = f"{app.download_source}/download"
-        api_url = f"{base}/app/{app_code}/version/{version_id}/files"
+        api_url = f"{app.download_source.removesuffix('/android')}/app/{app_id}/version/{version_id}/files"
 
         # Prime cookies by visiting the download page (variant API requires session state).
         make_request(download_page, headers=request_header)
-
         r = make_request(
             api_url,
             headers=request_header
@@ -95,102 +135,69 @@ class UptoDown(Downloader):
                 "Referer": download_page,
             },
         )
-
         if r.status_code == NOT_FOUND_STATUS_CODE:
             return []
-
-        data = r.json()
-        content = data.get("content", "")
+        content = r.json().get("content", "")
         if not content:
             return []
 
         doc = turbohtml.parse(content)
         parsed_archs = self._parse_variant_arch_text(doc)
-
         variants: list[dict[str, Any]] = []
         for card in doc.find_all("div", class_="variant"):
             img = card.find("img", attrs={"data-file-id": True})
             if not img:
                 continue
-
-            file_id = img.attr("data-file-id", "")
-            name_el = card.find("div", class_="v-version")
-            arch_el = card.find("div", class_="v-screen")
-
-            onclick = cast("str", name_el.attr("onclick", "")) if name_el else ""
-            dl_url = ""
-            if "location.href" in onclick:
-                m = re.search(r"location\.href='([^']+)'", onclick)
-                if m:
-                    dl_url = m.group(1)
-
-            density_text = self._text_or(arch_el)
-            parsed_density = VariantSorter.parse_density(density_text) if density_text else None
-
+            density_text = self._text_or(card.find("div", class_="v-screen"))
             variants.append(
                 {
-                    "file_id": file_id,
-                    "download_url": dl_url,
+                    "file_id": img.attr("data-file-id", ""),
                     "archs": list(parsed_archs),
-                    "density": parsed_density,
+                    "density": VariantSorter.parse_density(density_text) if density_text else None,
                 },
             )
-
         return variants
 
-    def _select_best_variant(self: Self, app: APP, app_code: str, version_id: str) -> tuple[str, str] | None:
-        """Select and download the best variant, or return None if no variants exist."""
-        variants = self._fetch_variants(app, app_code, version_id)
-        if not variants:
-            return None
+    def _find_release(self: Self, app: APP, app_id: str, version: str | None) -> dict[str, Any]:
+        """Return the version list entry of a version, or the newest entry when no version is given."""
+        for page in range(1, MAX_VERSION_PAGES + 1):
+            url = f"{app.download_source}/apps/{app_id}/versions/{page}"
+            response = make_request(url, headers=request_header)
+            handle_request_response(response, url)
+            items = response.json().get("data") or []
+            if not items:
+                break
+            for item in items:
+                if version is None or item.get("version") == version:
+                    return cast("dict[str, Any]", item)
+        msg = f"Unable to find {app.app_name} version {version} on uptodown"
+        raise VersionNotFoundError(msg, url=app.download_source)
 
-        # Sort with best match first (reverse=True)
-        variants.sort(
-            key=lambda v: VariantSorter.sorting_key(v["archs"], v["density"]),
-            reverse=True,
-        )
-
-        best = variants[0]
-        dl_url = best["download_url"]
-        if not dl_url:
-            return None
-
-        file_name = f"{app.app_name}.apk"
-        self._download(dl_url, file_name, extra_headers=request_header)
-
-        return file_name, dl_url
-
-    def extract_download_link(self: Self, page: str, app: str) -> tuple[str, str]:
-        """Extract download link from uptodown url."""
-        r = make_request(page, headers=request_header)
-        handle_request_response(r, page)
-        doc = turbohtml.parse(r.text)
-        detail_download_button = doc.find("button", id="detail-download-button")
-
-        if not detail_download_button:
-            msg = f"Unable to download {app} from uptodown."
-            raise UptoDownAPKDownloadError(msg, url=page)
-
-        data_url = detail_download_button.attr("data-url")
-        if not isinstance(data_url, str) or not data_url:
-            if self._is_xapk_store_bridge(detail_download_button, page):
-                # Older Uptodown pages omitted the direct token, so keep the variant-page fallback for that shape.
-                return self.extract_download_link(
-                    self._resolve_xapk_variant_page(detail_download_button, page, app),
-                    app,
-                )
-
-            msg = f"Unable to download {app} from uptodown."
-            raise UptoDownAPKDownloadError(msg, url=page)
-
-        download_url = f"https://dw.uptodown.com/dwn/{data_url}"
-        # Generic pages may be labeled XAPK while redirecting to one APK; archive inspection handles splits later.
-        file_name = f"{app}.xapk" if self._is_xapk_variant_page(page) else f"{app}.apk"
-        self._download(download_url, file_name, extra_headers=request_header)
-
+    def _download_release(self: Self, app: APP, version: str | None) -> tuple[str, str]:
+        """Download the best file of a release through the client API's signed file URL."""
+        app_id = self._app_id(app.package_name)
+        if not app_id:
+            msg = f"Uptodown has no app for {app.package_name}"
+            raise UptoDownAPKDownloadError(msg, url=app.download_source)
+        release = self._find_release(app, app_id, version)
+        file_id = str(release.get("fileID", ""))
+        version_id = str((release.get("versionURL") or {}).get("versionID") or file_id)
+        if variants := self._fetch_variants(app, app_id, version_id):
+            file_id = max(variants, key=lambda v: VariantSorter.sorting_key(v["archs"], v["density"]))["file_id"]
+        download = self._api_get(f"/apps/{app_id}/file/{file_id}/downloadUrl?update=0")
+        download_url = cast("str", download.get("downloadURL", ""))
+        if not download_url:
+            msg = f"Uptodown returned no download URL for {app.app_name}"
+            raise UptoDownAPKDownloadError(msg, url=app.download_source)
+        # A split archive named `.apk` is detected later.
+        extension = "xapk" if str(release.get("kindFile", "")).lower() in {"xapk", "apks", "apkm"} else "apk"
+        file_name = f"{app.app_name}.{extension}"
+        self._download(download_url, file_name)
+        if version is None:
+            app.resolved_version = release.get("version") or None
         return file_name, download_url
 
-    def specific_version(self: Self, app: APP, version: str) -> tuple[str, str]:  # noqa: C901
+    def specific_version(self: Self, app: APP, version: str) -> tuple[str, str]:
         """Function to download the specified version of app from uptodown.
 
         :param app: Name of the application
@@ -198,86 +205,9 @@ class UptoDown(Downloader):
         :return: Version of downloaded apk
         """
         logger.debug("downloading specified version of app from uptodown.")
-        url = f"{app.download_source}/versions"
-        html = make_request(url, headers=request_header).text
-        doc = turbohtml.parse(html)
-        detail_app_name = doc.find("h1", id="detail-app-name")
-
-        if not detail_app_name:
-            msg = f"Unable to download {app} from uptodown."
-            raise UptoDownAPKDownloadError(msg, url=url)
-
-        app_code = cast("str", detail_app_name.attr("data-code"))
-        version_page = 1
-        download_url = None
-        version_found = False
-
-        while not version_found:
-            version_url = f"{app.download_source}/apps/{app_code}/versions/{version_page}"
-            r = make_request(version_url, headers=request_header)
-            handle_request_response(r, version_url)
-            json = r.json()
-
-            if "data" not in json:
-                break
-
-            for item in json["data"]:
-                if item["version"] == version:
-                    version_url_data = item["versionURL"]
-                    if isinstance(version_url_data, dict):
-                        version_id = str(version_url_data.get("versionID", ""))
-                        if version_id:
-                            variant_result = self._select_best_variant(app, app_code, version_id)
-                            if variant_result is not None:
-                                return variant_result
-                        download_url = f"{version_url_data['url']}/{version_url_data['extraURL']}/{version_id}"
-                    else:
-                        download_url = f"{version_url_data}-x"
-                    version_found = True
-                    break
-
-            version_page += 1
-
-        if download_url is None:
-            msg = f"Unable to download {app.app_name} from uptodown."
-            raise VersionNotFoundError(msg, url=url)
-
-        try:
-            return self.extract_download_link(download_url, app.app_name)
-        except ScrapingError as exc:
-            if not exc.is_not_found():
-                raise
-            # let the version-fallback system try a different version.
-            msg = f"UptoDown version download page not found: {download_url}"
-            raise VersionNotFoundError(
-                msg,
-                url=download_url,
-            ) from exc
+        return self._download_release(app, version)
 
     def latest_version(self: Self, app: APP, **kwargs: Any) -> tuple[str, str]:
         """Function to download the latest version of app from uptodown."""
         logger.debug("downloading latest version of app from uptodown.")
-        page = f"{app.download_source}/download"
-
-        # Try variant selection first: scrape version info from the download page.
-        try:
-            r = make_request(page, headers=request_header)
-            handle_request_response(r, page)
-            doc = turbohtml.parse(r.text)
-
-            app_code = ""
-            el = doc.find("h1", id="detail-app-name")
-            if el:
-                app_code = el.attr("data-code", "")
-
-            dl_button = doc.find("button", id="detail-download-button")
-            version_id = dl_button.attr("data-download-version", "") if dl_button else ""
-
-            if app_code and version_id:
-                variant_result = self._select_best_variant(app, app_code, version_id)
-                if variant_result is not None:
-                    return variant_result
-        except UptoDownAPKDownloadError:
-            logger.debug("Variant selection for latest version failed, falling back to default download.")
-
-        return self.extract_download_link(page, app.app_name)
+        return self._download_release(app, None)
