@@ -2,10 +2,12 @@
 
 from src.downloader.apkeep import Apkeep
 from src.downloader.apkmirror import ApkMirror
+from src.downloader.apkpure import ApkPure
 from src.downloader.github import Github
 from src.downloader.gitlab import Gitlab
 from src.downloader.sources import (
     APK_MIRROR_BASE_URL,
+    APK_PURE_BASE_URL,
     APKEEP,
     GITHUB_BASE_URL,
     UPTODOWN_SUFFIX,
@@ -37,6 +39,8 @@ class DownloaderFactory(object):
             return UptoDown(config)
         if apk_source.startswith(APK_MIRROR_BASE_URL):
             return ApkMirror(config)
+        if apk_source.startswith(APK_PURE_BASE_URL):
+            return ApkPure(config)
         if apk_source.startswith(APKEEP):
             return Apkeep(config)
         msg = "No download factory found."

@@ -1,182 +1,102 @@
 """APK Pure Downloader Class."""
 
-# TODO(IMXEren): Rewrite the download implementation — the current approach is out of date.  # noqa: FIX002, TD003
+import json
+import secrets
+from typing import Any, Self, cast
+from urllib.parse import urlsplit
 
-from functools import cmp_to_key
-from typing import Any, Self
-from urllib.parse import parse_qs, urlparse
-
-import turbohtml
 from loguru import logger
 
+from src.apks.version_sorter import VersionSorter
 from src.downloader.download import Downloader
-from src.exceptions import APKPureAPKDownloadError, ScrapingError, VersionNotFoundError
-from src.utils import handle_request_response, make_request, request_header, slugify
+from src.downloader.sources import APK_PURE_DIRECT_URL, APK_PURE_URL, APK_PURE_VERSIONS_URL
+from src.exceptions import APKPureAPKDownloadError, VersionNotFoundError
+from src.utils import handle_request_response, request_timeout, session
 lazy from src.app import APP
+
+DEVICE_SDK = "34"
+DEVICE_RELEASE = "14"
+# Any other redirect means APKPure lacks the build.
+FILE_HOST = "winudf.com"
 
 
 class ApkPure(Downloader):
     """Files downloader."""
 
-    default_archs_priority: tuple[str, ...] = ("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+    @staticmethod
+    def _versions(package_name: str, archs: list[str]) -> list[dict[str, Any]]:
+        """Return APKPure's 20 newest builds of a package, newest first."""
+        device = {
+            "abis": archs,
+            "android_id": secrets.token_hex(8),
+            "os_ver": DEVICE_SDK,
+            "os_ver_name": DEVICE_RELEASE,
+            "platform": 1,
+        }
+        response = session.get(
+            APK_PURE_VERSIONS_URL,
+            params={"package_name": package_name, "hl": "en"},
+            headers={
+                "ual-access-businessid": "projecta",
+                "ual-access-projecta": json.dumps({"device_info": device}),
+                "Content-Type": "application/json",
+            },
+            timeout=request_timeout,
+        )
+        handle_request_response(response, APK_PURE_VERSIONS_URL)
+        return cast("list[dict[str, Any]]", response.json().get("version_list") or [])
 
     @staticmethod
-    def _select_preferred_dl(app: str, apk_dls: list[str], xapk_dls: list[str]) -> tuple[str | None, str | None]:
-        file_name = None
-        app_dl = None
-        if apk_dls:
-            file_name = f"{app}.apk"
-            app_dl = apk_dls[0]
-        elif xapk_dls:
-            file_name = f"{app}.zip"
-            app_dl = xapk_dls[0]
-        return file_name, app_dl
+    def source_for_package(package_name: str) -> str:
+        """Return the APKPure app source URL for a package, or an empty string when APKPure lacks it."""
+        try:
+            found = bool(ApkPure._versions(package_name, ["arm64-v8a"]))
+        except Exception as exc:  # noqa: BLE001 - discovery moves on to the next mirror
+            logger.debug(f"APKPure lookup failed for {package_name}: {exc}")
+            return ""
+        return APK_PURE_URL.format(package_name) if found else ""
 
-    def _sort_by_priority(self: Self, arch_list: list[str] | tuple[str]) -> list[str]:
-        """Specifically used to sort the arch list based on order of elements of default archs priority list."""
-        return [darch for darch in self.default_archs_priority if darch in arch_list]
+    @staticmethod
+    def _direct_builds(package_name: str, version: str, codes: set[int]) -> list[dict[str, Any]]:
+        """Return builds of version codes the history no longer lists, from the direct file endpoint."""
+        builds = []
+        for code in sorted(codes):
+            for kind in ("APK", "XAPK"):
+                url = APK_PURE_DIRECT_URL.format(kind=kind, package=package_name, code=code)
+                location = session.get(url, allow_redirects=False, timeout=request_timeout).headers.get("location")
+                if location and (urlsplit(location).hostname or "").endswith(FILE_HOST):
+                    builds.append(
+                        {"version_name": version, "version_code": code, "asset": {"type": kind, "url": location}},
+                    )
+        return builds
 
-    def _get_apk_type(self: Self, dl: str) -> list[str] | None:
-        """Extract apk type from download link."""
-        query_params = parse_qs(urlparse(dl).query)
-        return query_params.get("nc")
-
-    def _compare_apk_types(self: Self, apk_type1: list[str], apk_type2: list[str]) -> int:
-        """Compare two apk types for prioritization."""
-        l1, l2 = len(apk_type1), len(apk_type2)
-        if l1 != l2:
-            # Longer list indicates support for multiple archs, higher priority
-            return -1 if l1 > l2 else 1
-
-        # Same length, compare by priority order
-        priority = self.global_archs_priority or self.default_archs_priority
-        for arch in priority:
-            has_arch1 = arch in apk_type1
-            has_arch2 = arch in apk_type2
-            if has_arch1 != has_arch2:
-                return -1 if has_arch1 else 1
-        return 0
-
-    def _compare_dls(self: Self, dl1: str, dl2: str) -> int:
-        """Compare two dls of same type (apk or xapk) to prioritise the archs on lower indices."""
-        apk_type1 = self._get_apk_type(dl1)
-        apk_type2 = self._get_apk_type(dl2)
-
-        if apk_type1 and apk_type2:
-            return self._compare_apk_types(apk_type1, apk_type2)
-        if not apk_type1 and apk_type2:
-            return 1
-        if apk_type1 and not apk_type2:
-            return -1
-        return 0
-
-    def extract_download_link(self: Self, page: str, app: str) -> tuple[str, str]:
-        """Function to extract the download link from apkpure download page.
-
-        :param page: Url of the page
-        :param app: Name of the app
-        :return: Tuple of filename and app direct download link
-        """
-        logger.debug(f"Extracting download link from\n{page}")
-        r = make_request(page, headers=request_header)
-        handle_request_response(r, page)
-        doc = turbohtml.parse(r.text)
-        apks = doc.select("#version-list a.download-btn")
-        _apk_dls: list[str] = []
-        _xapk_dls: list[str] = []
-        for apk in apks:
-            if _apk_dl := apk.attr("href"):
-                if "/b/XAPK/" in _apk_dl:
-                    _xapk_dls.append(_apk_dl)
-                else:
-                    _apk_dls.append(_apk_dl)
-        _apk_dls.sort(key=cmp_to_key(self._compare_dls))
-        _xapk_dls.sort(key=cmp_to_key(self._compare_dls))
-        file_name, app_dl = self._select_preferred_dl(app, _apk_dls, _xapk_dls)
-        if not file_name or not app_dl:
-            msg = f"Unable to extract link from {app} version list"
-            raise APKPureAPKDownloadError(msg, url=page)
-        if app_version := doc.select_one("span.info-sdk > span"):
-            self.resolved_version = slugify("".join(app_version.stripped_strings))
-            logger.info(f"Will be downloading {app}'s version {self.resolved_version}...")
-        else:
-            self.resolved_version = "latest"
-            logger.info(f"Unable to resolve latest version of {app}")
-        return file_name, app_dl
+    def _download_build(self: Self, app: APP, version: str | None) -> tuple[str, str]:
+        """Download a version's build, preferring the targeted version codes, then a plain APK."""
+        archs = app.archs_to_build or ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"]
+        builds = self._versions(app.package_name, archs)
+        wanted = version if version is not None else (builds[0].get("version_name", "") if builds else "")
+        builds = [b for b in builds if b.get("version_name") == wanted]
+        codes = VersionSorter.target_codes(app.compatible_version_codes, wanted, archs)
+        builds = [b for b in builds if int(b.get("version_code") or 0) in codes] or builds
+        if not builds and codes:
+            builds = self._direct_builds(app.package_name, wanted, codes)
+        if not builds:
+            msg = f"Unable to find {app.app_name} version {version or 'latest'} on APKPure"
+            raise VersionNotFoundError(msg, url=app.download_source)
+        build = min(builds, key=lambda b: b.get("asset", {}).get("type") != "APK")
+        asset = build.get("asset", {})
+        if not asset.get("url"):
+            msg = f"APKPure returned no file for {app.app_name}"
+            raise APKPureAPKDownloadError(msg, url=app.download_source)
+        file_name = f"{app.app_name}.{'apk' if asset.get('type') == 'APK' else 'xapk'}"
+        self._download(asset["url"], file_name)
+        app.resolved_version = build.get("version_name") or None
+        return file_name, cast("str", asset["url"])
 
     def specific_version(self: Self, app: APP, version: str) -> tuple[str, str]:
-        """
-        Downloads the specified version of an app from APKPure.
-
-        Parameters
-        ----------
-        app : APP
-            The application object containing metadata.
-        version : str
-            The specific version of the application to download.
-
-        Returns
-        -------
-        tuple[str, str]
-            A tuple containing:
-            - The filename of the downloaded APK.
-            - The direct download link of the APK.
-
-        Raises
-        ------
-        APKPureAPKDownloadError
-            If the specified version is not found.
-        """
-        self.global_archs_priority = tuple(self._sort_by_priority(app.archs_to_build))
-        version_page = f"{app.download_source}/versions"
-
-        response = make_request(version_page, headers=request_header)
-        handle_request_response(response, version_page)
-
-        doc = turbohtml.parse(response.text)
-
-        for box in doc.select("ul.ver-wrap > *"):
-            download_link = box.select_one("a.ver_download_link")
-            if not download_link:
-                continue
-
-            found_version = download_link.attr("data-dt-version")
-            if found_version == version:
-                download_page = download_link.attr("href")
-                try:
-                    file_name, download_source = self.extract_download_link(
-                        str(download_page),
-                        app.app_name,
-                    )
-                except ScrapingError as exc:
-                    if not exc.is_not_found():
-                        raise
-                    # let the version-fallback system try a different version.
-                    msg = f"APKPure version download page not found: {download_page}"
-                    raise VersionNotFoundError(
-                        msg,
-                        url=str(download_page),
-                    ) from exc
-
-                app.resolved_version = self.resolved_version or version
-                logger.info(f"Resolved {app.resolved_version} for {app.app_name}")
-
-                self._download(download_source, file_name)
-                return file_name, download_source
-        msg = f"Unable to find specific version '{version}' for {app} from version list"
-        raise VersionNotFoundError(msg, url=version_page)
+        """Download the specified version of an app from APKPure."""
+        return self._download_build(app, version)
 
     def latest_version(self: Self, app: APP, **kwargs: Any) -> tuple[str, str]:
-        """Function to download whatever the latest version of app from apkpure.
-
-        :param app: Name of the application
-        :return: Tuple of filename and app direct download link
-        """
-        self.global_archs_priority = tuple(self._sort_by_priority(app.archs_to_build))
-        download_page = app.download_source + "/download"
-        file_name, download_source = self.extract_download_link(download_page, app.app_name)
-        app.resolved_version = self.resolved_version or "latest"
-        if app.resolved_version != "latest":
-            logger.info(f"Resolved {app.resolved_version} for {app.app_name}")
-        self._download(download_source, file_name)
-        return file_name, download_source
+        """Download the latest version of an app from APKPure."""
+        return self._download_build(app, None)
