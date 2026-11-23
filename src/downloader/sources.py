@@ -13,6 +13,7 @@ APK_PURE_ICON_URL = APK_PURE_BASE_URL + "/search?q={}"
 APK_PURE_VERSIONS_URL = "https://tapi.pureapk.com/v3/get_app_his_version"
 # Also serves builds the version list omits.
 APK_PURE_DIRECT_URL = "https://d.apkpure.com/b/{kind}/{package}?versionCode={code}"
+APK_CUBE_BASE_URL = "https://apkcube.com"
 MORPHE_RESOLVER_URL = "https://api.morphe.software/v2/web-search/"
 GITHUB_BASE_URL = "https://github.com"
 PLAY_STORE_BASE_URL = "https://play.google.com"

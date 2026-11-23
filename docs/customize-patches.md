@@ -116,10 +116,13 @@ If you don't define anything in `.env` file or `ENVS` in GitHub Secrets, these c
    2. UPTODOWN - Supports downloading any available version
       1. Link Format - `https://<app-name>.en.uptodown.com/android`
       2. Example Link - https://spotify.en.uptodown.com/android
-   3. APKPURE - Supports downloading its 20 newest builds, and older builds whose version code the patches target
+   3. APKCUBE - Supports downloading the builds APKCube holds, including the exact build code the patches target
+       1. Link Format - `https://apkcube.com/<app-slug>/<package-name>`
+       2. Example Link - https://apkcube.com/instagram/com.instagram.android
+   4. APKPURE - Supports downloading its 20 newest builds, and older builds whose version code the patches target
        1. Link Format - `https://apkpure.net/-/<package-name>`
        2. Example Link - https://apkpure.net/-/com.google.android.youtube
-   4. APKEEP - Downloads using [APKEEP](https://github.com/EFForg/apkeep) from the Google Play provider by default, or from any
+   5. APKEEP - Downloads using [APKEEP](https://github.com/EFForg/apkeep) from the Google Play provider by default, or from any
       other provider APKEEP supports when written as `apkeep:<provider>`
        1. Link Format - `apkeep` or `apkeep:<provider>`
        2. Example Link - `apkeep`, `apkeep:f-droid`, `apkeep:apk-pure`

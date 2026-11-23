@@ -118,6 +118,10 @@ class APKPureAPKDownloadError(APKDownloadError):
     """Exception raised when downloading an APK from apkpure failed."""
 
 
+class APKCubeAPKDownloadError(APKDownloadError):
+    """Exception raised when downloading an APK from apkcube failed."""
+
+
 class PatchingFailedError(BuilderError):
     """Patching Failed."""
 
